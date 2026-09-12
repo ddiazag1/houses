@@ -3,36 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Soldotna Homes 2000+ sqft near Central Peninsula Hospital</title>
+<title>Soldotna Home Search — Decision Board</title>
 <style>
   :root{
     --bg:#0f1115; --card:#1a1d24; --card2:#20242d; --ink:#e8eaed; --mut:#9aa0aa;
-    --line:#2a2f3a; --accent:#4f9cf9; --gold:#f5c518; --good:#3ecf8e; --warn:#e0a458;
+    --line:#2a2f3a; --accent:#4f9cf9; --gold:#f5c518; --good:#3ecf8e; --warn:#e0a458; --bad:#e0685f;
   }
   @media (prefers-color-scheme: light){
     :root{ --bg:#f6f7f9; --card:#fff; --card2:#f0f2f5; --ink:#1a1d24; --mut:#5b626e;
-           --line:#e2e5ea; --accent:#1a73e8; --gold:#c99400; --good:#178f5c; --warn:#b5730f; }
+           --line:#e2e5ea; --accent:#1a73e8; --gold:#c99400; --good:#178f5c; --warn:#b5730f; --bad:#c0392b; }
   }
   *{box-sizing:border-box}
   body{margin:0;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
        background:var(--bg);color:var(--ink)}
-  header{padding:18px 20px 8px;max-width:1100px;margin:0 auto}
+  header{padding:18px 20px 4px;max-width:1150px;margin:0 auto}
   h1{font-size:20px;margin:0 0 4px}
   .sub{color:var(--mut);font-size:13px}
-  .bar{max-width:1100px;margin:10px auto 0;padding:0 20px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .bar button{background:var(--card);color:var(--ink);border:1px solid var(--line);
-       border-radius:8px;padding:7px 11px;font-size:13px;cursor:pointer}
-  .bar button:hover{border-color:var(--accent)}
-  .stats{max-width:1100px;margin:10px auto;padding:0 20px;display:flex;gap:18px;flex-wrap:wrap;color:var(--mut);font-size:13px}
+  .toolbar{max-width:1150px;margin:0 auto;padding:8px 20px;position:sticky;top:0;background:var(--bg);z-index:20;border-bottom:1px solid var(--line)}
+  .row-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+  .row-tools:first-child{margin-top:0}
+  .lbl{color:var(--mut);font-size:12px;margin-right:2px}
+  button,select,input[type=text]{background:var(--card);color:var(--ink);border:1px solid var(--line);
+       border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;font-family:inherit}
+  button:hover,select:hover{border-color:var(--accent)}
+  button.tgl.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  input[type=range]{cursor:pointer;accent-color:var(--accent);vertical-align:middle}
+  input[type=text]{cursor:text}
+  .rng{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)}
+  .rng b{color:var(--ink)}
+  .stats{max-width:1150px;margin:10px auto 2px;padding:0 20px;display:flex;gap:18px;flex-wrap:wrap;color:var(--mut);font-size:13px}
   .stats b{color:var(--ink)}
-  .list{max-width:1100px;margin:8px auto 60px;padding:0 20px;display:flex;flex-direction:column;gap:10px}
-  .card{display:grid;grid-template-columns:34px 150px 1fr auto;gap:14px;align-items:center;
+  .list{max-width:1150px;margin:8px auto 60px;padding:0 20px;display:flex;flex-direction:column;gap:10px}
+  .card{display:grid;grid-template-columns:34px 150px 1fr auto;gap:14px;align-items:start;
         background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;
         transition:box-shadow .15s,border-color .15s}
   .card.fav{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+  .card.st-contender{border-left:4px solid var(--good)}
+  .card.st-maybe{border-left:4px solid var(--warn)}
+  .card.st-toured{border-left:4px solid var(--accent)}
+  .card.st-rejected{border-left:4px solid var(--bad);opacity:.72}
   .card.dragging{opacity:.4}
   .card.over{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
-  .handle{cursor:grab;color:var(--mut);text-align:center;font-size:20px;user-select:none;line-height:1}
+  .handle{cursor:grab;color:var(--mut);text-align:center;font-size:20px;user-select:none;line-height:1;padding-top:4px}
   .rank{font-size:11px;color:var(--mut);display:block;margin-top:2px}
   .thumb{width:150px;height:104px;border-radius:8px;object-fit:cover;background:var(--card2);display:block}
   .meta .addr{font-weight:650;font-size:15px}
@@ -46,7 +58,7 @@
   .chips.loc{margin-top:5px}
   .chip.score{background:var(--accent);color:#fff;font-weight:650}
   .chip.tag{background:transparent;border:1px solid var(--line);color:var(--mut);font-style:italic}
-  .right{text-align:right;padding-right:6px}
+  .right{text-align:right;padding-right:6px;min-width:120px}
   .price{font-weight:700;font-size:17px}
   .ppsf{color:var(--mut);font-size:12px}
   .star{background:none;border:none;font-size:22px;cursor:pointer;color:#4a4f5a;padding:0 4px}
@@ -54,38 +66,81 @@
   .right .row{display:flex;align-items:center;gap:6px;justify-content:flex-end}
   a.zlink{font-size:12px;color:var(--accent);text-decoration:none}
   a.zlink:hover{text-decoration:underline}
-  footer{max-width:1100px;margin:0 auto 40px;padding:0 20px;color:var(--mut);font-size:12px}
+  .statusrow{margin-top:8px;display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+  .sbtn{font-size:11px;padding:3px 8px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--mut)}
+  .sbtn.on-contender{background:var(--good);color:#08130d;border-color:var(--good);font-weight:600}
+  .sbtn.on-maybe{background:var(--warn);color:#1a1204;border-color:var(--warn);font-weight:600}
+  .sbtn.on-toured{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+  .sbtn.on-rejected{background:var(--bad);color:#fff;border-color:var(--bad);font-weight:600}
+  .linkbtn{font-size:12px;color:var(--mut);background:none;border:none;cursor:pointer;padding:2px 4px;text-decoration:underline}
+  .linkbtn:hover{color:var(--accent)}
+  .note{margin-top:8px}
+  .note textarea{width:100%;min-height:0;height:34px;resize:vertical;background:var(--card2);color:var(--ink);
+        border:1px solid var(--line);border-radius:8px;padding:7px 9px;font:13px/1.4 inherit;transition:height .1s}
+  .note textarea:focus{height:76px;outline:none;border-color:var(--accent)}
+  .note textarea.hasnote{border-color:var(--gold)}
+  details.more{margin-top:6px}
+  details.more summary{cursor:pointer;color:var(--accent);font-size:12px;list-style:none}
+  details.more summary::-webkit-details-marker{display:none}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 14px;margin-top:6px;font-size:12px;color:var(--mut)}
+  .grid2 b{color:var(--ink)}
+  .empty{max-width:1150px;margin:30px auto;padding:0 20px;color:var(--mut);text-align:center}
+  footer{max-width:1150px;margin:0 auto 40px;padding:0 20px;color:var(--mut);font-size:12px}
   @media(max-width:640px){
-    .card{grid-template-columns:26px 92px 1fr;grid-template-areas:"h t m" "h t r"}
-    .thumb{width:92px;height:70px} .handle{grid-area:h}.thumb{grid-area:t}.meta{grid-area:m}.right{grid-area:r;text-align:left}
+    .card{grid-template-columns:26px 92px 1fr;grid-template-areas:"h t m" "h t r" "h note note"}
+    .thumb{width:92px;height:70px} .handle{grid-area:h}.thumb{grid-area:t}.meta{grid-area:m}.right{grid-area:r;text-align:left;min-width:0}
     .right .row{justify-content:flex-start}
+    .toolbar{position:static}
   }
 </style>
 </head>
 <body>
 <header>
-  <h1>Soldotna Homes &ge; 2,000 sqft &mdash; within 5 mi of Central Peninsula Hospital</h1>
-  <div class="sub">31 single-family listings &middot; 250 Hospital Pl, Soldotna AK &middot; drag <b>&#10022;</b> to reorder &middot; click <b>&#9733;</b> to favorite (saved in your browser)</div>
+  <h1>Soldotna Home Search &mdash; Decision Board</h1>
+  <div class="sub">Single-family, &ge;2,000 sqft, within ~5 mi of Central Peninsula Hospital &middot; tag a status, add notes, hide what's out, drag to rank. Everything saves in <b>this browser</b>.</div>
 </header>
 
-<div class="bar">
-  <button id="sortFav">&#9733; Favorites first</button>
-  <button data-sort="loc_score" data-dir="desc">Sort: Location</button>
-  <button data-sort="park_mi">Sort: Nearest park</button>
-  <button data-sort="vibe_score" data-dir="desc">Sort: Vibe</button>
-  <button data-sort="miles">Sort: Hospital dist</button>
-  <button data-sort="price">Sort: Price</button>
-  <button data-sort="sqft">Sort: Size</button>
-  <button data-sort="ppsf">Sort: $/sqft</button>
-  <button id="reset">Reset order</button>
+<div class="toolbar">
+  <div class="row-tools">
+    <span class="lbl">Show:</span>
+    <button class="tgl" id="fStar">&#9733; Favorites</button>
+    <button class="tgl" id="fContender" data-fstatus="contender">Contenders</button>
+    <button class="tgl" id="fMaybe" data-fstatus="maybe">Maybe</button>
+    <button class="tgl" id="fToured" data-fstatus="toured">Toured</button>
+    <button class="tgl" id="fNotes">Has notes</button>
+    <button class="tgl" id="fGuest">Guest house</button>
+    <button class="tgl" id="fReject">Show rejected</button>
+    <button id="clearF">Clear filters</button>
+  </div>
+  <div class="row-tools">
+    <span class="lbl">Sort:</span>
+    <button data-sort="loc_score" data-dir="desc">Location</button>
+    <button data-sort="vibe_score" data-dir="desc">Vibe</button>
+    <button data-sort="miles">Hospital dist</button>
+    <button data-sort="park_mi">Nearest park</button>
+    <button data-sort="price">Price &uarr;</button>
+    <button data-sort="price" data-dir="desc">Price &darr;</button>
+    <button data-sort="sqft" data-dir="desc">Size</button>
+    <button data-sort="ppsf">$/sqft</button>
+    <button id="reset">Reset (by rank)</button>
+  </div>
+  <div class="row-tools">
+    <span class="rng">Max price <input type="range" id="rPrice" min="0" max="3000000" step="25000"><b id="rPriceV">any</b></span>
+    <span class="rng">Min sqft <input type="range" id="rSqft" min="2000" max="8000" step="100"><b id="rSqftV">2,000</b></span>
+    <span class="rng">Max mi <input type="range" id="rMiles" min="0" max="5" step="0.5"><b id="rMilesV">any</b></span>
+    <span class="rng">Min beds <input type="range" id="rBeds" min="0" max="6" step="1"><b id="rBedsV">any</b></span>
+    <input type="text" id="q" placeholder="search address / notes&hellip;" style="flex:1;min-width:140px">
+  </div>
 </div>
 
 <div class="stats" id="stats"></div>
 <div class="list" id="list"></div>
+<div class="empty" id="empty" style="display:none"></div>
 
 <footer>
-  Photos &amp; links via Zillow. Garage/guest-house marked <span style="color:var(--good)">confirmed</span> from MLS remarks where available; "?" = not yet verified (Zillow/Redfin detail pages block automated reads &mdash; verify on the listing).
-  Data pulled 2026-09-12. Favorites &amp; custom order are stored locally in this browser only.
+  Photos &amp; links via Zillow. Location / park / hospital / vibe scores are computed from mapped coordinates (haversine distance to Central Peninsula Hospital, weighted parks, downtown, and lot size) &mdash; they're directional, verify feel on the listing &amp; in person.
+  Garage/guest-house: "?" = not yet verified. Data pulled 2026-09-12. <b>Status, notes, favorites, hidden homes &amp; custom order are stored locally in this browser only</b> &mdash; use <button class="linkbtn" id="exportBtn">export</button> to back up / move devices, <button class="linkbtn" id="importBtn">import</button> to restore.
+  <span id="hiddenNote"></span>
 </footer>
 
 <script>
@@ -932,44 +987,72 @@ const DATA = /*DATA*/[
 ]/*END*/;
 const $ = s => document.querySelector(s);
 const money = n => '$'+Number(n).toLocaleString();
-const key = 'soldotna_homes_v1';
-let state = JSON.parse(localStorage.getItem(key) || '{}');
-state.fav = state.fav || {};
-state.order = state.order || DATA.map(d=>d.zpid);
-function save(){ localStorage.setItem(key, JSON.stringify(state)); }
-function ppsf(d){ return Math.round(d.price/d.sqft); }
+const ppsf = d => Math.round(d.price/d.sqft);
+
+// ---- state (with migration from v1) ----
+const KEY='soldotna_homes_v2';
+let state = JSON.parse(localStorage.getItem(KEY) || 'null');
+if(!state){
+  const old = JSON.parse(localStorage.getItem('soldotna_homes_v1') || '{}');
+  state = { fav: old.fav||{}, order: old.order||DATA.map(d=>d.zpid), status:{}, notes:{}, hidden:{} };
+}
+state.fav=state.fav||{}; state.status=state.status||{}; state.notes=state.notes||{};
+state.hidden=state.hidden||{}; state.order=state.order||DATA.map(d=>d.zpid);
+const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+
+// ---- filters ----
+const filt = { star:false, notes:false, guest:false, showReject:false, status:new Set(),
+               maxPrice:null, minSqft:2000, maxMiles:null, minBeds:null, q:'' };
 
 function ordered(){
   const byId = Object.fromEntries(DATA.map(d=>[d.zpid,d]));
-  const seen = new Set();
-  const arr = state.order.map(id=>byId[id]).filter(Boolean);
-  arr.forEach(d=>seen.add(d.zpid));
+  const seen = new Set(); const arr = [];
+  state.order.forEach(id=>{ if(byId[id]&&!seen.has(id)){arr.push(byId[id]);seen.add(id);} });
   DATA.forEach(d=>{ if(!seen.has(d.zpid)) arr.push(d); });
   return arr;
+}
+function passes(d){
+  if(state.hidden[d.zpid]) return false;
+  const st = state.status[d.zpid];
+  if(st==='rejected' && !filt.showReject && !filt.status.has('rejected')) return false;
+  if(filt.star && !state.fav[d.zpid]) return false;
+  if(filt.notes && !(state.notes[d.zpid]||'').trim()) return false;
+  if(filt.guest && d.guest!=='YES') return false;
+  if(filt.status.size && !filt.status.has(st)) return false;
+  if(filt.maxPrice!=null && d.price>filt.maxPrice) return false;
+  if(filt.minSqft!=null && d.sqft<filt.minSqft) return false;
+  if(filt.maxMiles!=null && d.miles>filt.maxMiles) return false;
+  if(filt.minBeds!=null && d.beds<filt.minBeds) return false;
+  if(filt.q){ const s=(d.addr+' '+(state.notes[d.zpid]||'')+' '+(d.vibe_tags||[]).join(' ')).toLowerCase();
+              if(!s.includes(filt.q.toLowerCase())) return false; }
+  return true;
 }
 function garageChip(g){
   if(g==='?'||g==null) return '<span class="chip q">garage ?</span>';
   if(g==='-'||g==='none') return '<span class="chip">no garage</span>';
-  return '<span class="chip g">car: '+g+'</span>';
+  return '<span class="chip g">'+g+' garage</span>';
 }
 function guestChip(g){
   if(g==='YES') return '<span class="chip guest">guest house</span>';
   if(g==='?'||g==null) return '<span class="chip q">guest ?</span>';
   return '';
 }
+const STATUSES=[['contender','Contender'],['maybe','Maybe'],['toured','Toured'],['rejected','Rejected']];
+
 function render(){
-  const list = $('#list'); list.innerHTML='';
-  const arr = ordered();
+  const list=$('#list'); list.innerHTML='';
+  const full=ordered(); const arr=full.filter(passes);
   arr.forEach((d,i)=>{
-    const el = document.createElement('div');
-    el.className = 'card'+(state.fav[d.zpid]?' fav':'');
-    el.draggable = true; el.dataset.id = d.zpid;
-    el.innerHTML =
+    const st=state.status[d.zpid]||''; const note=state.notes[d.zpid]||'';
+    const el=document.createElement('div');
+    el.className='card'+(state.fav[d.zpid]?' fav':'')+(st?' st-'+st:'');
+    el.draggable=true; el.dataset.id=d.zpid;
+    el.innerHTML=
       '<div class="handle" title="drag to reorder">&#10022;<span class="rank">#'+(i+1)+'</span></div>'+
       '<a href="'+d.url+'" target="_blank" rel="noopener"><img class="thumb" src="'+d.img+'" loading="lazy" alt=""></a>'+
       '<div class="meta"><div class="addr"><a href="'+d.url+'" target="_blank" rel="noopener">'+d.addr+'</a></div>'+
       '<div class="chips">'+
-        '<span class="chip">'+d.miles+' mi</span>'+
+        '<span class="chip">'+d.miles+' mi hosp</span>'+
         '<span class="chip">'+d.sqft.toLocaleString()+' sqft</span>'+
         '<span class="chip">'+d.beds+' bd / '+d.baths+' ba</span>'+
         (d.lot?'<span class="chip">'+(Math.round(d.lot*100)/100)+' ac</span>':'')+
@@ -980,7 +1063,23 @@ function render(){
         (d.park_mi!=null?'<span class="chip">'+(d.nearest_park||'park')+' '+d.park_mi+' mi</span>':'')+
         (d.vibe_score!=null?'<span class="chip">Vibe '+d.vibe_score+'</span>':'')+
         ((d.vibe_tags||[]).map(t=>'<span class="chip tag">'+t+'</span>').join(''))+
-      '</div></div>'+
+      '</div>'+
+      '<div class="statusrow">'+
+        STATUSES.map(([v,lbl])=>'<button class="sbtn'+(st===v?' on-'+v:'')+'" data-status="'+d.zpid+'|'+v+'">'+lbl+'</button>').join('')+
+        '<button class="linkbtn" data-hide="'+d.zpid+'">Hide</button>'+
+      '</div>'+
+      '<div class="note"><textarea class="'+(note?'hasnote':'')+'" data-note="'+d.zpid+'" placeholder="Notes: pros/cons, tour date, questions&hellip;">'+
+        note.replace(/</g,'&lt;')+'</textarea></div>'+
+      '<details class="more"><summary>All details</summary><div class="grid2">'+
+        '<span>Home <b>'+(d.home_type||'SFR')+'</b></span>'+
+        '<span>$/sqft <b>$'+ppsf(d)+'</b></span>'+
+        '<span>Lot <b>'+(d.lot?d.lot.toFixed(2)+' ac':'?')+'</b></span>'+
+        '<span>Hospital <b>'+(d.hosp_mi!=null?d.hosp_mi+' mi':d.miles+' mi')+'</b></span>'+
+        '<span>Park <b>'+(d.nearest_park||'?')+(d.park_mi!=null?' ('+d.park_mi+' mi)':'')+'</b></span>'+
+        '<span>Loc score <b>'+(d.loc_score??'?')+'/100</b></span>'+
+        '<span>Vibe score <b>'+(d.vibe_score??'?')+'/100</b></span>'+
+        '<span>Park score <b>'+(d.park_score??'?')+'/100</b></span>'+
+      '</div></details></div>'+
       '<div class="right"><div class="row"><span class="price">'+money(d.price)+'</span>'+
         '<button class="star '+(state.fav[d.zpid]?'on':'')+'" data-fav="'+d.zpid+'" title="favorite">&#9733;</button></div>'+
         '<div class="ppsf">$'+ppsf(d)+'/sqft</div>'+
@@ -988,54 +1087,123 @@ function render(){
     list.appendChild(el);
   });
   wireDnD();
+  const empty=$('#empty');
+  if(!arr.length){ empty.style.display='block'; empty.textContent='No homes match these filters. Try Clear filters.'; }
+  else empty.style.display='none';
   renderStats(arr);
+  const nHidden=Object.values(state.hidden).filter(Boolean).length;
+  $('#hiddenNote').innerHTML = nHidden? ' &middot; '+nHidden+' hidden <button class="linkbtn" id="showHidden">restore all</button>' : '';
+  const sh=$('#showHidden'); if(sh) sh.onclick=()=>{ state.hidden={}; save(); render(); };
 }
 function renderStats(arr){
-  const favs = arr.filter(d=>state.fav[d.zpid]);
-  const set = favs.length? favs : arr;
-  const label = favs.length? favs.length+' favorites' : 'all '+arr.length;
-  const avg = k => Math.round(set.reduce((s,d)=>s+d[k],0)/set.length);
-  const avgPpsf = Math.round(set.reduce((s,d)=>s+ppsf(d),0)/set.length);
-  const avgMi = (set.reduce((s,d)=>s+d.miles,0)/set.length).toFixed(1);
-  $('#stats').innerHTML =
-    '<span>Averages for: <b>'+label+'</b></span>'+
+  if(!arr.length){ $('#stats').innerHTML=''; return; }
+  const cnt=s=>Object.values(state.status).filter(v=>v===s).length;
+  const avg=k=>Math.round(arr.reduce((s,d)=>s+d[k],0)/arr.length);
+  const avgPpsf=Math.round(arr.reduce((s,d)=>s+ppsf(d),0)/arr.length);
+  const avgMi=(arr.reduce((s,d)=>s+d.miles,0)/arr.length).toFixed(1);
+  $('#stats').innerHTML=
+    '<span>Showing <b>'+arr.length+'</b> of '+DATA.length+'</span>'+
+    '<span>&#9733; <b>'+Object.values(state.fav).filter(Boolean).length+'</b></span>'+
+    '<span>Contenders <b>'+cnt('contender')+'</b></span>'+
+    '<span>Maybe <b>'+cnt('maybe')+'</b></span>'+
+    '<span>Toured <b>'+cnt('toured')+'</b></span>'+
     '<span>Avg price <b>'+money(avg('price'))+'</b></span>'+
-    '<span>Avg size <b>'+avg('sqft').toLocaleString()+' sqft</b></span>'+
+    '<span>Avg size <b>'+avg('sqft').toLocaleString()+'</b></span>'+
     '<span>Avg $/sqft <b>$'+avgPpsf+'</b></span>'+
     '<span>Avg dist <b>'+avgMi+' mi</b></span>';
 }
+
+// ---- card interactions ----
 $('#list').addEventListener('click', e=>{
-  const b = e.target.closest('[data-fav]'); if(!b) return;
-  const id=b.dataset.fav; state.fav[id]=!state.fav[id]; save(); render();
+  const f=e.target.closest('[data-fav]');
+  if(f){ const id=f.dataset.fav; state.fav[id]=!state.fav[id]; save(); render(); return; }
+  const s=e.target.closest('[data-status]');
+  if(s){ const [id,v]=s.dataset.status.split('|'); state.status[id]= state.status[id]===v?'':v; save(); render(); return; }
+  const h=e.target.closest('[data-hide]');
+  if(h){ state.hidden[h.dataset.hide]=true; save(); render(); return; }
 });
+$('#list').addEventListener('input', e=>{
+  const t=e.target.closest('[data-note]'); if(!t) return;
+  const id=t.dataset.note; state.notes[id]=t.value; save();
+  t.classList.toggle('hasnote', !!t.value.trim());
+});
+
+// ---- sort ----
 document.querySelectorAll('[data-sort]').forEach(btn=>{
   btn.addEventListener('click',()=>{
-    const k=btn.dataset.sort;
-    const desc=btn.dataset.dir==='desc';
+    const k=btn.dataset.sort, desc=btn.dataset.dir==='desc';
     const val=d=> k==='ppsf'?ppsf(d) : (d[k]!=null?d[k]:(desc?-Infinity:Infinity));
     const arr=[...DATA].sort((a,b)=> desc? val(b)-val(a) : val(a)-val(b));
     state.order=arr.map(d=>d.zpid); save(); render();
   });
 });
-$('#sortFav').addEventListener('click',()=>{
-  const arr=ordered().sort((a,b)=>(state.fav[b.zpid]?1:0)-(state.fav[a.zpid]?1:0));
-  state.order=arr.map(d=>d.zpid); save(); render();
-});
 $('#reset').addEventListener('click',()=>{
-  const arr=[...DATA].sort((a,b)=>a.miles-b.miles);
-  state.order=arr.map(d=>d.zpid); save(); render();
+  state.order=[...DATA].sort((a,b)=>(b.loc_score||0)-(a.loc_score||0)).map(d=>d.zpid);
+  save(); render();
 });
+
+// ---- filter controls ----
+function tgl(id,key){ const b=$(id); b.addEventListener('click',()=>{ filt[key]=!filt[key]; b.classList.toggle('on',filt[key]); render(); }); }
+tgl('#fStar','star'); tgl('#fNotes','notes'); tgl('#fGuest','guest'); tgl('#fReject','showReject');
+[['#fContender','contender'],['#fMaybe','maybe'],['#fToured','toured']].forEach(([id,v])=>{
+  const b=$(id); b.addEventListener('click',()=>{ if(filt.status.has(v))filt.status.delete(v); else filt.status.add(v); b.classList.toggle('on'); render(); });
+});
+function rng(id,vid,key,fmt,zeroAny){
+  const el=$(id), out=$(vid);
+  el.value = key==='minSqft'?2000 : (key==='maxMiles'||key==='maxPrice'?el.max:(key==='minBeds'?0:el.min));
+  el.addEventListener('input',()=>{
+    let v=+el.value;
+    if(zeroAny && ((key==='maxPrice'&&v>=+el.max)||(key==='maxMiles'&&v>=+el.max)||(key==='minBeds'&&v===0))){ filt[key]=null; out.textContent='any'; }
+    else { filt[key]=v; out.textContent=fmt(v); }
+    render();
+  });
+}
+rng('#rPrice','#rPriceV','maxPrice',v=>'$'+(v/1000)+'k',true);
+rng('#rSqft','#rSqftV','minSqft',v=>v.toLocaleString(),false);
+rng('#rMiles','#rMilesV','maxMiles',v=>v+' mi',true);
+rng('#rBeds','#rBedsV','minBeds',v=>v+'+',true);
+$('#q').addEventListener('input',e=>{ filt.q=e.target.value; render(); });
+$('#clearF').addEventListener('click',()=>{
+  filt.star=filt.notes=filt.guest=filt.showReject=false; filt.status.clear();
+  filt.maxPrice=filt.maxMiles=filt.minBeds=null; filt.minSqft=2000; filt.q='';
+  document.querySelectorAll('.tgl').forEach(b=>b.classList.remove('on'));
+  $('#rPrice').value=$('#rPrice').max; $('#rPriceV').textContent='any';
+  $('#rSqft').value=2000; $('#rSqftV').textContent='2,000';
+  $('#rMiles').value=$('#rMiles').max; $('#rMilesV').textContent='any';
+  $('#rBeds').value=0; $('#rBedsV').textContent='any';
+  $('#q').value=''; render();
+});
+
+// ---- export / import ----
+$('#exportBtn').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='soldotna-home-decisions.json'; a.click();
+});
+$('#importBtn').addEventListener('click',()=>{
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
+  inp.onchange=()=>{ const f=inp.files[0]; if(!f)return; const r=new FileReader();
+    r.onload=()=>{ try{ const s=JSON.parse(r.result);
+      state.fav=s.fav||{}; state.status=s.status||{}; state.notes=s.notes||{};
+      state.hidden=s.hidden||{}; state.order=s.order||state.order; save(); render();
+      alert('Imported.'); }catch(e){ alert('Bad file'); } };
+    r.readAsText(f); };
+  inp.click();
+});
+
+// ---- drag & drop ----
 let dragId=null;
 function wireDnD(){
   document.querySelectorAll('.card').forEach(c=>{
-    c.addEventListener('dragstart',()=>{dragId=c.dataset.id;c.classList.add('dragging')});
+    c.addEventListener('dragstart',ev=>{ if(ev.target.closest('textarea,button,a,summary')){ev.preventDefault();return;} dragId=c.dataset.id;c.classList.add('dragging'); });
     c.addEventListener('dragend',()=>{c.classList.remove('dragging');document.querySelectorAll('.over').forEach(x=>x.classList.remove('over'))});
     c.addEventListener('dragover',e=>{e.preventDefault();c.classList.add('over')});
     c.addEventListener('dragleave',()=>c.classList.remove('over'));
     c.addEventListener('drop',e=>{
       e.preventDefault();
-      const targetId=c.dataset.id; if(dragId===targetId) return;
-      const o=[...state.order];
+      const targetId=c.dataset.id; if(!dragId||dragId===targetId) return;
+      const o=[...state.order].filter(x=>DATA.some(d=>d.zpid===x));
+      DATA.forEach(d=>{ if(!o.includes(d.zpid)) o.push(d.zpid); });
       const from=o.indexOf(dragId), to=o.indexOf(targetId);
       o.splice(from,1); o.splice(to,0,dragId);
       state.order=o; save(); render();
