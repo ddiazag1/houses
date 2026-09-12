@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soldotna Homes 2000+ sqft near Central Peninsula Hospital</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#1a1d24; --card2:#20242d; --ink:#e8eaed; --mut:#9aa0aa;
+    --line:#2a2f3a; --accent:#4f9cf9; --gold:#f5c518; --good:#3ecf8e; --warn:#e0a458;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f7f9; --card:#fff; --card2:#f0f2f5; --ink:#1a1d24; --mut:#5b626e;
+           --line:#e2e5ea; --accent:#1a73e8; --gold:#c99400; --good:#178f5c; --warn:#b5730f; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--ink)}
+  header{padding:18px 20px 8px;max-width:1100px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--mut);font-size:13px}
+  .bar{max-width:1100px;margin:10px auto 0;padding:0 20px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .bar button{background:var(--card);color:var(--ink);border:1px solid var(--line);
+       border-radius:8px;padding:7px 11px;font-size:13px;cursor:pointer}
+  .bar button:hover{border-color:var(--accent)}
+  .stats{max-width:1100px;margin:10px auto;padding:0 20px;display:flex;gap:18px;flex-wrap:wrap;color:var(--mut);font-size:13px}
+  .stats b{color:var(--ink)}
+  .list{max-width:1100px;margin:8px auto 60px;padding:0 20px;display:flex;flex-direction:column;gap:10px}
+  .card{display:grid;grid-template-columns:34px 150px 1fr auto;gap:14px;align-items:center;
+        background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;
+        transition:box-shadow .15s,border-color .15s}
+  .card.fav{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+  .card.dragging{opacity:.4}
+  .card.over{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+  .handle{cursor:grab;color:var(--mut);text-align:center;font-size:20px;user-select:none;line-height:1}
+  .rank{font-size:11px;color:var(--mut);display:block;margin-top:2px}
+  .thumb{width:150px;height:104px;border-radius:8px;object-fit:cover;background:var(--card2);display:block}
+  .meta .addr{font-weight:650;font-size:15px}
+  .meta .addr a{color:var(--ink);text-decoration:none}
+  .meta .addr a:hover{color:var(--accent);text-decoration:underline}
+  .chips{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font-size:12px;padding:2px 8px;border-radius:20px;background:var(--card2);color:var(--mut);white-space:nowrap}
+  .chip.g{color:var(--good)}
+  .chip.guest{color:var(--gold);font-weight:600}
+  .chip.q{color:var(--warn)}
+  .right{text-align:right;padding-right:6px}
+  .price{font-weight:700;font-size:17px}
+  .ppsf{color:var(--mut);font-size:12px}
+  .star{background:none;border:none;font-size:22px;cursor:pointer;color:#4a4f5a;padding:0 4px}
+  .star.on{color:var(--gold)}
+  .right .row{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+  a.zlink{font-size:12px;color:var(--accent);text-decoration:none}
+  a.zlink:hover{text-decoration:underline}
+  footer{max-width:1100px;margin:0 auto 40px;padding:0 20px;color:var(--mut);font-size:12px}
+  @media(max-width:640px){
+    .card{grid-template-columns:26px 92px 1fr;grid-template-areas:"h t m" "h t r"}
+    .thumb{width:92px;height:70px} .handle{grid-area:h}.thumb{grid-area:t}.meta{grid-area:m}.right{grid-area:r;text-align:left}
+    .right .row{justify-content:flex-start}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Soldotna Homes &ge; 2,000 sqft &mdash; within 5 mi of Central Peninsula Hospital</h1>
+  <div class="sub">31 single-family listings &middot; 250 Hospital Pl, Soldotna AK &middot; drag <b>&#10022;</b> to reorder &middot; click <b>&#9733;</b> to favorite (saved in your browser)</div>
+</header>
+
+<div class="bar">
+  <button id="sortFav">&#9733; Favorites first</button>
+  <button data-sort="miles">Sort: Distance</button>
+  <button data-sort="price">Sort: Price</button>
+  <button data-sort="sqft">Sort: Size</button>
+  <button data-sort="ppsf">Sort: $/sqft</button>
+  <button id="reset">Reset order</button>
+</div>
+
+<div class="stats" id="stats"></div>
+<div class="list" id="list"></div>
+
+<footer>
+  Photos &amp; links via Zillow. Garage/guest-house marked <span style="color:var(--good)">confirmed</span> from MLS remarks where available; "?" = not yet verified (Zillow/Redfin detail pages block automated reads &mdash; verify on the listing).
+  Data pulled 2026-09-12. Favorites &amp; custom order are stored locally in this browser only.
+</footer>
+
+<script>
+const DATA = /*DATA*/[
+    {
+        "addr":  "35841 Irons Ave",
+        "price":  595000,
+        "sqft":  2826,
+        "beds":  4,
+        "baths":  3.0,
+        "miles":  0.5,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/a10eb090c7b5f97f16524e8ef2d5c089-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/35841-Irons-Ave-Soldotna-AK-99669/74516861_zpid/",
+        "zpid":  "74516861",
+        "lot":  0.6599999999999999,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "317 Diane Ln",
+        "price":  995000,
+        "sqft":  2128,
+        "beds":  3,
+        "baths":  2.0,
+        "miles":  0.9,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/a70d21b46d454ac3e115f2fb8135a4da-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/317-Diane-Ln-Soldotna-AK-99669/74517167_zpid/",
+        "zpid":  "74517167",
+        "lot":  1.22,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "44570 Sunrise Ave",
+        "price":  299000,
+        "sqft":  2460,
+        "beds":  3,
+        "baths":  3.0,
+        "miles":  1,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/5645d901a2fb2faf974e607846e1f7d8-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/44570-Sunrise-Ave-Soldotna-AK-99669/223311839_zpid/",
+        "zpid":  "223311839",
+        "lot":  0.67,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "48672 Funny River Rd",
+        "price":  2799000,
+        "sqft":  7692,
+        "beds":  11,
+        "baths":  11.0,
+        "miles":  1.3,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/88e92d6fd250a32167bb16f931255cc2-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/48672-Funny-River-Rd-Soldotna-AK-99669/223322464_zpid/",
+        "zpid":  "223322464",
+        "lot":  0.9199999999999999,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "46113 Sather Ct",
+        "price":  925000,
+        "sqft":  3307,
+        "beds":  3,
+        "baths":  3.0,
+        "miles":  1.4,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/8ba0bb722ed7ed83ab80cd095bad1856-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/46113-Sather-Ct-Soldotna-AK-99669/90678074_zpid/",
+        "zpid":  "90678074",
+        "lot":  1.03,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "575 Pace St",
+        "price":  699750,
+        "sqft":  2280,
+        "beds":  4,
+        "baths":  2.0,
+        "miles":  1.5,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/7dba275498072d8bbea0d3324fead6eb-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/575-Pace-St-Soldotna-AK-99669/248964124_zpid/",
+        "zpid":  "248964124",
+        "lot":  20.0,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "624 Yupik Rd",
+        "price":  725000,
+        "sqft":  2200,
+        "beds":  3,
+        "baths":  3.0,
+        "miles":  1.5,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/ed14a5424f76ed3341b6f74b162adbcd-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/624-Yupik-Rd-Soldotna-AK-99669/223313484_zpid/",
+        "zpid":  "223313484",
+        "lot":  0.9199999999999999,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "35188 Rockwood Dr",
+        "price":  449000,
+        "sqft":  2466,
+        "beds":  4,
+        "baths":  2.0,
+        "miles":  2.4,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/a9fd86a6c7f75ebcd1b3085b76bf3925-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/35188-Rockwood-Dr-Soldotna-AK-99669/223311670_zpid/",
+        "zpid":  "223311670",
+        "lot":  0.45999999999999996,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "36880 Kendanemken Rd",
+        "price":  720000,
+        "sqft":  3188,
+        "beds":  5,
+        "baths":  4.0,
+        "miles":  2.5,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/59da532b2e0b1d880197f338b96718d0-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/36880-Kendanemken-Rd-Soldotna-AK-99669/223313120_zpid/",
+        "zpid":  "223313120",
+        "lot":  9.04,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "36471 Wren Dr",
+        "price":  500000,
+        "sqft":  4000,
+        "beds":  2,
+        "baths":  2.0,
+        "miles":  2.5,
+        "garage":  "6-car",
+        "guest":  "-",
+        "img":  "https://photos.zillowstatic.com/fp/29e340e2a02b92a0e7959e77e0f3c8ad-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/36471-Wren-Dr-Kenai-AK-99611/122053374_zpid/",
+        "zpid":  "122053374",
+        "lot":  2.04,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "33365 Community College Dr",
+        "price":  499000,
+        "sqft":  3406,
+        "beds":  4,
+        "baths":  5.0,
+        "miles":  2.8,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/35fff51583744b821e559fa5037a1ba1-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/33365-Community-College-Dr-Soldotna-AK-99669/90669863_zpid/",
+        "zpid":  "90669863",
+        "lot":  0.9199999999999999,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "46861 Mooseberry Ave",
+        "price":  575000,
+        "sqft":  2237,
+        "beds":  3,
+        "baths":  3.0,
+        "miles":  2.8,
+        "garage":  "2-car",
+        "guest":  "-",
+        "img":  "https://photos.zillowstatic.com/fp/e7d881b4186bc774300d1435e2c6ea72-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/46861-Mooseberry-Ave-Kenai-AK-99611/74516546_zpid/",
+        "zpid":  "74516546",
+        "lot":  1.31,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "5220 Swallow Dr",
+        "price":  595000,
+        "sqft":  3730,
+        "beds":  3,
+        "baths":  4.0,
+        "miles":  2.9,
+        "garage":  "1-car",
+        "guest":  "-",
+        "img":  "https://photos.zillowstatic.com/fp/c41c685197c3ffe4e01ff26772d14e11-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/5220-Swallow-Dr-Kenai-AK-99611/74516107_zpid/",
+        "zpid":  "74516107",
+        "lot":  1.96,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "38131 Woods Dr",
+        "price":  865000,
+        "sqft":  2871,
+        "beds":  4,
+        "baths":  4.0,
+        "miles":  3,
+        "garage":  "2-car",
+        "guest":  "-",
+        "img":  "https://photos.zillowstatic.com/fp/5499d879123fc5f76100e7352ec83053-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/38131-Woods-Dr-Kenai-AK-99611/74516196_zpid/",
+        "zpid":  "74516196",
+        "lot":  1.26,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "47620 Amy Ln",
+        "price":  2300000,
+        "sqft":  3504,
+        "beds":  3,
+        "baths":  3.0,
+        "miles":  3,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/dc3e6bc90952ddf57ac94a2866a826d4-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/47620-Amy-Ln-Soldotna-AK-99669/402838088_zpid/",
+        "zpid":  "402838088",
+        "lot":  19.8,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "41611 Tischer Ave",
+        "price":  519000,
+        "sqft":  2044,
+        "beds":  3,
+        "baths":  2.0,
+        "miles":  3.1,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/5a56fd68b52e2895f51f72b76a8e6c7f-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/41611-Tischer-Ave-Soldotna-AK-99669/304657993_zpid/",
+        "zpid":  "304657993",
+        "lot":  12.22,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "47420 Jefferson Ave",
+        "price":  480000,
+        "sqft":  4029,
+        "beds":  5,
+        "baths":  2.0,
+        "miles":  3.2,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/f49516512c1dedb844d0ae95c9a7efed-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/47420-Jefferson-Ave-Soldotna-AK-99669/223320734_zpid/",
+        "zpid":  "223320734",
+        "lot":  0.9527089072543617,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "47489 Wispen Ave",
+        "price":  750000,
+        "sqft":  3334,
+        "beds":  3,
+        "baths":  3.0,
+        "miles":  3.2,
+        "garage":  "2-car",
+        "guest":  "YES",
+        "img":  "https://photos.zillowstatic.com/fp/57abf15e47c2238af81c29ca1b5df1f8-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/47489-Wispen-Ave-Kenai-AK-99611/223310913_zpid/",
+        "zpid":  "223310913",
+        "lot":  1.0,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "42016 Dolly Varden Way",
+        "price":  638000,
+        "sqft":  2538,
+        "beds":  4,
+        "baths":  4.0,
+        "miles":  3.4,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/6c7305789a65434fa4096d084f16add5-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/42016-Dolly-Varden-Way-Soldotna-AK-99669/223312778_zpid/",
+        "zpid":  "223312778",
+        "lot":  1.47,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "36142 Pine St",
+        "price":  940000,
+        "sqft":  2964,
+        "beds":  2,
+        "baths":  3.0,
+        "miles":  3.4,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/c6c4fa27e473578d916cbe8545856cd0-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/36142-Pine-St-Soldotna-AK-99669/2087456164_zpid/",
+        "zpid":  "2087456164",
+        "lot":  2.71,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "48011 Miracle Ave",
+        "price":  587079,
+        "sqft":  2952,
+        "beds":  5,
+        "baths":  4.0,
+        "miles":  3.4,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/1f90e9262e1132f97472e463a0625a4a-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/48011-Miracle-Ave-Soldotna-AK-99669/248938925_zpid/",
+        "zpid":  "248938925",
+        "lot":  4.66,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "34035 Keystone Dr",
+        "price":  1950000,
+        "sqft":  2976,
+        "beds":  5,
+        "baths":  3.0,
+        "miles":  3.5,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/062526df422c20a5821a6135f1f3da6e-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/34035-Keystone-Dr-Soldotna-AK-99669/74517004_zpid/",
+        "zpid":  "74517004",
+        "lot":  0.93,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "36026 Meandering Rd",
+        "price":  549000,
+        "sqft":  3072,
+        "beds":  2,
+        "baths":  3.0,
+        "miles":  3.5,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/0fc4a44c7281b073ed3135050106bc81-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/36026-Meandering-Rd-Soldotna-AK-99669/112566085_zpid/",
+        "zpid":  "112566085",
+        "lot":  1.48,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "41327 Crater Ln",
+        "price":  399500,
+        "sqft":  7020,
+        "beds":  6,
+        "baths":  4.0,
+        "miles":  3.5,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/b1983b25fe0bf329b3c5d258eb9c7821-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/41327-Crater-Ln-Soldotna-AK-99669/223313206_zpid/",
+        "zpid":  "223313206",
+        "lot":  4.51,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "41578 Aksala Ln",
+        "price":  995000,
+        "sqft":  2807,
+        "beds":  2,
+        "baths":  3.0,
+        "miles":  3.5,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/b8486c1721510f363b6f174ced3b4b09-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/41578-Aksala-Ln-Soldotna-AK-99669/223312755_zpid/",
+        "zpid":  "223312755",
+        "lot":  1.23,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "35311 Raintree Cir",
+        "price":  665000,
+        "sqft":  2475,
+        "beds":  3,
+        "baths":  4.0,
+        "miles":  3.6,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/46d4d079890c491179c718cf46eb9da9-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/35311-Raintree-Cir-Soldotna-AK-99669/223311116_zpid/",
+        "zpid":  "223311116",
+        "lot":  0.9199999999999999,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "42175 W Lake Ct",
+        "price":  969000,
+        "sqft":  3156,
+        "beds":  4,
+        "baths":  3.0,
+        "miles":  3.6,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/f95ad311a00551e1f495eeface8b137a-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/42175-W-Lake-Ct-Soldotna-AK-99669/90679019_zpid/",
+        "zpid":  "90679019",
+        "lot":  1.31,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "40550 Franklin Ct",
+        "price":  488000,
+        "sqft":  4320,
+        "beds":  3,
+        "baths":  4.0,
+        "miles":  4.1,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/efe9a7b68aac521ce2bb6b5c43f87dcb-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/40550-Franklin-Ct-Soldotna-AK-99669/223312913_zpid/",
+        "zpid":  "223312913",
+        "lot":  1.1,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "36243 Schultz St",
+        "price":  849000,
+        "sqft":  2936,
+        "beds":  5,
+        "baths":  5.0,
+        "miles":  4.2,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/2929ec7cbad280c5d4dd0065557ecb8f-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/36243-Schultz-St-Soldotna-AK-99669/90679188_zpid/",
+        "zpid":  "90679188",
+        "lot":  2.38,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "33092 Horace St",
+        "price":  447000,
+        "sqft":  2424,
+        "beds":  5,
+        "baths":  3.0,
+        "miles":  4.3,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/73dc6f304106f10eacfd32bf7f238514-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/33092-Horace-St-Soldotna-AK-99669/90670113_zpid/",
+        "zpid":  "90670113",
+        "lot":  1.47,
+        "lotUnit":  "acres",
+        "year":  null
+    },
+    {
+        "addr":  "39930 Sapphire Loop",
+        "price":  849000,
+        "sqft":  5331,
+        "beds":  5,
+        "baths":  5.0,
+        "miles":  4.7,
+        "garage":  "?",
+        "guest":  "?",
+        "img":  "https://photos.zillowstatic.com/fp/ffd3850665fd69104a3f19113161c767-p_e.jpg",
+        "url":  "https://www.zillow.com/homedetails/39930-Sapphire-Loop-Soldotna-AK-99669/90680501_zpid/",
+        "zpid":  "90680501",
+        "lot":  1.33,
+        "lotUnit":  "acres",
+        "year":  null
+    }
+]
+/*END*/;
+const $ = s => document.querySelector(s);
+const money = n => '$'+Number(n).toLocaleString();
+const key = 'soldotna_homes_v1';
+let state = JSON.parse(localStorage.getItem(key) || '{}');
+state.fav = state.fav || {};
+state.order = state.order || DATA.map(d=>d.zpid);
+function save(){ localStorage.setItem(key, JSON.stringify(state)); }
+function ppsf(d){ return Math.round(d.price/d.sqft); }
+
+function ordered(){
+  const byId = Object.fromEntries(DATA.map(d=>[d.zpid,d]));
+  const seen = new Set();
+  const arr = state.order.map(id=>byId[id]).filter(Boolean);
+  arr.forEach(d=>seen.add(d.zpid));
+  DATA.forEach(d=>{ if(!seen.has(d.zpid)) arr.push(d); });
+  return arr;
+}
+function garageChip(g){
+  if(g==='?'||g==null) return '<span class="chip q">garage ?</span>';
+  if(g==='-'||g==='none') return '<span class="chip">no garage</span>';
+  return '<span class="chip g">car: '+g+'</span>';
+}
+function guestChip(g){
+  if(g==='YES') return '<span class="chip guest">guest house</span>';
+  if(g==='?'||g==null) return '<span class="chip q">guest ?</span>';
+  return '';
+}
+function render(){
+  const list = $('#list'); list.innerHTML='';
+  const arr = ordered();
+  arr.forEach((d,i)=>{
+    const el = document.createElement('div');
+    el.className = 'card'+(state.fav[d.zpid]?' fav':'');
+    el.draggable = true; el.dataset.id = d.zpid;
+    el.innerHTML =
+      '<div class="handle" title="drag to reorder">&#10022;<span class="rank">#'+(i+1)+'</span></div>'+
+      '<a href="'+d.url+'" target="_blank" rel="noopener"><img class="thumb" src="'+d.img+'" loading="lazy" alt=""></a>'+
+      '<div class="meta"><div class="addr"><a href="'+d.url+'" target="_blank" rel="noopener">'+d.addr+'</a></div>'+
+      '<div class="chips">'+
+        '<span class="chip">'+d.miles+' mi</span>'+
+        '<span class="chip">'+d.sqft.toLocaleString()+' sqft</span>'+
+        '<span class="chip">'+d.beds+' bd / '+d.baths+' ba</span>'+
+        (d.lot?'<span class="chip">'+(Math.round(d.lot*100)/100)+' ac</span>':'')+
+        garageChip(d.garage)+guestChip(d.guest)+
+      '</div></div>'+
+      '<div class="right"><div class="row"><span class="price">'+money(d.price)+'</span>'+
+        '<button class="star '+(state.fav[d.zpid]?'on':'')+'" data-fav="'+d.zpid+'" title="favorite">&#9733;</button></div>'+
+        '<div class="ppsf">$'+ppsf(d)+'/sqft</div>'+
+        '<a class="zlink" href="'+d.url+'" target="_blank" rel="noopener">Zillow &#8599;</a></div>';
+    list.appendChild(el);
+  });
+  wireDnD();
+  renderStats(arr);
+}
+function renderStats(arr){
+  const favs = arr.filter(d=>state.fav[d.zpid]);
+  const set = favs.length? favs : arr;
+  const label = favs.length? favs.length+' favorites' : 'all '+arr.length;
+  const avg = k => Math.round(set.reduce((s,d)=>s+d[k],0)/set.length);
+  const avgPpsf = Math.round(set.reduce((s,d)=>s+ppsf(d),0)/set.length);
+  const avgMi = (set.reduce((s,d)=>s+d.miles,0)/set.length).toFixed(1);
+  $('#stats').innerHTML =
+    '<span>Averages for: <b>'+label+'</b></span>'+
+    '<span>Avg price <b>'+money(avg('price'))+'</b></span>'+
+    '<span>Avg size <b>'+avg('sqft').toLocaleString()+' sqft</b></span>'+
+    '<span>Avg $/sqft <b>$'+avgPpsf+'</b></span>'+
+    '<span>Avg dist <b>'+avgMi+' mi</b></span>';
+}
+$('#list').addEventListener('click', e=>{
+  const b = e.target.closest('[data-fav]'); if(!b) return;
+  const id=b.dataset.fav; state.fav[id]=!state.fav[id]; save(); render();
+});
+document.querySelectorAll('[data-sort]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const k=btn.dataset.sort;
+    const arr=[...DATA].sort((a,b)=> k==='price'?a.price-b.price : k==='sqft'?b.sqft-a.sqft : k==='ppsf'?ppsf(a)-ppsf(b) : a.miles-b.miles);
+    state.order=arr.map(d=>d.zpid); save(); render();
+  });
+});
+$('#sortFav').addEventListener('click',()=>{
+  const arr=ordered().sort((a,b)=>(state.fav[b.zpid]?1:0)-(state.fav[a.zpid]?1:0));
+  state.order=arr.map(d=>d.zpid); save(); render();
+});
+$('#reset').addEventListener('click',()=>{
+  const arr=[...DATA].sort((a,b)=>a.miles-b.miles);
+  state.order=arr.map(d=>d.zpid); save(); render();
+});
+let dragId=null;
+function wireDnD(){
+  document.querySelectorAll('.card').forEach(c=>{
+    c.addEventListener('dragstart',()=>{dragId=c.dataset.id;c.classList.add('dragging')});
+    c.addEventListener('dragend',()=>{c.classList.remove('dragging');document.querySelectorAll('.over').forEach(x=>x.classList.remove('over'))});
+    c.addEventListener('dragover',e=>{e.preventDefault();c.classList.add('over')});
+    c.addEventListener('dragleave',()=>c.classList.remove('over'));
+    c.addEventListener('drop',e=>{
+      e.preventDefault();
+      const targetId=c.dataset.id; if(dragId===targetId) return;
+      const o=[...state.order];
+      const from=o.indexOf(dragId), to=o.indexOf(targetId);
+      o.splice(from,1); o.splice(to,0,dragId);
+      state.order=o; save(); render();
+    });
+  });
+}
+render();
+</script>
+</body>
+</html>
