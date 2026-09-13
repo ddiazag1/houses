@@ -16,10 +16,10 @@
   *{box-sizing:border-box}
   body{margin:0;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
        background:var(--bg);color:var(--ink)}
-  header{padding:18px 20px 4px;max-width:1150px;margin:0 auto}
+  header{padding:18px 20px 4px;max-width:1280px;margin:0 auto}
   h1{font-size:20px;margin:0 0 4px}
   .sub{color:var(--mut);font-size:13px}
-  .toolbar{max-width:1150px;margin:0 auto;padding:8px 20px;position:sticky;top:0;background:var(--bg);z-index:20;border-bottom:1px solid var(--line)}
+  .toolbar{max-width:1280px;margin:0 auto;padding:8px 20px;position:sticky;top:0;background:var(--bg);z-index:20;border-bottom:1px solid var(--line)}
   .row-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
   .row-tools:first-child{margin-top:0}
   .lbl{color:var(--mut);font-size:12px;margin-right:2px}
@@ -31,11 +31,11 @@
   input[type=text]{cursor:text}
   .rng{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)}
   .rng b{color:var(--ink)}
-  .stats{max-width:1150px;margin:10px auto 2px;padding:0 20px;display:flex;gap:18px;flex-wrap:wrap;color:var(--mut);font-size:13px}
+  .stats{max-width:1280px;margin:10px auto 2px;padding:0 20px;display:flex;gap:18px;flex-wrap:wrap;color:var(--mut);font-size:13px}
   .stats b{color:var(--ink)}
-  .list{max-width:1150px;margin:8px auto 60px;padding:0 20px;display:flex;flex-direction:column;gap:10px}
-  .card{display:grid;grid-template-columns:34px 150px 1fr auto;gap:14px;align-items:start;
-        background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;
+  .list{max-width:1280px;margin:8px auto 60px;padding:0 20px;display:flex;flex-direction:column;gap:14px}
+  .card{display:grid;grid-template-columns:34px 320px 1fr auto;gap:18px;align-items:start;
+        background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;
         transition:box-shadow .15s,border-color .15s}
   .card.fav{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
   .card.st-contender{border-left:4px solid var(--good)}
@@ -46,18 +46,18 @@
   .card.over{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
   .handle{cursor:grab;color:var(--mut);text-align:center;font-size:20px;user-select:none;line-height:1;padding-top:4px}
   .rank{font-size:11px;color:var(--mut);display:block;margin-top:2px}
-  .thumb{width:150px;height:104px;border-radius:8px;object-fit:cover;background:var(--card2);display:block}
+  .thumb{width:320px;height:214px;border-radius:8px;object-fit:cover;background:var(--card2);display:block}
   /* photo carousel */
-  .gal{grid-area:t;position:relative;width:150px}
+  .gal{grid-area:t;position:relative;width:320px}
   .gal .strip{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:0;border-radius:8px;
         -webkit-overflow-scrolling:touch;scrollbar-width:none}
   .gal .strip::-webkit-scrollbar{display:none}
-  .gal .strip img{flex:0 0 100%;width:150px;height:104px;object-fit:cover;scroll-snap-align:center;
+  .gal .strip img{flex:0 0 100%;width:320px;height:214px;object-fit:cover;scroll-snap-align:center;
         background:var(--card2);cursor:zoom-in;display:block}
   .gal .cnt{position:absolute;bottom:5px;right:5px;background:rgba(0,0,0,.66);color:#fff;font-size:11px;
         padding:1px 6px;border-radius:20px;pointer-events:none}
-  .gal .nav{position:absolute;top:50%;transform:translateY(-50%);width:24px;height:24px;border:none;
-        background:rgba(0,0,0,.5);color:#fff;font-size:15px;border-radius:50%;cursor:pointer;display:none;
+  .gal .nav{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border:none;
+        background:rgba(0,0,0,.55);color:#fff;font-size:19px;border-radius:50%;cursor:pointer;display:none;
         align-items:center;justify-content:center;padding:0;line-height:1}
   .gal:hover .nav{display:flex}
   .gal .nav.prev{left:4px}.gal .nav.next{right:4px}
@@ -121,13 +121,27 @@
   .grid2 b{color:var(--ink)}
   .syncstat{font-size:11px;padding:1px 8px;border-radius:20px;background:var(--card2);color:var(--mut);margin-left:6px}
   .syncstat.ok{color:var(--good)} .syncstat.warn{color:var(--warn)}
-  .empty{max-width:1150px;margin:30px auto;padding:0 20px;color:var(--mut);text-align:center}
-  footer{max-width:1150px;margin:0 auto 40px;padding:0 20px;color:var(--mut);font-size:12px}
-  @media(max-width:640px){
-    .card{grid-template-columns:26px 92px 1fr;grid-template-areas:"h t m" "h t r" "h note note"}
-    .thumb{width:92px;height:70px} .handle{grid-area:h}.thumb{grid-area:t}.meta{grid-area:m}.right{grid-area:r;text-align:left;min-width:0}
-    .gal{width:92px}.gal .strip img{width:92px;height:70px}.gal:hover .nav{display:none}
+  .empty{max-width:1280px;margin:30px auto;padding:0 20px;color:var(--mut);text-align:center}
+  footer{max-width:1280px;margin:0 auto 40px;padding:0 20px;color:var(--mut);font-size:12px}
+  /* tablets / small laptops: shrink the photo column so nothing overflows */
+  @media(max-width:1080px) and (min-width:721px){
+    .card{grid-template-columns:34px 240px 1fr auto;gap:14px}
+    .thumb,.gal,.gal .strip img{width:240px}
+    .thumb,.gal .strip img{height:160px}
+  }
+  /* phones: full-width photo on top, everything stacked below */
+  @media(max-width:720px){
+    .list{padding:0 12px;gap:12px}
+    .card{grid-template-columns:1fr;grid-template-areas:"t" "m" "note" "r";gap:10px;padding:10px}
+    .handle{display:none}
+    .gal,.thumb{grid-area:t;width:100%}
+    .gal .strip img,.thumb{width:100%;height:230px}
+    .gal .nav{display:flex;width:34px;height:34px;font-size:20px}
+    .meta{grid-area:m;min-width:0}
+    .note{grid-area:note}
+    .right{grid-area:r;text-align:left;min-width:0;padding-right:0}
     .right .row{justify-content:flex-start}
+    .price{font-size:19px}
     .toolbar{position:static}
   }
 </style>
