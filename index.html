@@ -48,7 +48,7 @@
   .rank{font-size:11px;color:var(--mut);display:block;margin-top:2px}
   .thumb{width:320px;height:214px;border-radius:8px;object-fit:cover;background:var(--card2);display:block}
   /* photo carousel */
-  .gal{grid-area:t;position:relative;width:320px}
+  .gal{grid-column:2;position:relative;width:320px}
   .gal .strip{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:0;border-radius:8px;
         -webkit-overflow-scrolling:touch;scrollbar-width:none}
   .gal .strip::-webkit-scrollbar{display:none}
@@ -134,7 +134,7 @@
     .list{padding:0 12px;gap:12px}
     .card{grid-template-columns:1fr;grid-template-areas:"t" "m" "note" "r";gap:10px;padding:10px}
     .handle{display:none}
-    .gal,.thumb{grid-area:t;width:100%}
+    .gal,.thumb{grid-area:t;grid-column:auto;width:100%}
     .gal .strip img,.thumb{width:100%;height:230px}
     .gal .nav{display:flex;width:34px;height:34px;font-size:20px}
     .meta{grid-area:m;min-width:0}
@@ -2526,8 +2526,18 @@ function openLB(z,i){
   if(!lb.ph.length) return;
   lb.z=z; lb.i=i||0; showLB(); $('#lb').classList.add('on');
 }
+// Redfin thumbnails are the small "bcsphoto/genBcs" bucket (~38KB). The full-res
+// gallery image lives in the "mbphotov3/genMid" bucket (~150KB, ~1080px). Upgrade on click.
+function hires(u){
+  if(!u) return u;
+  return u.replace('/bcsphoto/','/mbphotov3/').replace('genBcs','genMid');
+}
 function showLB(){
-  $('#lbImg').src=lb.ph[lb.i];
+  const hi=hires(lb.ph[lb.i]);
+  const img=$('#lbImg');
+  img.src=hi;
+  // if the high-res variant 404s, fall back to the stored thumbnail
+  img.onerror=()=>{ img.onerror=null; img.src=lb.ph[lb.i]; };
   $('#lbCnt').textContent=(lb.i+1)+' / '+lb.ph.length;
 }
 function stepLB(n){ lb.i=(lb.i+n+lb.ph.length)%lb.ph.length; showLB(); }
