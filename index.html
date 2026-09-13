@@ -205,8 +205,8 @@
   Garage/guest-house: "?" = not yet verified. Data pulled 2026-09-12. <b>Status, notes, favorites, hidden homes &amp; custom order are stored locally in this browser only</b> &mdash; use <button class="linkbtn" id="exportBtn">export</button> to back up / move devices, <button class="linkbtn" id="importBtn">import</button> to restore.
   <span id="hiddenNote"></span>
   <div style="margin-top:10px">
-    <b>Cross-device sync:</b> notes, tags &amp; order sync automatically across your phone &amp; PC.
-    <button class="linkbtn" id="syncBtn">connect this device to save</button>
+    <b>Cross-device sync:</b> your notes/tags/order back up to the cloud &amp; sync across devices &mdash; but ONLY after you connect a token on this device. Until then this device is <b>read-only</b> and nothing is backed up.
+    <button class="linkbtn" id="syncBtn">connect &amp; back up this device</button>
     <span class="syncstat" id="syncStat">Read-only</span>
   </div>
 </footer>
@@ -3710,11 +3710,46 @@ function syncPush(){
   },1200);
 }
 
+// Force-push local state to the gist immediately (used right after connecting a token,
+// so the list already on THIS device gets backed up — not just future edits).
+async function forcePush(reason){
+  const tok=localStorage.getItem(TOKKEY);
+  if(!tok){ setSyncStatus('Not connected','warn'); return false; }
+  setSyncStatus((reason||'Backing up')+'…','');
+  // stamp every existing item so the merge treats this device's list as the newest edit
+  const T=now();
+  ['fav','status','notes','hidden'].forEach(f=>Object.keys(state[f]||{}).forEach(k=>state._ts[f+'|'+k]=T));
+  state._ts.order=T;
+  const body={files:{}}; body.files[GIST_FILE]={content:JSON.stringify({fav:state.fav,status:state.status,notes:state.notes,hidden:state.hidden,order:state.order,_ts:state._ts})};
+  try{
+    const r=await fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',
+      headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+tok,'Content-Type':'application/json'},
+      body:JSON.stringify(body)});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    localStorage.setItem(KEY,JSON.stringify(state));
+    const n=Object.keys(state.status||{}).length+Object.keys(state.fav||{}).length+Object.keys(state.notes||{}).length;
+    setSyncStatus('Backed up '+n+' items · '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),'ok');
+    return true;
+  }catch(e){ setSyncStatus('Backup failed ('+String(e.message||e)+') — check token has "gist" scope','warn'); return false; }
+}
+
 function connectSync(){
   const has=!!localStorage.getItem(TOKKEY);
-  if(has){ if(confirm('Disconnect sync-writing on this device? (This device will still read shared updates.)')){ localStorage.removeItem(TOKKEY); render(); setSyncStatus('Read-only (disconnected)','warn'); } return; }
-  const t=prompt('Paste a GitHub token with "gist" scope to let THIS device save shared changes.\n\nStored only in this browser, never uploaded. Leave blank to keep this device read-only.');
-  if(t&&t.trim()){ localStorage.setItem(TOKKEY,t.trim()); setSyncStatus('Connected — saving…',''); syncPush(); render(); }
+  if(has){
+    if(confirm('This device IS connected (can save).\n\nOK = back up this device\'s list to the cloud now.\nCancel = disconnect saving (still reads shared updates).')){
+      forcePush('Backing up this device');
+    } else {
+      localStorage.removeItem(TOKKEY); render(); setSyncStatus('Read-only (disconnected)','warn');
+    }
+    return;
+  }
+  const t=prompt('Paste a GitHub token with "gist" scope to let THIS device save & back up your list.\n\nStored only in this browser, never uploaded. Leave blank to stay read-only.');
+  if(t&&t.trim()){
+    localStorage.setItem(TOKKEY,t.trim());
+    render();
+    // back up whatever is already on this device right now, then keep syncing
+    forcePush('Connected — backing up your current list');
+  }
 }
 
 // ---- filters ----
