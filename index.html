@@ -47,6 +47,30 @@
   .handle{cursor:grab;color:var(--mut);text-align:center;font-size:20px;user-select:none;line-height:1;padding-top:4px}
   .rank{font-size:11px;color:var(--mut);display:block;margin-top:2px}
   .thumb{width:150px;height:104px;border-radius:8px;object-fit:cover;background:var(--card2);display:block}
+  /* photo carousel */
+  .gal{grid-area:t;position:relative;width:150px}
+  .gal .strip{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:0;border-radius:8px;
+        -webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .gal .strip::-webkit-scrollbar{display:none}
+  .gal .strip img{flex:0 0 100%;width:150px;height:104px;object-fit:cover;scroll-snap-align:center;
+        background:var(--card2);cursor:zoom-in;display:block}
+  .gal .cnt{position:absolute;bottom:5px;right:5px;background:rgba(0,0,0,.66);color:#fff;font-size:11px;
+        padding:1px 6px;border-radius:20px;pointer-events:none}
+  .gal .nav{position:absolute;top:50%;transform:translateY(-50%);width:24px;height:24px;border:none;
+        background:rgba(0,0,0,.5);color:#fff;font-size:15px;border-radius:50%;cursor:pointer;display:none;
+        align-items:center;justify-content:center;padding:0;line-height:1}
+  .gal:hover .nav{display:flex}
+  .gal .nav.prev{left:4px}.gal .nav.next{right:4px}
+  /* lightbox */
+  #lb{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:100;display:none;
+        align-items:center;justify-content:center;touch-action:pan-y}
+  #lb.on{display:flex}
+  #lb img{max-width:96vw;max-height:88vh;object-fit:contain;border-radius:6px}
+  #lb .lbclose{position:absolute;top:14px;right:18px;font-size:34px;color:#fff;background:none;border:none;cursor:pointer}
+  #lb .lbnav{position:absolute;top:50%;transform:translateY(-50%);font-size:40px;color:#fff;background:none;
+        border:none;cursor:pointer;padding:10px 18px;user-select:none}
+  #lb .lbnav.prev{left:6px}#lb .lbnav.next{right:6px}
+  #lb .lbcnt{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;font-size:14px}
   .meta .addr{font-weight:650;font-size:15px}
   .meta .addr a{color:var(--ink);text-decoration:none}
   .meta .addr a:hover{color:var(--accent);text-decoration:underline}
@@ -89,6 +113,7 @@
   @media(max-width:640px){
     .card{grid-template-columns:26px 92px 1fr;grid-template-areas:"h t m" "h t r" "h note note"}
     .thumb{width:92px;height:70px} .handle{grid-area:h}.thumb{grid-area:t}.meta{grid-area:m}.right{grid-area:r;text-align:left;min-width:0}
+    .gal{width:92px}.gal .strip img{width:92px;height:70px}.gal:hover .nav{display:none}
     .right .row{justify-content:flex-start}
     .toolbar{position:static}
   }
@@ -138,10 +163,18 @@
 <div class="empty" id="empty" style="display:none"></div>
 
 <footer>
-  Photos &amp; links via Zillow. Location / park / hospital / vibe scores are computed from mapped coordinates (haversine distance to Central Peninsula Hospital, weighted parks, downtown, and lot size) &mdash; they're directional, verify feel on the listing &amp; in person.
+  Photo galleries via Redfin; links via Zillow. Tap any photo for full-screen; swipe/arrow to browse. Location / park / hospital / vibe scores are computed from mapped coordinates (haversine distance to Central Peninsula Hospital, weighted parks, downtown, and lot size) &mdash; they're directional, verify feel on the listing &amp; in person.
   Garage/guest-house: "?" = not yet verified. Data pulled 2026-09-12. <b>Status, notes, favorites, hidden homes &amp; custom order are stored locally in this browser only</b> &mdash; use <button class="linkbtn" id="exportBtn">export</button> to back up / move devices, <button class="linkbtn" id="importBtn">import</button> to restore.
   <span id="hiddenNote"></span>
 </footer>
+
+<div id="lb">
+  <button class="lbclose" aria-label="close">&times;</button>
+  <button class="lbnav prev" data-lbnav="-1" aria-label="previous">&#8249;</button>
+  <img id="lbImg" src="" alt="">
+  <button class="lbnav next" data-lbnav="1" aria-label="next">&#8250;</button>
+  <div class="lbcnt" id="lbCnt"></div>
+</div>
 
 <script>
 const DATA = /*DATA*/[
@@ -160,6 +193,18 @@ const DATA = /*DATA*/[
     "lot": 0.9199999999999999,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bcsphoto/744/genBcs.26-11744_1_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bcsphoto/495/genBcs.26-11495_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bcsphoto/865/genBcs.26-10865_21_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bcsphoto/578/genBcs.26-11578_26_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bcsphoto/495/genBcs.26-11495_29_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bcsphoto/717/genBcs.26-11717_38_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bcsphoto/744/genBcs.26-11744_44_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bcsphoto/648/genBcs.26-11648_48_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bcsphoto/664/genBcs.26-11664_51_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bcsphoto/590/genBcs.26-11590_68_0.jpg"
+    ],
     "hosp_mi": 1.3,
     "park_mi": 0.27,
     "nearest_park": "Centennial Park",
@@ -189,6 +234,32 @@ const DATA = /*DATA*/[
     "lot": 0.6599999999999999,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_1_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_3_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_4_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_5_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_6_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_7_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_8_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_9_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_10_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_11_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_12_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_13_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_14_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_15_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_16_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_17_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_18_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_19_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_20_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_21_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_22_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_23_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/414/25-12414_24_0.jpg"
+    ],
     "hosp_mi": 0.49,
     "park_mi": 1.0,
     "nearest_park": "Soldotna Creek Park",
@@ -218,6 +289,18 @@ const DATA = /*DATA*/[
     "lot": 20.0,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/697/26-6697_49_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/697/26-6697_50_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/697/26-6697_51_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/697/26-6697_52_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/697/26-6697_53_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/697/26-6697_54_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/697/26-6697_55_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/697/26-6697_56_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/697/26-6697_57_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/697/26-6697_58_2.jpg"
+    ],
     "hosp_mi": 1.47,
     "park_mi": 0.74,
     "nearest_park": "Soldotna Sports Complex",
@@ -247,6 +330,32 @@ const DATA = /*DATA*/[
     "lot": 0.9199999999999999,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_1_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_2_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_3_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_4_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_5_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_7_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_8_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_9_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_10_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_11_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_12_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_13_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_14_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_15_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_16_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_17_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_18_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_19_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_20_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_21_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_22_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_23_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/240/26-5240_24_5.jpg"
+    ],
     "hosp_mi": 1.48,
     "park_mi": 0.64,
     "nearest_park": "Soldotna Sports Complex",
@@ -276,6 +385,32 @@ const DATA = /*DATA*/[
     "lot": 1.22,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_1_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_2_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_3_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_5_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_6_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_7_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_8_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_9_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_10_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_11_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_12_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_13_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_14_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_15_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_16_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_17_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_18_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_19_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_20_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_21_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_22_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_23_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/054/26-7054_24_4.jpg"
+    ],
     "hosp_mi": 0.93,
     "park_mi": 1.35,
     "nearest_park": "Soldotna Creek Park",
@@ -304,6 +439,19 @@ const DATA = /*DATA*/[
     "lot": 0.67,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/544/26-7544_31_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/544/26-7544_32_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/544/26-7544_33_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/544/26-7544_34_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/544/26-7544_35_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/544/26-7544_36_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/544/26-7544_37_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/544/26-7544_38_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/544/26-7544_39_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/544/26-7544_40_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/544/26-7544_41_2.jpg"
+    ],
     "hosp_mi": 1.04,
     "park_mi": 1.49,
     "nearest_park": "Soldotna Creek Park",
@@ -332,6 +480,32 @@ const DATA = /*DATA*/[
     "lot": 1.03,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_1_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_2_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_3_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_4_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_5_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_6_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_7_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_9_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_10_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_11_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_12_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_13_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_14_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_15_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_16_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_17_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_18_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_19_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_20_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_21_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_22_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_23_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/166/26-4166_24_8.jpg"
+    ],
     "hosp_mi": 1.44,
     "park_mi": 1.82,
     "nearest_park": "Centennial Park",
@@ -360,6 +534,32 @@ const DATA = /*DATA*/[
     "lot": 9.04,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_1_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_2_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_4_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_5_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_6_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_7_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_8_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_9_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_10_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_11_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_12_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_13_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_14_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_15_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_16_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_17_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_18_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_19_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_20_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_21_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_22_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_23_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/187/26-7187_24_3.jpg"
+    ],
     "hosp_mi": 2.54,
     "park_mi": 2.24,
     "nearest_park": "Soldotna Sports Complex",
@@ -387,6 +587,32 @@ const DATA = /*DATA*/[
     "lot": 0.9199999999999999,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_2_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_3_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_4_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_5_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_6_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_7_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_8_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_9_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_10_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_11_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_12_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_13_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_14_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_15_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_16_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_17_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_18_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_19_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_20_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_21_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_22_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_23_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/980/26-5980_24_1.jpg"
+    ],
     "hosp_mi": 2.81,
     "park_mi": 2.1,
     "nearest_park": "Centennial Park",
@@ -414,6 +640,32 @@ const DATA = /*DATA*/[
     "lot": 12.22,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_1_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_2_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_3_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_4_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_5_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_6_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_7_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_9_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_10_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_11_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_12_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_13_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_14_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_15_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_16_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_17_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_18_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_19_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_20_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_21_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_22_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_23_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/732/26-9732_24_8.jpg"
+    ],
     "hosp_mi": 3.06,
     "park_mi": 2.17,
     "nearest_park": "Swiftwater Park",
@@ -441,6 +693,32 @@ const DATA = /*DATA*/[
     "lot": 0.93,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_2_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_3_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_4_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_5_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_6_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_7_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_8_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_9_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_10_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_11_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_12_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_13_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_14_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_15_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_16_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_17_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_18_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_19_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_20_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_21_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_22_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_23_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/468/26-6468_24_1.jpg"
+    ],
     "hosp_mi": 3.52,
     "park_mi": 1.86,
     "nearest_park": "Kenai Refuge Visitor Ctr",
@@ -468,6 +746,32 @@ const DATA = /*DATA*/[
     "lot": 2.04,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_2_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_3_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_4_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_5_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_6_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_7_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_8_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_9_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_10_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_11_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_12_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_13_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_14_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_15_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_16_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_17_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_18_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_19_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_20_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_21_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_22_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_23_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/075/25-15075_24_1.jpg"
+    ],
     "hosp_mi": 2.49,
     "park_mi": 2.96,
     "nearest_park": "Soldotna Creek Park",
@@ -494,6 +798,32 @@ const DATA = /*DATA*/[
     "lot": 0.45999999999999996,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_1_K.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_2_K.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_3_K.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_4_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_5_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_6_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_7_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_8_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_9_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_10_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_11_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_12_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_13_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_14_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_15_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_16_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_17_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_18_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_19_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_20_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_21_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_22_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_23_I.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/515/26-6515_24_I.jpg"
+    ],
     "hosp_mi": 2.37,
     "park_mi": 2.41,
     "nearest_park": "Centennial Park",
@@ -521,6 +851,32 @@ const DATA = /*DATA*/[
     "lot": 1.31,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_20_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_21_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_22_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_23_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_24_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_25_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_26_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_27_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_28_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_29_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_30_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_31_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_32_8.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_33_7.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_34_7.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_35_7.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_36_7.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_37_7.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_38_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_39_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_40_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_41_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_42_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/138/26-11138_43_6.jpg"
+    ],
     "hosp_mi": 2.77,
     "park_mi": 3.27,
     "nearest_park": "Soldotna Creek Park",
@@ -547,6 +903,32 @@ const DATA = /*DATA*/[
     "lot": 1.96,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_1_7.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_2_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_3_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_4_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_5_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_6_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_7.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_8_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_9_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_10_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_11_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_12_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_13_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_14_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_15_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_16_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_17_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_18_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_19_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_20_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_21_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_22_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_23_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/245/26-6245_24_5.jpg"
+    ],
     "hosp_mi": 2.9,
     "park_mi": 3.36,
     "nearest_park": "Soldotna Creek Park",
@@ -573,6 +955,32 @@ const DATA = /*DATA*/[
     "lot": 19.8,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_2_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_3_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_4_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_5_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_6_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_7_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_8_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_9_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_10_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_11_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_12_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_13_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_14_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_15_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_16_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_17_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_18_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_19_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_20_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_21_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_22_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_23_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/264/25-5264_24_1.jpg"
+    ],
     "hosp_mi": 3.02,
     "park_mi": 3.24,
     "nearest_park": "Centennial Park",
@@ -599,6 +1007,32 @@ const DATA = /*DATA*/[
     "lot": 1.26,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_38_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_39_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_40_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_41_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_42_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_43_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_44_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_45_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_46_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_47_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_48_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_49_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_50_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_51_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_52_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_53_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_54_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_55_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_56_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_57_19.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_58_18.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_59_18.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_60_18.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/091/26-5091_61_18.jpg"
+    ],
     "hosp_mi": 3.05,
     "park_mi": 3.57,
     "nearest_park": "Soldotna Creek Park",
@@ -625,6 +1059,7 @@ const DATA = /*DATA*/[
     "lot": 0.9527089072543617,
     "lotUnit": "acres",
     "year": null,
+    "photos": null,
     "hosp_mi": 3.15,
     "park_mi": 2.39,
     "nearest_park": "Centennial Park",
@@ -652,6 +1087,32 @@ const DATA = /*DATA*/[
     "lot": 1.0,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_2_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_3_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_4_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_5_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_6_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_7_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_8_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_9_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_10_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_11_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_12_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_13_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_14_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_15_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_16_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_17_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_18_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_19_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_20_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_21_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_22_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_23_1.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/016/26-9016_24_1.jpg"
+    ],
     "hosp_mi": 3.19,
     "park_mi": 3.66,
     "nearest_park": "Soldotna Creek Park",
@@ -678,6 +1139,32 @@ const DATA = /*DATA*/[
     "lot": 2.71,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_1_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_3_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_4_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_5_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_6_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_7_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_8_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_9_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_10_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_11_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_12_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_13_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_14_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_15_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_16_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_17_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_18_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_19_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_20_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_21_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_22_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_23_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/301/25-301_24_2.jpg"
+    ],
     "hosp_mi": 3.44,
     "park_mi": 2.77,
     "nearest_park": "Soldotna Sports Complex",
@@ -704,6 +1191,32 @@ const DATA = /*DATA*/[
     "lot": 4.51,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_1_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_2_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_3_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_5_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_6_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_7_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_8_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_9_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_10_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_11_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_12_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_13_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_14_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_15_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_16_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_17_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_18_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_19_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_20_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_21_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_22_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_23_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/931/26-6931_24_4.jpg"
+    ],
     "hosp_mi": 3.48,
     "park_mi": 2.83,
     "nearest_park": "Soldotna Sports Complex",
@@ -730,6 +1243,32 @@ const DATA = /*DATA*/[
     "lot": 1.47,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_1_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_2_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_3_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_4_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_6_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_7_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_8_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_9_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_10_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_11_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_12_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_13_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_14_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_15_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_16_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_17_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_18_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_19_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_20_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_21_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_22_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_23_5.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/620/25-13620_24_5.jpg"
+    ],
     "hosp_mi": 3.44,
     "park_mi": 3.15,
     "nearest_park": "Soldotna Sports Complex",
@@ -756,6 +1295,13 @@ const DATA = /*DATA*/[
     "lot": 4.66,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/136/26-7136_29_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/136/26-7136_30_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/136/26-7136_31_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/136/26-7136_32_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/136/26-7136_33_1.jpg"
+    ],
     "hosp_mi": 3.36,
     "park_mi": 3.47,
     "nearest_park": "Centennial Park",
@@ -783,6 +1329,32 @@ const DATA = /*DATA*/[
     "lot": 1.23,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_1_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_2_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_3_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_5_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_6_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_7_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_8_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_9_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_10_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_11_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_12_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_13_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_14_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_15_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_16_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_17_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_18_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_19_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_20_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_21_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_22_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_23_4.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/793/26-6793_24_4.jpg"
+    ],
     "hosp_mi": 3.54,
     "park_mi": 3.09,
     "nearest_park": "Soldotna Sports Complex",
@@ -809,6 +1381,32 @@ const DATA = /*DATA*/[
     "lot": 1.31,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_1_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_2_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_3_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_4_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_5_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_6_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_7_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_8_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_10_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_11_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_12_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_13_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_14_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_15_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_16_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_17_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_18_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_19_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_20_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_21_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_22_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_23_9.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/127/26-8127_24_9.jpg"
+    ],
     "hosp_mi": 3.57,
     "park_mi": 3.37,
     "nearest_park": "Soldotna Sports Complex",
@@ -835,6 +1433,32 @@ const DATA = /*DATA*/[
     "lot": 1.48,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_1_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_2_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_4_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_5_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_6_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_7_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_8_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_9_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_10_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_11_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_12_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_13_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_14_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_15_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_16_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_17_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_18_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_19_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_20_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_21_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_22_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_23_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/344/26-9344_24_3.jpg"
+    ],
     "hosp_mi": 3.47,
     "park_mi": 3.71,
     "nearest_park": "Centennial Park",
@@ -862,6 +1486,32 @@ const DATA = /*DATA*/[
     "lot": 0.9199999999999999,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_1_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_2_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_3_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_4_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_5_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_6_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_7_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_8_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_9_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_10_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_11_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_12_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_13_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_14_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_15_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_16_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_17_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_18_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_19_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_20_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_21_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_22_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_23_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/384/26-11384_24_0.jpg"
+    ],
     "hosp_mi": 3.64,
     "park_mi": 3.68,
     "nearest_park": "Centennial Park",
@@ -889,6 +1539,30 @@ const DATA = /*DATA*/[
     "lot": 1.1,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_1_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_2_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_3_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_4_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_5_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_7_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_8_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_9_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_10_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_11_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_12_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_13_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_14_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_15_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_16_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_17_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_18_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_19_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_20_6.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_21_3.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/018/26-1018_22_0.jpg"
+    ],
     "hosp_mi": 4.13,
     "park_mi": 3.34,
     "nearest_park": "Swiftwater Park",
@@ -916,6 +1590,32 @@ const DATA = /*DATA*/[
     "lot": 2.38,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_1_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_2_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_3_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_4_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_5_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_6_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_7_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_8_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_9_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_10_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_11_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_12_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_13_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_14_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_15_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_16_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_17_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_18_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_19_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_20_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_21_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_22_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_23_0.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/590/26-11590_24_0.jpg"
+    ],
     "hosp_mi": 4.23,
     "park_mi": 3.54,
     "nearest_park": "Soldotna Sports Complex",
@@ -943,6 +1643,32 @@ const DATA = /*DATA*/[
     "lot": 1.47,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_1_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_3_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_4_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_5_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_6_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_7_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_8_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_9_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_10_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_11_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_12_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_13_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_14_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_15_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_16_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_17_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_18_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_19_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_20_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_21_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_22_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_23_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/746/26-8746_24_2.jpg"
+    ],
     "hosp_mi": 4.29,
     "park_mi": 3.75,
     "nearest_park": "Centennial Park",
@@ -971,6 +1697,32 @@ const DATA = /*DATA*/[
     "lot": 1.33,
     "lotUnit": "acres",
     "year": null,
+    "photos": [
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_1_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_3_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_4_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_5_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_6_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_7_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_8_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_9_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_10_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_11_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_12_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_13_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_14_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_15_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_16_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_17_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_18_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_19_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_20_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_21_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_22_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_23_2.jpg",
+      "https://ssl.cdn-redfin.com/photo/270/bigphoto/471/25-13471_24_2.jpg"
+    ],
     "hosp_mi": 4.73,
     "park_mi": 3.56,
     "nearest_park": "Kenai Refuge Visitor Ctr",
@@ -1039,6 +1791,15 @@ function guestChip(g){
 }
 const STATUSES=[['contender','Contender'],['maybe','Maybe'],['toured','Toured'],['rejected','Rejected']];
 
+function gallery(d){
+  const ph=(d.photos&&d.photos.length)?d.photos:(d.img?[d.img]:[]);
+  if(!ph.length) return '<div class="gal"><div class="strip"></div></div>';
+  const imgs=ph.map((u,i)=>'<img loading="lazy" data-z="'+d.zpid+'" data-i="'+i+'" src="'+u+'" alt="">').join('');
+  const nav=ph.length>1?'<button class="nav prev" data-gnav="-1" tabindex="-1">&#8249;</button><button class="nav next" data-gnav="1" tabindex="-1">&#8250;</button><div class="cnt"><span class="ci">1</span>/'+ph.length+'</div>':'';
+  return '<div class="gal">'+
+    '<div class="strip">'+imgs+'</div>'+nav+'</div>';
+}
+
 function render(){
   const list=$('#list'); list.innerHTML='';
   const full=ordered(); const arr=full.filter(passes);
@@ -1049,7 +1810,7 @@ function render(){
     el.draggable=true; el.dataset.id=d.zpid;
     el.innerHTML=
       '<div class="handle" title="drag to reorder">&#10022;<span class="rank">#'+(i+1)+'</span></div>'+
-      '<a href="'+d.url+'" target="_blank" rel="noopener"><img class="thumb" src="'+d.img+'" loading="lazy" alt=""></a>'+
+      gallery(d)+
       '<div class="meta"><div class="addr"><a href="'+d.url+'" target="_blank" rel="noopener">'+d.addr+'</a></div>'+
       '<div class="chips">'+
         '<span class="chip">'+d.miles+' mi hosp</span>'+
@@ -1115,6 +1876,11 @@ function renderStats(arr){
 
 // ---- card interactions ----
 $('#list').addEventListener('click', e=>{
+  const gn=e.target.closest('[data-gnav]');
+  if(gn){ const strip=gn.parentElement.querySelector('.strip');
+    strip.scrollBy({left:(+gn.dataset.gnav)*strip.clientWidth,behavior:'smooth'}); return; }
+  const im=e.target.closest('.strip img');
+  if(im){ openLB(im.dataset.z, +im.dataset.i); return; }
   const f=e.target.closest('[data-fav]');
   if(f){ const id=f.dataset.fav; state.fav[id]=!state.fav[id]; save(); render(); return; }
   const s=e.target.closest('[data-status]');
@@ -1122,6 +1888,41 @@ $('#list').addEventListener('click', e=>{
   const h=e.target.closest('[data-hide]');
   if(h){ state.hidden[h.dataset.hide]=true; save(); render(); return; }
 });
+// update "n/total" counter as the strip scrolls
+$('#list').addEventListener('scroll', e=>{
+  const strip=e.target.closest?e.target.closest('.strip'):null; if(!strip) return;
+  const ci=strip.parentElement.querySelector('.ci'); if(!ci) return;
+  ci.textContent=Math.round(strip.scrollLeft/strip.clientWidth)+1;
+}, true);
+
+// ---- lightbox ----
+let lb={z:null,i:0,ph:[]};
+function openLB(z,i){
+  const d=DATA.find(x=>String(x.zpid)===String(z)); if(!d) return;
+  lb.ph=(d.photos&&d.photos.length)?d.photos:(d.img?[d.img]:[]);
+  if(!lb.ph.length) return;
+  lb.z=z; lb.i=i||0; showLB(); $('#lb').classList.add('on');
+}
+function showLB(){
+  $('#lbImg').src=lb.ph[lb.i];
+  $('#lbCnt').textContent=(lb.i+1)+' / '+lb.ph.length;
+}
+function stepLB(n){ lb.i=(lb.i+n+lb.ph.length)%lb.ph.length; showLB(); }
+function closeLB(){ $('#lb').classList.remove('on'); $('#lbImg').src=''; }
+document.addEventListener('keydown',e=>{
+  if(!$('#lb').classList.contains('on')) return;
+  if(e.key==='Escape')closeLB(); else if(e.key==='ArrowRight')stepLB(1); else if(e.key==='ArrowLeft')stepLB(-1);
+});
+(function(){
+  const el=$('#lb');
+  el.addEventListener('click',e=>{
+    if(e.target.id==='lb'||e.target.classList.contains('lbclose'))return closeLB();
+    const n=e.target.closest('[data-lbnav]'); if(n){e.stopPropagation();stepLB(+n.dataset.lbnav);}
+  });
+  let sx=0; el.addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});
+  el.addEventListener('touchend',e=>{ const dx=e.changedTouches[0].clientX-sx;
+    if(Math.abs(dx)>40) stepLB(dx<0?1:-1); },{passive:true});
+})();
 $('#list').addEventListener('input', e=>{
   const t=e.target.closest('[data-note]'); if(!t) return;
   const id=t.dataset.note; state.notes[id]=t.value; save();
@@ -1195,7 +1996,7 @@ $('#importBtn').addEventListener('click',()=>{
 let dragId=null;
 function wireDnD(){
   document.querySelectorAll('.card').forEach(c=>{
-    c.addEventListener('dragstart',ev=>{ if(ev.target.closest('textarea,button,a,summary')){ev.preventDefault();return;} dragId=c.dataset.id;c.classList.add('dragging'); });
+    c.addEventListener('dragstart',ev=>{ if(ev.target.closest('textarea,button,a,summary,.gal')){ev.preventDefault();return;} dragId=c.dataset.id;c.classList.add('dragging'); });
     c.addEventListener('dragend',()=>{c.classList.remove('dragging');document.querySelectorAll('.over').forEach(x=>x.classList.remove('over'))});
     c.addEventListener('dragover',e=>{e.preventDefault();c.classList.add('over')});
     c.addEventListener('dragleave',()=>c.classList.remove('over'));
