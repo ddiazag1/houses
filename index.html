@@ -95,6 +95,8 @@
   .chip.plow-state{background:#12243a;color:#7fbfff;font-weight:600}
   .chip.plow-unknown{background:var(--card2);color:var(--mut)}
   .chip.hosp{background:#1c2740;color:#9cc4ff;font-weight:650}
+  a.chip{text-decoration:none;cursor:pointer}
+  a.chip.hosp:hover{background:#24365c;color:#cfe1ff}
   .desc{margin-top:6px;font-size:12.5px;line-height:1.5;color:var(--ink);opacity:.92}
   .facts{margin-top:8px;display:flex;gap:5px;flex-wrap:wrap}
   .right{text-align:right;padding-right:6px;min-width:120px}
@@ -2472,6 +2474,16 @@ function roadChip(d){
   return '';
 }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// Google Maps driving-directions URL from the home to Central Peninsula Hospital.
+// Origin = full street address (city parsed from the Zillow URL slug, e.g. ...-Soldotna-AK-99669...).
+function hospMapsUrl(d){
+  let city='Soldotna', zip='';
+  const m=(d.url||'').match(/-([A-Za-z]+)-AK-(\d{5})/);
+  if(m){ city=m[1]; zip=m[2]; }
+  const origin=[d.addr, city+' AK', zip].filter(Boolean).join(', ');
+  const dest='Central Peninsula Hospital, 250 Hospital Pl, Soldotna, AK 99669';
+  return 'https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(origin)+'&destination='+encodeURIComponent(dest)+'&travelmode=driving';
+}
 
 function gallery(d){
   const ph=(d.photos&&d.photos.length)?d.photos:(d.img?[d.img]:[]);
@@ -2495,7 +2507,7 @@ function render(){
       gallery(d)+
       '<div class="meta"><div class="addr"><a href="'+d.url+'" target="_blank" rel="noopener">'+d.addr+'</a></div>'+
       '<div class="chips">'+
-        (d.drive_min!=null?'<span class="chip hosp" title="driving time to Central Peninsula Hospital ('+d.drive_mi+' mi by road)">&#128663; '+d.drive_min+' min hosp</span>':'<span class="chip">'+d.miles+' mi hosp</span>')+
+        (d.drive_min!=null?'<a class="chip hosp" href="'+hospMapsUrl(d)+'" target="_blank" rel="noopener" title="Open driving route to Central Peninsula Hospital in Google Maps ('+d.drive_mi+' mi by road)">&#128663; '+d.drive_min+' min &middot; '+d.drive_mi+' mi hosp &#8599;</a>':'<span class="chip">'+d.miles+' mi hosp</span>')+
         '<span class="chip">'+d.sqft.toLocaleString()+' sqft</span>'+
         '<span class="chip">'+d.beds+' bd / '+d.baths+' ba</span>'+
         (d.lot?'<span class="chip">'+(Math.round(d.lot*100)/100)+' ac</span>':'')+
@@ -2520,7 +2532,7 @@ function render(){
         '<span>Home <b>'+(d.home_type||'SFR')+'</b></span>'+
         '<span>$/sqft <b>$'+ppsf(d)+'</b></span>'+
         '<span>Lot <b>'+(d.lot?d.lot.toFixed(2)+' ac':'?')+'</b></span>'+
-        '<span>Hospital <b>'+(d.drive_min!=null?d.drive_min+' min drive &middot; '+d.drive_mi+' mi road':(d.hosp_mi!=null?d.hosp_mi+' mi':d.miles+' mi'))+'</b></span>'+
+        '<span>Hospital <b>'+(d.drive_min!=null?d.drive_min+' min drive &middot; '+d.drive_mi+' mi road':(d.hosp_mi!=null?d.hosp_mi+' mi':d.miles+' mi'))+'</b> <a class="linkbtn" href="'+hospMapsUrl(d)+'" target="_blank" rel="noopener" title="Driving route in Google Maps">map &#8599;</a></span>'+
         '<span>Park <b>'+(d.nearest_park||'?')+(d.park_mi!=null?' ('+d.park_mi+' mi)':'')+'</b></span>'+
         '<span>Loc score <b>'+(d.loc_score??'?')+'/100</b></span>'+
         '<span>Vibe score <b>'+(d.vibe_score??'?')+'/100</b></span>'+
