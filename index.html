@@ -86,6 +86,11 @@
   .chip.flood-mid{background:#3a2c0a;color:#f0c14b;font-weight:600}
   .chip.flood-hi{background:#3a1113;color:#ff7a7a;font-weight:700}
   .chip.road{background:#12243a;color:#7fbfff;font-weight:600}
+  .chip.plow-plowed{background:#0f2e1c;color:#5fd39a;font-weight:600}
+  .chip.plow-partial{background:#3a2c0a;color:#f0c14b;font-weight:600}
+  .chip.plow-private{background:#3a1113;color:#ff7a7a;font-weight:700}
+  .chip.plow-state{background:#12243a;color:#7fbfff;font-weight:600}
+  .chip.plow-unknown{background:var(--card2);color:var(--mut)}
   .desc{margin-top:6px;font-size:12.5px;line-height:1.5;color:var(--ink);opacity:.92}
   .facts{margin-top:8px;display:flex;gap:5px;flex-wrap:wrap}
   .right{text-align:right;padding-right:6px;min-width:120px}
@@ -114,6 +119,8 @@
   details.more summary::-webkit-details-marker{display:none}
   .grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 14px;margin-top:6px;font-size:12px;color:var(--mut)}
   .grid2 b{color:var(--ink)}
+  .syncstat{font-size:11px;padding:1px 8px;border-radius:20px;background:var(--card2);color:var(--mut);margin-left:6px}
+  .syncstat.ok{color:var(--good)} .syncstat.warn{color:var(--warn)}
   .empty{max-width:1150px;margin:30px auto;padding:0 20px;color:var(--mut);text-align:center}
   footer{max-width:1150px;margin:0 auto 40px;padding:0 20px;color:var(--mut);font-size:12px}
   @media(max-width:640px){
@@ -172,6 +179,11 @@
   Photo galleries via Redfin; links via Zillow. Tap any photo for full-screen; swipe/arrow to browse. Location / park / hospital / vibe scores are computed from mapped coordinates (haversine distance to Central Peninsula Hospital, weighted parks, downtown, and lot size) &mdash; they're directional, verify feel on the listing &amp; in person.
   Garage/guest-house: "?" = not yet verified. Data pulled 2026-09-12. <b>Status, notes, favorites, hidden homes &amp; custom order are stored locally in this browser only</b> &mdash; use <button class="linkbtn" id="exportBtn">export</button> to back up / move devices, <button class="linkbtn" id="importBtn">import</button> to restore.
   <span id="hiddenNote"></span>
+  <div style="margin-top:10px">
+    <b>Cross-device sync:</b> notes, tags &amp; order sync automatically across your phone &amp; PC.
+    <button class="linkbtn" id="syncBtn">connect this device to save</button>
+    <span class="syncstat" id="syncStat">Read-only</span>
+  </div>
 </footer>
 
 <div id="lb">
@@ -219,6 +231,11 @@ const DATA = /*DATA*/[
     "sewer": null,
     "heat_type": null,
     "features": [],
+    "road_name": "FUNNY RIVER RD",
+    "road_mgmt": "State",
+    "road_class": "Town Major Collector",
+    "plow_label": "State-maintained highway (plowed by AK DOT)",
+    "plow_level": "state",
     "hosp_mi": 1.3,
     "park_mi": 0.27,
     "nearest_park": "Centennial Park",
@@ -284,6 +301,11 @@ const DATA = /*DATA*/[
     "features": [
       "Acreage/land"
     ],
+    "road_name": "IRONS AVE",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 0.49,
     "park_mi": 1.0,
     "nearest_park": "Soldotna Creek Park",
@@ -335,6 +357,11 @@ const DATA = /*DATA*/[
     "features": [
       "Acreage/land"
     ],
+    "road_name": "PACE ST",
+    "road_mgmt": "Soldotna, City of",
+    "road_class": "Town Medium Volume-Unmaintained",
+    "plow_label": "Soldotna city road \u2014 plowed by the city",
+    "plow_level": "plowed",
     "hosp_mi": 1.47,
     "park_mi": 0.74,
     "nearest_park": "Soldotna Sports Complex",
@@ -400,6 +427,11 @@ const DATA = /*DATA*/[
     "features": [
       "Waterfront"
     ],
+    "road_name": "YUPIK RD",
+    "road_mgmt": "Soldotna, City of",
+    "road_class": "Town Medium Volume-Unmaintained",
+    "plow_label": "Soldotna city road \u2014 plowed by the city",
+    "plow_level": "plowed",
     "hosp_mi": 1.48,
     "park_mi": 0.64,
     "nearest_park": "Soldotna Sports Complex",
@@ -468,6 +500,11 @@ const DATA = /*DATA*/[
       "Remodeled/updated",
       "Acreage/land"
     ],
+    "road_name": "DIANE LN",
+    "road_mgmt": "Soldotna, City of",
+    "road_class": "Town Medium Volume-Unmaintained",
+    "plow_label": "Soldotna city road \u2014 plowed by the city",
+    "plow_level": "plowed",
     "hosp_mi": 0.93,
     "park_mi": 1.35,
     "nearest_park": "Soldotna Creek Park",
@@ -519,6 +556,11 @@ const DATA = /*DATA*/[
     "features": [
       "Acreage/land"
     ],
+    "road_name": "SUNRISE AVE",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 1.04,
     "park_mi": 1.49,
     "nearest_park": "Soldotna Creek Park",
@@ -583,6 +625,11 @@ const DATA = /*DATA*/[
     "features": [
       "Views"
     ],
+    "road_name": "SATHER CT",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 1.44,
     "park_mi": 1.82,
     "nearest_park": "Centennial Park",
@@ -650,6 +697,11 @@ const DATA = /*DATA*/[
       "Acreage/land",
       "Rental/income"
     ],
+    "road_name": "FINE CT",
+    "road_mgmt": "Borough (platted, NOT certified maintained)",
+    "road_class": "Proposed",
+    "plow_label": "Platted but NOT certified maintained \u2014 verify plowing",
+    "plow_level": "partial",
     "hosp_mi": 2.54,
     "park_mi": 2.24,
     "nearest_park": "Soldotna Sports Complex",
@@ -713,6 +765,11 @@ const DATA = /*DATA*/[
     "features": [
       "Shop/outbuilding"
     ],
+    "road_name": "COMMUNITY COLLEGE DR",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 2.81,
     "park_mi": 2.1,
     "nearest_park": "Centennial Park",
@@ -778,6 +835,11 @@ const DATA = /*DATA*/[
       "Shop/outbuilding",
       "Acreage/land"
     ],
+    "road_name": "SLOPING DR",
+    "road_mgmt": "Borough (platted, NOT certified maintained)",
+    "road_class": "Proposed",
+    "plow_label": "Platted but NOT certified maintained \u2014 verify plowing",
+    "plow_level": "partial",
     "hosp_mi": 3.06,
     "park_mi": 2.17,
     "nearest_park": "Swiftwater Park",
@@ -842,6 +904,11 @@ const DATA = /*DATA*/[
       "Waterfront",
       "New roof"
     ],
+    "road_name": "KEYSTONE DR",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 3.52,
     "park_mi": 1.86,
     "nearest_park": "Kenai Refuge Visitor Ctr",
@@ -903,6 +970,11 @@ const DATA = /*DATA*/[
     "sewer": null,
     "heat_type": null,
     "features": [],
+    "road_name": "WREN DR",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 2.49,
     "park_mi": 2.96,
     "nearest_park": "Soldotna Creek Park",
@@ -966,6 +1038,11 @@ const DATA = /*DATA*/[
       "New roof",
       "Acreage/land"
     ],
+    "road_name": "ROCKWOOD DR",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 2.37,
     "park_mi": 2.41,
     "nearest_park": "Centennial Park",
@@ -1027,6 +1104,11 @@ const DATA = /*DATA*/[
     "sewer": null,
     "heat_type": null,
     "features": [],
+    "road_name": "MOOSEBERRY AVE",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 2.77,
     "park_mi": 3.27,
     "nearest_park": "Soldotna Creek Park",
@@ -1087,6 +1169,11 @@ const DATA = /*DATA*/[
     "sewer": null,
     "heat_type": null,
     "features": [],
+    "road_name": "SWALLOW DR",
+    "road_mgmt": "Kenai, City of",
+    "road_class": "Town Medium Volume-Unmaintained",
+    "plow_label": "Kenai city road \u2014 plowed by the city",
+    "plow_level": "plowed",
     "hosp_mi": 2.9,
     "park_mi": 3.36,
     "nearest_park": "Soldotna Creek Park",
@@ -1150,6 +1237,11 @@ const DATA = /*DATA*/[
       "Shop/outbuilding",
       "Acreage/land"
     ],
+    "road_name": "AMY LN",
+    "road_mgmt": "Borough (platted, NOT certified maintained)",
+    "road_class": "Town Medium Volume-Unmaintained",
+    "plow_label": "Platted but NOT certified maintained \u2014 verify plowing",
+    "plow_level": "partial",
     "hosp_mi": 3.02,
     "park_mi": 3.24,
     "nearest_park": "Centennial Park",
@@ -1210,6 +1302,11 @@ const DATA = /*DATA*/[
     "sewer": null,
     "heat_type": null,
     "features": [],
+    "road_name": "WOODS DR",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 3.05,
     "park_mi": 3.57,
     "nearest_park": "Soldotna Creek Park",
@@ -1248,6 +1345,11 @@ const DATA = /*DATA*/[
       "Shop/outbuilding",
       "Acreage/land"
     ],
+    "road_name": "JEFFERSON AVE",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 3.15,
     "park_mi": 2.39,
     "nearest_park": "Centennial Park",
@@ -1309,6 +1411,11 @@ const DATA = /*DATA*/[
     "sewer": null,
     "heat_type": null,
     "features": [],
+    "road_name": "WISPEN AVE",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 3.19,
     "park_mi": 3.66,
     "nearest_park": "Soldotna Creek Park",
@@ -1373,6 +1480,11 @@ const DATA = /*DATA*/[
       "Guest/ADU",
       "Acreage/land"
     ],
+    "road_name": "PINE ST",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 3.44,
     "park_mi": 2.77,
     "nearest_park": "Soldotna Sports Complex",
@@ -1438,6 +1550,11 @@ const DATA = /*DATA*/[
       "Acreage/land",
       "Rental/income"
     ],
+    "road_name": "CRATER LN",
+    "road_mgmt": "Borough (platted, NOT certified maintained)",
+    "road_class": "Town Medium Volume-Unmaintained",
+    "plow_label": "Platted but NOT certified maintained \u2014 verify plowing",
+    "plow_level": "partial",
     "hosp_mi": 3.48,
     "park_mi": 2.83,
     "nearest_park": "Soldotna Sports Complex",
@@ -1502,6 +1619,11 @@ const DATA = /*DATA*/[
       "New roof",
       "Remodeled/updated"
     ],
+    "road_name": "DOLLY VARDEN WAY",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 3.44,
     "park_mi": 3.15,
     "nearest_park": "Soldotna Sports Complex",
@@ -1548,6 +1670,11 @@ const DATA = /*DATA*/[
       "Acreage/land",
       "Rental/income"
     ],
+    "road_name": "DANA BAYES ST N",
+    "road_mgmt": "Borough (platted, NOT certified maintained)",
+    "road_class": "Proposed",
+    "plow_label": "Platted but NOT certified maintained \u2014 verify plowing",
+    "plow_level": "partial",
     "hosp_mi": 3.36,
     "park_mi": 3.47,
     "nearest_park": "Centennial Park",
@@ -1612,6 +1739,11 @@ const DATA = /*DATA*/[
       "Waterfront",
       "Views"
     ],
+    "road_name": "AKSALA LN",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 3.54,
     "park_mi": 3.09,
     "nearest_park": "Soldotna Sports Complex",
@@ -1677,6 +1809,11 @@ const DATA = /*DATA*/[
       "Guest/ADU",
       "Acreage/land"
     ],
+    "road_name": "WEST LAKE CT",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 3.57,
     "park_mi": 3.37,
     "nearest_park": "Soldotna Sports Complex",
@@ -1737,6 +1874,11 @@ const DATA = /*DATA*/[
     "sewer": null,
     "heat_type": null,
     "features": [],
+    "road_name": "MEANDERING RD",
+    "road_mgmt": "Borough (platted, NOT certified maintained)",
+    "road_class": "Town Medium Volume-Unmaintained",
+    "plow_label": "Platted but NOT certified maintained \u2014 verify plowing",
+    "plow_level": "partial",
     "hosp_mi": 3.47,
     "park_mi": 3.71,
     "nearest_park": "Centennial Park",
@@ -1801,6 +1943,11 @@ const DATA = /*DATA*/[
       "Remodeled/updated",
       "Acreage/land"
     ],
+    "road_name": "RAINTREE CIR",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 3.64,
     "park_mi": 3.68,
     "nearest_park": "Centennial Park",
@@ -1860,6 +2007,11 @@ const DATA = /*DATA*/[
     "sewer": null,
     "heat_type": null,
     "features": [],
+    "road_name": "FRANKLIN CT",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 4.13,
     "park_mi": 3.34,
     "nearest_park": "Swiftwater Park",
@@ -1925,6 +2077,11 @@ const DATA = /*DATA*/[
       "Guest/ADU",
       "Acreage/land"
     ],
+    "road_name": "SCHULTZ ST",
+    "road_mgmt": "Borough (platted, NOT certified maintained)",
+    "road_class": "Town Medium Volume-Unmaintained",
+    "plow_label": "Platted but NOT certified maintained \u2014 verify plowing",
+    "plow_level": "partial",
     "hosp_mi": 4.23,
     "park_mi": 3.54,
     "nearest_park": "Soldotna Sports Complex",
@@ -1989,6 +2146,11 @@ const DATA = /*DATA*/[
       "Remodeled/updated",
       "Rental/income"
     ],
+    "road_name": "HORACE ST",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 4.29,
     "park_mi": 3.75,
     "nearest_park": "Centennial Park",
@@ -2053,6 +2215,11 @@ const DATA = /*DATA*/[
     "features": [
       "Acreage/land"
     ],
+    "road_name": "SAPPHIRE LOOP",
+    "road_mgmt": "Borough RSA (maintained/plowed)",
+    "road_class": "Town Medium Volume-Maintained",
+    "plow_label": "Borough RSA \u2014 maintained & plowed",
+    "plow_level": "plowed",
     "hosp_mi": 4.73,
     "park_mi": 3.56,
     "nearest_park": "Kenai Refuge Visitor Ctr",
@@ -2080,7 +2247,87 @@ if(!state){
 }
 state.fav=state.fav||{}; state.status=state.status||{}; state.notes=state.notes||{};
 state.hidden=state.hidden||{}; state.order=state.order||DATA.map(d=>d.zpid);
-const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+state._ts=state._ts||{};  // per-field/per-item change timestamps for cross-device merge
+const save = () => { localStorage.setItem(KEY, JSON.stringify(state)); syncPush(); };
+
+// ---- cross-device sync via GitHub Gist ----
+// House notes are non-sensitive. Shared state lives in a public gist (read by anyone,
+// written only with a token stored per-device in localStorage — never in this file).
+const GIST_ID='cc3dd79340dd2e54357c09c6b37cc2f8';
+const GIST_FILE='soldotna_homes_state.json';
+const TOKKEY='soldotna_sync_token';
+const now=()=>Date.now();
+// stamp a change so merges pick the newest edit
+function touch(field,itemKey){ state._ts[itemKey?field+'|'+itemKey:field]=now(); }
+function ts(field,itemKey){ return state._ts[itemKey?field+'|'+itemKey:field]||0; }
+
+// Merge a remote state object into local, newest-timestamp-wins per item.
+function mergeRemote(rem){
+  if(!rem||typeof rem!=='object') return false;
+  const rt=rem._ts||{}; let changed=false;
+  const rget=(f,k)=>rt[k?f+'|'+k:f]||0;
+  // item-keyed maps: fav, status, notes, hidden
+  ['fav','status','notes','hidden'].forEach(f=>{
+    const rm=rem[f]||{}; const keys=new Set([...Object.keys(state[f]||{}),...Object.keys(rm)]);
+    keys.forEach(k=>{
+      if(rget(f,k)>ts(f,k)){
+        if(rm[k]===undefined||rm[k]===''||rm[k]===false){ delete state[f][k]; }
+        else state[f][k]=rm[k];
+        state._ts[f+'|'+k]=rget(f,k); changed=true;
+      }
+    });
+  });
+  // order: whole-array, newest wins
+  if(Array.isArray(rem.order)&&rget('order')>ts('order')){
+    state.order=rem.order.slice(); state._ts.order=rget('order'); changed=true;
+  }
+  return changed;
+}
+
+let pushTimer=null, syncing=false;
+function setSyncStatus(txt,cls){ const el=document.getElementById('syncStat'); if(el){ el.textContent=txt; el.className='syncstat '+(cls||''); } }
+
+async function syncPull(){
+  try{
+    const r=await fetch('https://api.github.com/gists/'+GIST_ID,{headers:{'Accept':'application/vnd.github+json'}});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const g=await r.json(); const f=g.files&&g.files[GIST_FILE];
+    if(!f||!f.content){ setSyncStatus('Sync: empty','ok'); return; }
+    const rem=JSON.parse(f.content);
+    const changed=mergeRemote(rem);
+    if(changed){ localStorage.setItem(KEY,JSON.stringify(state)); render(); }
+    setSyncStatus('Synced '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),'ok');
+  }catch(e){ setSyncStatus('Sync read failed','warn'); }
+}
+
+function syncPush(){
+  const tok=localStorage.getItem(TOKKEY);
+  if(!tok) return;  // read-only device until a token is connected
+  clearTimeout(pushTimer);
+  pushTimer=setTimeout(async ()=>{
+    if(syncing) return; syncing=true; setSyncStatus('Saving…','');
+    try{
+      // pull-merge first so we never clobber the other device's newer edits
+      try{ const r0=await fetch('https://api.github.com/gists/'+GIST_ID,{headers:{'Accept':'application/vnd.github+json'}});
+        if(r0.ok){ const g0=await r0.json(); const f0=g0.files&&g0.files[GIST_FILE];
+          if(f0&&f0.content){ if(mergeRemote(JSON.parse(f0.content))) localStorage.setItem(KEY,JSON.stringify(state)); } } }catch(_){}
+      const body={files:{}}; body.files[GIST_FILE]={content:JSON.stringify({fav:state.fav,status:state.status,notes:state.notes,hidden:state.hidden,order:state.order,_ts:state._ts})};
+      const r=await fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',
+        headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+tok,'Content-Type':'application/json'},
+        body:JSON.stringify(body)});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      setSyncStatus('Saved '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),'ok'); render();
+    }catch(e){ setSyncStatus('Save failed — check token','warn'); }
+    finally{ syncing=false; }
+  },1200);
+}
+
+function connectSync(){
+  const has=!!localStorage.getItem(TOKKEY);
+  if(has){ if(confirm('Disconnect sync-writing on this device? (This device will still read shared updates.)')){ localStorage.removeItem(TOKKEY); render(); setSyncStatus('Read-only (disconnected)','warn'); } return; }
+  const t=prompt('Paste a GitHub token with "gist" scope to let THIS device save shared changes.\n\nStored only in this browser, never uploaded. Leave blank to keep this device read-only.');
+  if(t&&t.trim()){ localStorage.setItem(TOKKEY,t.trim()); setSyncStatus('Connected — saving…',''); syncPush(); render(); }
+}
 
 // ---- filters ----
 const filt = { star:false, notes:false, guest:false, showReject:false, status:new Set(),
@@ -2105,7 +2352,7 @@ function passes(d){
   if(filt.minSqft!=null && d.sqft<filt.minSqft) return false;
   if(filt.maxMiles!=null && d.miles>filt.maxMiles) return false;
   if(filt.minBeds!=null && d.beds<filt.minBeds) return false;
-  if(filt.q){ const s=(d.addr+' '+(state.notes[d.zpid]||'')+' '+(d.vibe_tags||[]).join(' ')+' '+(d.features||[]).join(' ')+' '+(d.road||'')+' '+(d.desc||'')).toLowerCase();
+  if(filt.q){ const s=(d.addr+' '+(state.notes[d.zpid]||'')+' '+(d.vibe_tags||[]).join(' ')+' '+(d.features||[]).join(' ')+' '+(d.road||'')+' '+(d.plow_label||'')+' '+(d.road_name||'')+' '+(d.desc||'')).toLowerCase();
               if(!s.includes(filt.q.toLowerCase())) return false; }
   return true;
 }
@@ -2129,8 +2376,15 @@ function floodChip(d){
   return '<span class="chip '+cls+'" title="Redfin/First Street flood risk">Flood '+s+'/10 &middot; '+lvl+'</span>';
 }
 function roadChip(d){
-  if(!d.road) return '';
-  return '<span class="chip road" title="from listing description">'+d.road+'</span>';
+  // Authoritative: KPB road-maintenance classification (plow_level/plow_label).
+  if(d.plow_label){
+    const lvl=d.plow_level||'unknown';
+    const ico={plowed:'&#10052;',partial:'&#9888;',private:'&#9888;',state:'&#10052;',unknown:''}[lvl]||'';
+    const tip='KPB road data: '+(d.road_name||'')+(d.road_mgmt?' &mdash; '+d.road_mgmt:'')+(d.road_class?' ('+d.road_class+')':'');
+    return '<span class="chip plow-'+lvl+'" title="'+esc(tip)+'">'+ico+' '+esc(d.plow_label)+'</span>';
+  }
+  if(d.road) return '<span class="chip road" title="from listing description">'+esc(d.road)+'</span>';
+  return '';
 }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -2189,7 +2443,10 @@ function render(){
         (d.water?'<span>Water <b>'+d.water+'</b></span>':'')+
         (d.sewer?'<span>Sewer <b>'+d.sewer+'</b></span>':'')+
         (d.heat_type?'<span>Heat <b>'+d.heat_type+'</b></span>':'')+
-        (d.road?'<span>Road <b>'+d.road+'</b></span>':'<span>Road <b title="not stated in listing">not stated &mdash; verify</b></span>')+
+        (d.plow_label?'<span>Plowing <b title="Kenai Peninsula Borough road data">'+esc(d.plow_label)+'</b></span>':'')+
+        (d.road_name?'<span>KPB road <b>'+esc(d.road_name)+(d.road_mgmt?' &middot; '+esc(d.road_mgmt):'')+'</b></span>':'')+
+        (d.road_class?'<span>Road class <b>'+esc(d.road_class)+'</b></span>':'')+
+        (d.road?'<span>Listing road note <b>'+esc(d.road)+'</b></span>':(!d.plow_label?'<span>Road <b title="not stated in listing">not stated &mdash; verify</b></span>':''))+
       '</div>'+
       (d.desc?'<div class="desc">'+esc(d.desc)+'</div>':'<div class="desc" style="opacity:.6">No listing description available (public-records listing) &mdash; check Zillow.</div>')+
       '</details></div>'+
@@ -2206,7 +2463,7 @@ function render(){
   renderStats(arr);
   const nHidden=Object.values(state.hidden).filter(Boolean).length;
   $('#hiddenNote').innerHTML = nHidden? ' &middot; '+nHidden+' hidden <button class="linkbtn" id="showHidden">restore all</button>' : '';
-  const sh=$('#showHidden'); if(sh) sh.onclick=()=>{ state.hidden={}; save(); render(); };
+  const sh=$('#showHidden'); if(sh) sh.onclick=()=>{ const T=now(); Object.keys(state.hidden).forEach(k=>state._ts['hidden|'+k]=T); state.hidden={}; save(); render(); };
 }
 function renderStats(arr){
   if(!arr.length){ $('#stats').innerHTML=''; return; }
@@ -2234,11 +2491,11 @@ $('#list').addEventListener('click', e=>{
   const im=e.target.closest('.strip img');
   if(im){ openLB(im.dataset.z, +im.dataset.i); return; }
   const f=e.target.closest('[data-fav]');
-  if(f){ const id=f.dataset.fav; state.fav[id]=!state.fav[id]; save(); render(); return; }
+  if(f){ const id=f.dataset.fav; state.fav[id]=!state.fav[id]; touch('fav',id); save(); render(); return; }
   const s=e.target.closest('[data-status]');
-  if(s){ const [id,v]=s.dataset.status.split('|'); state.status[id]= state.status[id]===v?'':v; save(); render(); return; }
+  if(s){ const [id,v]=s.dataset.status.split('|'); state.status[id]= state.status[id]===v?'':v; touch('status',id); save(); render(); return; }
   const h=e.target.closest('[data-hide]');
-  if(h){ state.hidden[h.dataset.hide]=true; save(); render(); return; }
+  if(h){ state.hidden[h.dataset.hide]=true; touch('hidden',h.dataset.hide); save(); render(); return; }
 });
 // update "n/total" counter as the strip scrolls
 $('#list').addEventListener('scroll', e=>{
@@ -2277,7 +2534,7 @@ document.addEventListener('keydown',e=>{
 })();
 $('#list').addEventListener('input', e=>{
   const t=e.target.closest('[data-note]'); if(!t) return;
-  const id=t.dataset.note; state.notes[id]=t.value; save();
+  const id=t.dataset.note; state.notes[id]=t.value; touch('notes',id); save();
   t.classList.toggle('hasnote', !!t.value.trim());
 });
 
@@ -2287,11 +2544,11 @@ document.querySelectorAll('[data-sort]').forEach(btn=>{
     const k=btn.dataset.sort, desc=btn.dataset.dir==='desc';
     const val=d=> k==='ppsf'?ppsf(d) : (d[k]!=null?d[k]:(desc?-Infinity:Infinity));
     const arr=[...DATA].sort((a,b)=> desc? val(b)-val(a) : val(a)-val(b));
-    state.order=arr.map(d=>d.zpid); save(); render();
+    state.order=arr.map(d=>d.zpid); touch('order'); save(); render();
   });
 });
 $('#reset').addEventListener('click',()=>{
-  state.order=[...DATA].sort((a,b)=>(b.loc_score||0)-(a.loc_score||0)).map(d=>d.zpid);
+  state.order=[...DATA].sort((a,b)=>(b.loc_score||0)-(a.loc_score||0)).map(d=>d.zpid); touch('order');
   save(); render();
 });
 
@@ -2338,7 +2595,12 @@ $('#importBtn').addEventListener('click',()=>{
   inp.onchange=()=>{ const f=inp.files[0]; if(!f)return; const r=new FileReader();
     r.onload=()=>{ try{ const s=JSON.parse(r.result);
       state.fav=s.fav||{}; state.status=s.status||{}; state.notes=s.notes||{};
-      state.hidden=s.hidden||{}; state.order=s.order||state.order; save(); render();
+      state.hidden=s.hidden||{}; state.order=s.order||state.order;
+      // stamp everything so an imported backup propagates to synced devices
+      const T=now();
+      ['fav','status','notes','hidden'].forEach(fld=>Object.keys(state[fld]).forEach(k=>state._ts[fld+'|'+k]=T));
+      state._ts.order=T;
+      save(); render();
       alert('Imported.'); }catch(e){ alert('Bad file'); } };
     r.readAsText(f); };
   inp.click();
@@ -2359,11 +2621,18 @@ function wireDnD(){
       DATA.forEach(d=>{ if(!o.includes(d.zpid)) o.push(d.zpid); });
       const from=o.indexOf(dragId), to=o.indexOf(targetId);
       o.splice(from,1); o.splice(to,0,dragId);
-      state.order=o; save(); render();
+      state.order=o; touch('order'); save(); render();
     });
   });
 }
 render();
+
+// ---- sync wiring ----
+$('#syncBtn').addEventListener('click', connectSync);
+setSyncStatus(localStorage.getItem(TOKKEY)?'Sync on (this device saves)':'Read-only (connect to save)', localStorage.getItem(TOKKEY)?'ok':'');
+syncPull();                                  // pull shared state on load
+setInterval(syncPull, 45000);                // poll for other-device changes
+window.addEventListener('focus', syncPull);  // and whenever tab regains focus
 </script>
 </body>
 </html>
