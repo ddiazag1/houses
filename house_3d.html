@@ -110,7 +110,7 @@
     <label class="row"><input type="checkbox" id="c-main" checked><span class="swatch" style="background:#d8d0c0"></span>Main level &mdash; master, bdrm 2</label>
     <label class="row"><input type="checkbox" id="c-base" checked><span class="swatch" style="background:#a09a90"></span>Lower level &mdash; family rm</label>
     <p style="margin:2px 0 4px 23px;font-size:11px;color:var(--muted)">Below grade &mdash; untick <b style="color:#c6d3e1">Grade&nbsp;/&nbsp;site</b> to see it.</p>
-    <label class="row"><input type="checkbox" id="c-exist" checked><span class="swatch" style="background:#7e8896"></span>Existing house (massing)</label>
+    <label class="row"><input type="checkbox" id="c-exist" checked><span class="swatch" style="background:#7e8896"></span>Existing house (massing)</label><!-- rooms now modeled -->
     <label class="row"><input type="checkbox" id="c-ground" checked><span class="swatch" style="background:#5d6b4e"></span>Grade / site</label>
   </div>
 
@@ -140,7 +140,8 @@
         </ul>
         <p style="margin:8px 0 0"><b>Assumed</b> (not dimensioned on these four sheets): 8&prime;-0&Prime; wall heights, 12&Prime; floor systems, 6:12 main roof &amp; 4:12 wing roof scaled off the elevations, 18&Prime; eaves, and grade 1&prime; below main floor. Partition locations are scaled from the plans, not dimensioned.</p>
         <p style="margin:8px 0 0"><b>Three levels.</b> Lower: family room, bath, stair, crawlspace. Main: master suite, <b>bedroom&nbsp;#2</b>, two baths, stair and sitting room. Upper: bedrooms&nbsp;#4 and&nbsp;#5 with a bath.</p>
-        <p style="margin:8px 0 0">The master bedroom, its 10&prime;-0&Prime; bath / closet band and the 6&prime;-8&Prime; sitting-room opening are dimensioned on A/1. Bedroom&nbsp;#2, the two baths and the stair core are <b>scaled</b> from A/1, not dimensioned.</p>
+        <p style="margin:8px 0 0">The main floor is an <b>L</b>. One leg is the 70&prime;&times;24&prime; three-storey run ending in the master suite; the other carries <b>bedroom&nbsp;#2, a hall, two baths, the arctic entry, kitchen, utility/laundry, office</b> and the vaulted <b>family room</b>.</p>
+        <p style="margin:8px 0 0">Only the master bedroom (24&prime;-0&Prime; &times; 24&prime;-0&Prime;), its 10&prime;-0&Prime; bath / closet band and the 6&prime;-8&Prime; sitting-room opening carry dimensions on A/1. Every room in the second leg is <b>scaled off the sheet</b> at 18.33&nbsp;px/ft, calibrated on that 24&prime;-0&Prime; master bedroom &mdash; layout from the drawing, not numbers off it.</p>
       </div>
     </details>
   </div>
@@ -283,6 +284,18 @@ function rimBand(x1,z1,x2,z2,yTop,h){
   return g;
 }
 
+// A room transcribed from a plan: floor plate, thin wall outline, label.
+// Positions are scaled off A/1 (calibrated on the 24'-0" master bedroom),
+// so these are the drawing's layout, not dimensioned numbers.
+function room(grp, labGrp, name, sub, x0, z0, x1, z1, y, h){
+  grp.add(slab(x0,z0,x1,z1, y, 0.5, M.floor));
+  grp.add(wall(x0,z0, x1,z0, y,h,T_INT, M.inner));
+  grp.add(wall(x1,z0, x1,z1, y,h,T_INT, M.inner));
+  grp.add(wall(x1,z1, x0,z1, y,h,T_INT, M.inner));
+  grp.add(wall(x0,z1, x0,z0, y,h,T_INT, M.inner));
+  labGrp.add(label(name, sub, (x0+x1)/2, y + h*0.45, (z0+z1)/2));
+}
+
 function slab(x1,z1,x2,z2,y,t,mat){
   const m = new THREE.Mesh(new THREE.BoxGeometry(x2-x1, t, z2-z1), mat);
   m.position.set((x1+x2)/2, y - t/2, (z1+z2)/2);
@@ -349,7 +362,7 @@ document.getElementById('overlay').appendChild(labelRenderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = .07;
 controls.maxPolarAngle = Math.PI/2 - 0.02;
-const FOCUS = new THREE.Vector3(12, 6, DEP/2);   // addition + existing massing
+const FOCUS = new THREE.Vector3(34, 6, 34);   // whole L-shaped main floor
 controls.target.copy(FOCUS);
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.45));
@@ -449,7 +462,6 @@ Object.values(LAB).forEach(g=>G.labels.add(g));
 
   const MB0 = 46;                       // master bedroom starts (70 - 24)
   const ST0 = 23.28, ST1 = 27.28;       // stair core, over the flight below
-  const B2R = 17;                       // bedroom #2 / bath line
 
   // --- front wall  (z = 0) ---
   G.main.add(wall(0,0, LEN,0, y,h,T_EXT, M.siding, [
@@ -492,35 +504,29 @@ Object.values(LAB).forEach(g=>G.labels.add(g));
   I.add(wall(SPLIT+2.4,7.6, SPLIT+2.4,DEP, y,h,T_INT, M.inner,
         [{at:6,w:2.7,sill:0,h:6.8,type:'open'}]));
 
-  // sitting room links the master suite back to the rest of the floor,
-  // through the 6'-8" opening dimensioned on A/1
-  I.add(wall(SPLIT,8, SPLIT,DEP, y,h,T_INT, M.inner, [{at:1.5,w:6.67,sill:0,h:6.8,type:'open'}]));
-  I.add(wall(ST1,8, SPLIT,8,   y,h,T_INT, M.inner, [{at:3,w:3,sill:0,h:6.8,type:'open'}]));
-
   // stair core, over the flight coming up from the lower level
   I.add(wall(ST0,14, ST0,DEP,  y,h,T_INT, M.inner));
   I.add(wall(ST1,14, ST1,DEP,  y,h,T_INT, M.inner));
   I.add(wall(ST0,14, ST1,14,   y,h,T_INT, M.inner, [{at:0.6,w:3,sill:0,h:6.8,type:'open'}]));
 
-  // two baths between the stair and bedroom #2
-  I.add(wall(B2R,8, B2R,DEP,   y,h,T_INT, M.inner, [{at:2,w:2.4,sill:0,h:6.8,type:'open'},
-                                                    {at:10,w:2.4,sill:0,h:6.8,type:'open'}]));
-  I.add(wall(B2R,16, ST0,16,   y,h,T_INT, M.inner));
-  I.add(wall(B2R,8, ST0,8,     y,h,T_INT, M.inner));
-
-  // bedroom #2 and the hall along the front
-  I.add(wall(1,8, B2R,8,       y,h,T_INT, M.inner, [{at:12,w:2.7,sill:0,h:6.8,type:'open'}]));
-  I.add(wall(1,8, 1,DEP,       y,h,T_INT, M.inner));
-
   LAB.main.add(label('Master Bedroom','24&prime;-0&Prime; &times; 24&prime;-0&Prime;', 58, y+4.2, 12));
   LAB.main.add(label('Master Bath','14&prime;-8&Prime; deep', 41, y+3.4, 16));
   LAB.main.add(label('Closet','7&prime;-7&Prime;', 41, y+1.4, 3.5));
-  LAB.main.add(label('Sitting Room','6&prime;-8&Prime; opening to the master', 31.5, y+3.2, 17));
-  LAB.main.add(label('Bedroom #2','', 9, y+4.2, 16.5));
-  LAB.main.add(label('Bath','', 20, y+1.6, 20));
-  LAB.main.add(label('Bath','', 20, y+1.6, 12));
   LAB.main.add(label('Up', '', (ST0+ST1)/2, y+2.4, 19));
-  LAB.main.add(label('Hall','to arctic entry, kitchen &amp; office', 16, y+1.4, 4));
+
+  // ---- the other leg of the L, transcribed from A/1 ----------------------
+  // Scaled off the sheet at 18.33 px/ft, calibrated on the 24'-0" master.
+  const R = G.main, L = LAB.main;
+  room(R,L,'Sitting Room','6&prime;-8&Prime; opening to the master', 34.8,24.5, 45.7,36.5, y,h);
+  room(R,L,'Bath','',                                               40.0,36.5, 45.7,46.0, y,h);
+  room(R,L,'Bath','',                                               34.8,36.5, 40.0,46.0, y,h);
+  room(R,L,'Bedroom #2','',                                         18.4,24.5, 30.4,49.9, y,h);
+  room(R,L,'Hall','',                                               30.4,24.5, 34.8,55.6, y,h);
+  room(R,L,'Arctic Entry','',                                       -2.3,49.0, 18.4,55.6, y,h);
+  room(R,L,'Kitchen','',                                            18.4,55.6, 30.4,67.6, y,h);
+  room(R,L,'Uty / Laundry','',                                       6.4,55.6, 18.4,68.7, y,h);
+  room(R,L,'Office','new 9&prime;-0&Prime; window',                 -2.9,55.6,  6.4,68.7, y,h);
+  room(R,L,'Family Room','vaulted',                                 46.8,48.0, 70.8,64.4, y,h);
 })();
 
 /* ============================================================
@@ -593,6 +599,7 @@ Object.values(LAB).forEach(g=>G.labels.add(g));
    EXISTING HOUSE  (massing only — not dimensioned on these sheets)
    ============================================================ */
 (function existing(){
+  if (true) return;   // superseded: A/1's main-floor rooms are modeled above
   const x0 = -42, x1 = -4, z0 = -2, z1 = 30, h = 9;
   const bg  = new THREE.BoxGeometry(x1-x0, h, z1-z0);
   const box = new THREE.Mesh(bg, M.exist);
@@ -699,11 +706,11 @@ document.getElementById('c-explode').addEventListener('input', e=>{
 // camera offsets measured from FOCUS, scaled so the whole building still fits
 // on a narrow (phone) viewport
 const VIEWS = {
-  iso:   [-80,  62, -92],
-  front: [  0,   9, -136],
-  rear:  [  0,   9,  136],
-  end:   [124,  12,    1],
-  top:   [  0, 168,    0.1]
+  iso:   [-86,  74, -96],
+  front: [  0,  12, -140],
+  rear:  [  0,  12,  140],
+  end:   [140,  14,    1],
+  top:   [  0, 185,    0.1]
 };
 let anim = null;
 function goTo(v){
