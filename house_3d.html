@@ -61,8 +61,8 @@
   details>summary{cursor:pointer;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
     color:var(--muted);font-weight:700;list-style:none}
   details>summary::-webkit-details-marker{display:none}
-  details>summary::before{content:"▸ ";}
-  details[open]>summary::before{content:"▾ ";}
+  details>summary::before{content:"\25B8  ";}
+  details[open]>summary::before{content:"\25BE  ";}
 
   #toggleUi{
     position:fixed;top:12px;left:12px;z-index:11;display:none;cursor:pointer;
@@ -83,7 +83,7 @@
 <div id="app"></div>
 <div id="overlay"></div>
 <div id="loading">Loading 3D model&hellip;</div>
-<button id="toggleUi">☰ Controls</button>
+<button id="toggleUi">&#9776; Controls</button>
 
 <div id="ui">
   <header>
