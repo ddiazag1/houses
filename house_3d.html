@@ -89,7 +89,7 @@
   <header>
     <button id="collapse" title="Hide panel">&minus;</button>
     <h1>New Addition &mdash; McDowell</h1>
-    <p class="sub">Creative Designs Unlimited &middot; proj. 0604 &middot; 6/30/07<br/>Modeled from sheets A/2, A/3, A/4</p>
+    <p class="sub">Creative Designs Unlimited &middot; proj. 0604 &middot; 6/30/07<br/>Modeled from sheets A/1&ndash;A/4</p>
   </header>
 
   <div class="sec">
@@ -105,10 +105,11 @@
 
   <div class="sec">
     <h2>Levels</h2>
-    <label class="row"><input type="checkbox" id="c-roof" checked><span class="swatch" style="background:#4a525c"></span>Roof &mdash; gable, 37&prime; span</label>
+    <label class="row"><input type="checkbox" id="c-roof" checked><span class="swatch" style="background:#4a525c"></span>Roof</label>
     <label class="row"><input type="checkbox" id="c-upper" checked><span class="swatch" style="background:#d8d0c0"></span>Upper level &mdash; bdrm 4&nbsp;&amp;&nbsp;5</label>
-    <label class="row"><input type="checkbox" id="c-main" checked><span class="swatch" style="background:#d8d0c0"></span>Main level &mdash; open volume</label>
-    <label class="row"><input type="checkbox" id="c-base" checked><span class="swatch" style="background:#a09a90"></span>Slab &amp; 40&Prime; stem wall &mdash; 70&prime;</label>
+    <label class="row"><input type="checkbox" id="c-main" checked><span class="swatch" style="background:#d8d0c0"></span>Main level &mdash; master, bdrm 2</label>
+    <label class="row"><input type="checkbox" id="c-base" checked><span class="swatch" style="background:#a09a90"></span>Lower level &mdash; family rm</label>
+    <p style="margin:2px 0 4px 23px;font-size:11px;color:var(--muted)">Below grade &mdash; untick <b style="color:#c6d3e1">Grade&nbsp;/&nbsp;site</b> to see it.</p>
     <label class="row"><input type="checkbox" id="c-exist" checked><span class="swatch" style="background:#7e8896"></span>Existing house (massing)</label>
     <label class="row"><input type="checkbox" id="c-ground" checked><span class="swatch" style="background:#5d6b4e"></span>Grade / site</label>
   </div>
@@ -128,17 +129,18 @@
     <details>
       <summary>How this was built</summary>
       <div class="note" style="margin-top:7px">
-        <p style="margin:0 0 6px"><b>Sheet A/1 is a different job.</b> Its title block reads &ldquo;NEW HOME FOR SOMEONE, project&nbsp;0200, file&nbsp;JEFF&rdquo;, with no date. A/2, A/3 and A/4 all read &ldquo;NEW ADDITION FOR KEVIN AND STEPHANIE McDOWELL, file&nbsp;0604-A1, project&nbsp;0604, 6/30/07&rdquo;. Nothing from A/1 is used in this model.</p>
-        <p style="margin:8px 0 6px">Read off the McDowell sheets:</p>
+        <p style="margin:0 0 6px">Dimensions taken straight off the drawings:</p>
         <ul>
-          <li><b>70&prime;-0&Prime; &times; 24&prime;-2&frac12;&Prime;</b> new foundation (A/4), split <b>37&prime;-0&Prime; two storeys + 33&prime;-0&Prime; single storey</b> (A/2) &mdash; the same three masses A/3 draws left to right</li>
-          <li>Gable end 6&prime;-6&Prime; | 11&prime;-0&Prime; | 6&prime;-6&Prime;, two <b>5&prime;0&times;5&prime;0</b> windows (A/2) &mdash; the same pair drawn in the rear elevation gable</li>
-          <li>Bedroom&nbsp;#5 16&prime;-2&Prime; &times; 12&prime;-10&frac38;&Prime;, bedroom&nbsp;#4 15&prime;-9&frac34;&Prime;, closet 7&prime;-6&Prime;, stair 3&prime;-8&Prime; up / 3&prime;-9&frac12;&Prime; down, bedroom&nbsp;#4 window 5&prime;0&times;4&prime;0 (A/2)</li>
-          <li>20&nbsp;course &ldquo;LOGIX&rdquo; <b>40&Prime;-high</b> block stem wall o/ cont. 18&Prime;&times;10&Prime; footing w/ (2)&nbsp;#5 rebar; <b>4&Prime; slab w/ radiant in-floor heat</b>; 2&times;4 ponywall @ 16&Prime; o.c.; drill 18&Prime; into existing footing, epoxy-grout new rebar (A/4)</li>
-          <li>Two storeys. The gable faces front and rear: its rake scales 17&prime;-2&Prime; run to an 8&prime; rise (&asymp;&nbsp;6:12) and peak-to-base scales 26&prime;-6&Prime;, which fits a <b>37&prime; gable span</b>, not 24&prime; (A/3)</li>
+          <li><b>70&prime;-0&Prime; &times; 24&prime;-0&Prime;</b> overall foundation (A/4, A/1)</li>
+          <li><b>36&prime;-0&Prime;</b> finished lower level, balance crawlspace (A/1)</li>
+          <li><b>24&prime;-0&Prime; &times; 24&prime;-0&Prime;</b> master bedroom (A/1)</li>
+          <li><b>10&prime;-0&Prime;</b> master bath / closet band (A/1)</li>
+          <li><b>37&prime;-0&Prime; + 33&prime;-0&Prime;</b> upper floor &amp; lower roof (A/2)</li>
+          <li>Window sizes 5&prime;0&times;5&prime;0, 5&prime;0&times;4&prime;0, 5&prime;0&times;3&prime;6&nbsp;egress, 3&prime;0&times;5&prime;0 as tagged</li>
         </ul>
-        <p style="margin:8px 0 0"><b>Missing sheet.</b> The addition&rsquo;s main-floor plan is not among the photos &mdash; they run A/2 upper, A/3 elevations, A/4 foundation. The main level is shown as open volume, with only the openings the elevations give.</p>
-        <p style="margin:8px 0 0"><b>Assumed:</b> 8&prime;-0&Prime; walls, 12&Prime; floor system, 6:12 roof and 18&Prime; eaves scaled off A/3, grade 1&prime; below slab. Upper-level partition positions are scaled from A/2, not dimensioned.</p>
+        <p style="margin:8px 0 0"><b>Assumed</b> (not dimensioned on these four sheets): 8&prime;-0&Prime; wall heights, 12&Prime; floor systems, 6:12 main roof &amp; 4:12 wing roof scaled off the elevations, 18&Prime; eaves, and grade 1&prime; below main floor. Partition locations are scaled from the plans, not dimensioned.</p>
+        <p style="margin:8px 0 0"><b>Three levels.</b> Lower: family room, bath, stair, crawlspace. Main: master suite, <b>bedroom&nbsp;#2</b>, two baths, stair and sitting room. Upper: bedrooms&nbsp;#4 and&nbsp;#5 with a bath.</p>
+        <p style="margin:8px 0 0">The master bedroom, its 10&prime;-0&Prime; bath / closet band and the 6&prime;-8&Prime; sitting-room opening are dimensioned on A/1. Bedroom&nbsp;#2, the two baths and the stair core are <b>scaled</b> from A/1, not dimensioned.</p>
       </div>
     </details>
   </div>
@@ -159,37 +161,27 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 /* ============================================================
-   BUILDING PARAMETERS  (feet)
-
-   Taken from the McDowell set only - sheets A/2, A/3, A/4
-   (Creative Designs Unlimited, project 0604, 6/30/07).
-   Sheet A/1 in the same photos belongs to a different job
-   ("NEW HOME FOR SOMEONE", project 0200) and is not used here.
-
-   X = the 37'-0" direction, running back from the existing house
-   Z = the 24'-0" gable-end width  (Z = 0 is the front)
-   Y = height, 0 = top of slab
+   BUILDING PARAMETERS  (all units = feet)
+   X = length of the addition (0 .. 70)
+   Z = depth  (0 = front / street,  24 = rear)
+   Y = height (0 = main floor)
    ============================================================ */
-const LEN   = 70;        // 70'-0"  new foundation, full run        (A/4)
-const DEP   = 24;        // 24'-2 1/2" deep, modeled at 24'-0"      (A/4)
-const TWO   = 37;        // 37'-0"  of it is two storeys            (A/2)
-const ONE   = LEN - TWO; // 33'-0"  single storey, lower roof       (A/2)
-const EXIST = 34;        // existing house beyond; massing only
+const LEN   = 70;          // 70'-0"  overall  (A/4 + A/1)
+const DEP   = 24;          // 24'-0"  overall  (A/4 + A/1)
+const SPLIT = 36;          // 36'-0"  finished lower level / start of crawlspace (A/1)
 
-const WALL_H   = 8;                      // assumed 8'-0" walls
-const FLOOR_SY = 1;                      // assumed 12" floor system
-const Y_MAIN   = 0;                      // top of the 4" slab
-const Y_UPPER  = WALL_H + FLOOR_SY;      // +9'
-const Y_PLATE  = Y_UPPER + WALL_H;       // +17'
-const FROST    = 40/12;                  // 40" LOGIX block wall     (A/4)
+const WALL_H   = 8;        // assumed 8'-0" walls
+const FLOOR_SY = 1;        // assumed 12" floor system
+const Y_BASE   = -(WALL_H + FLOOR_SY);   // -9'  lower level floor
+const Y_MAIN   = 0;                      //  0'  main floor
+const Y_UPPER  = WALL_H + FLOOR_SY;      // +9'  upper floor
+const Y_PLATE  = Y_UPPER + WALL_H;       // +17' upper plate
 const GRADE    = -1;
-const PLATE_LO = WALL_H + FLOOR_SY;      // low run plate, +9'
-const RIDGE_LO = PLATE_LO + 4;           // 4:12 over the 24' depth (A/3)
-const RIDGE    = Y_PLATE + TWO/4;        // 6:12 over the 37' gable span (A/3)
-                                         // peak 26'-3" over slab; A/3 scales 26'-6"
 
 const T_EXT = 0.55, T_INT = 0.35;
 const EAVE = 1.5, RAKE = 1.0, RF_T = 0.75;
+const RIDGE_A = Y_PLATE + 6;      // 6:12 over 24' span
+const RIDGE_B = WALL_H   + 4;     // 4:12 over 24' span
 
 /* ---- materials ---- */
 const M = {
@@ -210,7 +202,6 @@ M.existE = new THREE.LineBasicMaterial({color:0x9fb0c4, transparent:true, opacit
 M.ground = new THREE.MeshStandardMaterial({color:0x76845f, roughness:1});
 
 const XRAY = [M.siding, M.inner, M.found, M.roof, M.trim];
-
 
 /* ============================================================
    GEOMETRY HELPERS
@@ -298,26 +289,6 @@ function slab(x1,z1,x2,z2,y,t,mat){
   m.receiveShadow = true; return m;
 }
 
-// Gable roof with the ridge running along Z (front to back), so the
-// triangular gable walls face front and rear and span LEN in X.  A/3.
-function gableRoofZ(z1, z2, plateY, ridgeY, span=LEN){
-  const s = new THREE.Shape();
-  const top = [[-EAVE, plateY],[span/2, ridgeY],[span+EAVE, plateY]];
-  s.moveTo(top[0][0], top[0][1]);
-  s.lineTo(top[1][0], top[1][1]);
-  s.lineTo(top[2][0], top[2][1]);
-  s.lineTo(top[2][0], top[2][1]-RF_T);
-  s.lineTo(top[1][0], top[1][1]-RF_T);
-  s.lineTo(top[0][0], top[0][1]-RF_T);
-  s.closePath();
-  // shape-X is already world X; extrude along world Z
-  const g = new THREE.ExtrudeGeometry(s, {depth:(z2-z1)+2*RAKE, bevelEnabled:false});
-  const m = new THREE.Mesh(g, M.roof);
-  m.position.set(0, 0, z1 - RAKE);
-  m.castShadow = true;
-  return m;
-}
-
 // Gable roof, ridge running along X, over z = 0..DEP
 function gableRoof(x1, x2, plateY, ridgeY, dep=DEP){
   const top = [[-EAVE, plateY],[dep/2, ridgeY],[dep+EAVE, plateY]];
@@ -378,7 +349,7 @@ document.getElementById('overlay').appendChild(labelRenderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = .07;
 controls.maxPolarAngle = Math.PI/2 - 0.02;
-const FOCUS = new THREE.Vector3(44, 8, DEP/2);   // addition + existing massing
+const FOCUS = new THREE.Vector3(12, 6, DEP/2);   // addition + existing massing
 controls.target.copy(FOCUS);
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.45));
@@ -408,179 +379,244 @@ Object.values(LAB).forEach(g=>G.labels.add(g));
    ============================================================ */
 (function site(){
   const g = new THREE.Mesh(new THREE.PlaneGeometry(520,520), M.ground);
-  g.rotation.x = -Math.PI/2; g.position.set(LEN/2 + 8, GRADE, DEP/2);
+  g.rotation.x = -Math.PI/2; g.position.set(LEN/2 - 20, GRADE, DEP/2);
   g.receiveShadow = true; G.ground.add(g);
   const grid = new THREE.GridHelper(280, 28, 0x5c6b49, 0x4a573c);
-  grid.position.set(LEN/2 + 8, GRADE+0.02, DEP/2);
+  grid.position.set(LEN/2 - 20, GRADE+0.02, DEP/2);
   grid.material.opacity=.35; grid.material.transparent=true;
   G.ground.add(grid);
 })();
 
 /* ============================================================
-   FOUNDATION  (A/4)
-   20 course "LOGIX" (40" high) block wall o/ cont. 18"x10" conc.
-   footing w/ (2) #5 rebar;  4" concrete slab w/ radiant in floor heat;
-   2x4 ponywall w/ studs @ 16" o.c. o/ cont. 12"x10" conc. footing.
+   LOWER LEVEL  (A/1 "Basement Floor Plan")
+   36'-0" finished  +  34'-0" crawlspace
    ============================================================ */
-(function foundation(){
-  const y = -FROST;
-  G.base.add(slab(0,0,LEN,DEP, Y_MAIN, 4/12, M.slab));      // 4" slab
-  // 40" block stem wall around the perimeter
-  G.base.add(wall(0,DEP, 0,0,     y, FROST, T_EXT, M.found));
-  G.base.add(wall(0,0,   LEN,0,   y, FROST, T_EXT, M.found));
-  G.base.add(wall(LEN,0, LEN,DEP, y, FROST, T_EXT, M.found));
-  G.base.add(wall(LEN,DEP, 0,DEP, y, FROST, T_EXT, M.found));
-  // continuous footing
-  const f = new THREE.Mesh(new THREE.BoxGeometry(LEN+2.5, 10/12, DEP+2.5), M.slab);
-  f.position.set(LEN/2, y - 5/12, DEP/2); G.base.add(f);
-  const inner = new THREE.Mesh(new THREE.BoxGeometry(LEN-1.5, 10/12, DEP-1.5), M.ground);
-  inner.position.set(LEN/2, y - 5/12, DEP/2); G.base.add(inner);
+(function lower(){
+  const y = Y_BASE, h = WALL_H;
+  G.base.add(slab(0,0,LEN,DEP,y,0.4,M.slab));                       // 4" slab
 
-  LAB.base.add(label('Slab on grade',
-    '4&Prime; slab w/ radiant heat &middot; 40&Prime; LOGIX block stem wall &middot; 70&prime;-0&Prime;',
-    LEN/2, y + 1.1, DEP/2));
+  // exterior foundation walls
+  const wEnd = [                                                     // x = 0 end wall: two 5'0x5'0
+    {at:3.25-2.5, w:5, sill:3.5, h:5, type:'win'},
+    {at:20.75-2.5,w:5, sill:3.5, h:5, type:'win'}
+  ];
+  G.base.add(wall(0,DEP, 0,0,      y,h,T_EXT, M.found, wEnd));       // west end
+  G.base.add(wall(0,0,   LEN,0,    y,h,T_EXT, M.found, [
+    {at:4-2.5,  w:5, sill:3.5, h:5,   type:'win'},                   // 5'0 x 5'0
+    {at:30-2.5, w:5, sill:4.0, h:3.5, type:'win'}                    // 5'0 x 3'6 EGRESS
+  ]));
+  G.base.add(wall(LEN,0, LEN,DEP,  y,h,T_EXT, M.found));             // east end
+  G.base.add(wall(LEN,DEP, 0,DEP,  y,h,T_EXT, M.found, [
+    {at:LEN-34, w:3, sill:0, h:6.7, type:'door'}                     // access door to existing crawlspace
+  ]));
+
+  // crawlspace / finished division  (36'-0")
+  G.base.add(wall(SPLIT,0, SPLIT,DEP, y,h,T_EXT, M.found, [{at:10, w:3, sill:0, h:4, type:'open'}]));
+
+  // finished floor of the family room
+  G.base.add(slab(0.3,0.3,SPLIT-0.3,DEP-0.3, y+0.45, 0.15, M.floor));
+
+  // --- interior partitions (scaled, not dimensioned) ---
+  const I = new THREE.Group(); G.interior.add(I); I.userData.level='base';
+  I.add(wall(23.28,0, 23.28,DEP, y,h,T_INT, M.inner, [{at:0,w:6,sill:0,h:h,type:'open'}])); // family rm / core
+  I.add(wall(23.28,8.3, 29,8.3,  y,h,T_INT, M.inner));               // bath front wall
+  I.add(wall(29,8.3, 29,14,      y,h,T_INT, M.inner, [{at:1,w:2.7,sill:0,h:6.7,type:'open'}]));
+  I.add(wall(23.28,14, 29,14,    y,h,T_INT, M.inner));
+  // stair up to main level
+  const st = new THREE.Group();
+  for(let i=0;i<13;i++){
+    const s = new THREE.Mesh(new THREE.BoxGeometry(3.6,0.55,0.83), M.floor);
+    s.position.set(25.1, y + 0.7*(i+1) - 0.28, 15.2 + i*0.83);
+    st.add(s);
+  }
+  I.add(st);
+
+  LAB.base.add(label('Family Room','24&prime;-0&Prime; &times; 23&prime;-3&frac38;&Prime; &middot; vaulted glb', 11, y+4, 13));
+  LAB.base.add(label('Bath','5&prime;-9&Prime; &times; 5&prime;-8&frac12;&Prime;', 26.5, y+2.6, 11.2));
+  LAB.base.add(label('Up', '', 25.1, y+4.4, 19));
+  LAB.base.add(label('Crawlspace','unexcavated &middot; 34&prime;-0&Prime;', 60, y+3.6, 19));
 })();
 
 /* ============================================================
-   MAIN LEVEL
-   The addition's main-floor plan is NOT among the photographed
-   sheets (the set runs A/2 upper, A/3 elevations, A/4 foundation).
-   Openings below come from the A/3 elevations only; the interior
-   is deliberately left open rather than invented.
+   MAIN LEVEL  (A/1 "Master Bedroom Plan")
+   master bedroom 24' x 24'  +  10' bath / closet band,
+   and west of that: bedroom #2, two baths, the stair and the sitting room
    ============================================================ */
-(function mainLevel(){
+(function main(){
   const y = Y_MAIN, h = WALL_H;
-  G.main.add(rimBand(0,0,TWO,DEP, y + h + FLOOR_SY, FLOOR_SY));
+  G.main.add(slab(0,0,LEN,DEP,y,0.9,M.floor));
+  G.main.add(rimBand(0,0,LEN,DEP, y, FLOOR_SY));
 
-  // 24'-0" side wall
-  G.main.add(wall(0,DEP, 0,0, y,h,T_EXT, M.siding, [
-    {at:3.25-2.5,  w:5, sill:2.5, h:4, type:'win'},
-    {at:20.75-2.5, w:5, sill:2.5, h:4, type:'win'}
-  ]));
-  // front wall, 70'-0": lower row of the two-over-two under the gable,
-  // then the windows A/3 shows along the single-storey run
+  const MB0 = 46;                       // master bedroom starts (70 - 24)
+  const ST0 = 23.28, ST1 = 27.28;       // stair core, over the flight below
+  const B2R = 17;                       // bedroom #2 / bath line
+
+  // --- front wall  (z = 0) ---
   G.main.add(wall(0,0, LEN,0, y,h,T_EXT, M.siding, [
-    {at:6.0,  w:5, sill:2.5, h:4, type:'win'},
-    {at:22.0, w:5, sill:2.5, h:4, type:'win'},
-    {at:44.0, w:5, sill:2.5, h:5, type:'win'},
-    {at:58.0, w:5, sill:2.5, h:5, type:'win'}
+    {at:7.5,  w:5, sill:2.5, h:5,   type:'win'},
+    {at:15.0, w:3, sill:0.0, h:6.8, type:'door'},  // 3068 into the hall
+    {at:25.5, w:5, sill:2.5, h:5,   type:'win'},
+    {at:49.5, w:3, sill:2.5, h:5,   type:'win'},   // 3'0 x 5'0
+    {at:61.5, w:3, sill:2.5, h:5,   type:'win'}
   ]));
-  // rear wall, 70'-0": french doors and window pairs on A/3
+  // --- rear wall (z = DEP) : runs from x=LEN back to 0 ---
   G.main.add(wall(LEN,DEP, 0,DEP, y,h,T_EXT, M.siding, [
-    {at:8.0,  w:6, sill:0.0, h:6.8, type:'door'},
-    {at:18.0, w:2.5,sill:3.5,h:3,   type:'win'},
-    {at:26.0, w:5, sill:2.5, h:5,   type:'win'},
-    {at:38.0, w:5, sill:2.5, h:5,   type:'win'},
-    {at:54.0, w:5, sill:2.5, h:5,   type:'win'}
+    {at:2.5,  w:3, sill:2.5, h:5,   type:'win'},   // master, 3'0x5'0
+    {at:18.0, w:3, sill:2.5, h:5,   type:'win'},
+    {at:26.0, w:2.5,sill:3.5,h:3,   type:'win'},   // small bath window
+    {at:31.0, w:6, sill:0.0, h:6.8, type:'door'},  // french doors (rear elev.)
+    {at:44.5, w:5, sill:2.5, h:5,   type:'win'},
+    {at:55.0, w:5, sill:2.5, h:5,   type:'win'},   // bedroom #2
+    {at:62.5, w:5, sill:2.5, h:5,   type:'win'}
   ]));
-  // wall shared with the existing house
+  // --- east end wall (x = LEN) : master bedroom gable end ---
   G.main.add(wall(LEN,0, LEN,DEP, y,h,T_EXT, M.siding, [
-    {at:9.0, w:6, sill:0, h:6.8, type:'open'}
+    {at:3.47, w:3, sill:2.5, h:5, type:'win'},     // 3'-5 5/8" | 3'0x5'0
+    {at:17.5, w:3, sill:2.5, h:5, type:'win'}
+  ]));
+  // --- west end wall (x = 0) : 2-storey gable end, main level ---
+  G.main.add(wall(0,DEP, 0,0, y,h,T_EXT, M.siding, [
+    {at:4.0,  w:5, sill:2.5, h:5, type:'win'},
+    {at:15.0, w:5, sill:2.5, h:5, type:'win'}
   ]));
 
-  LAB.main.add(label('Main level &mdash; 70&prime; &times; 24&prime;',
-    'plan sheet not in the photos &mdash; shown as open volume',
-    LEN/2, y + 4.4, DEP/2));
+  // --- interior partitions ---
+  const I = new THREE.Group(); G.interior.add(I); I.userData.level='main';
+
+  // master suite: 24'-0" bedroom + the 10'-0" bath / closet band
+  I.add(wall(MB0,0, MB0,DEP, y,h,T_INT, M.inner, [
+    {at:2,   w:2.7, sill:0, h:6.8, type:'open'},   // into closet
+    {at:14,  w:2.7, sill:0, h:6.8, type:'open'}    // into master bath
+  ]));
+  I.add(wall(SPLIT,7.6, MB0,7.6, y,h,T_INT, M.inner));        // closet / bath divider
+  I.add(wall(SPLIT+2.4,7.6, SPLIT+2.4,DEP, y,h,T_INT, M.inner,
+        [{at:6,w:2.7,sill:0,h:6.8,type:'open'}]));
+
+  // sitting room links the master suite back to the rest of the floor,
+  // through the 6'-8" opening dimensioned on A/1
+  I.add(wall(SPLIT,8, SPLIT,DEP, y,h,T_INT, M.inner, [{at:1.5,w:6.67,sill:0,h:6.8,type:'open'}]));
+  I.add(wall(ST1,8, SPLIT,8,   y,h,T_INT, M.inner, [{at:3,w:3,sill:0,h:6.8,type:'open'}]));
+
+  // stair core, over the flight coming up from the lower level
+  I.add(wall(ST0,14, ST0,DEP,  y,h,T_INT, M.inner));
+  I.add(wall(ST1,14, ST1,DEP,  y,h,T_INT, M.inner));
+  I.add(wall(ST0,14, ST1,14,   y,h,T_INT, M.inner, [{at:0.6,w:3,sill:0,h:6.8,type:'open'}]));
+
+  // two baths between the stair and bedroom #2
+  I.add(wall(B2R,8, B2R,DEP,   y,h,T_INT, M.inner, [{at:2,w:2.4,sill:0,h:6.8,type:'open'},
+                                                    {at:10,w:2.4,sill:0,h:6.8,type:'open'}]));
+  I.add(wall(B2R,16, ST0,16,   y,h,T_INT, M.inner));
+  I.add(wall(B2R,8, ST0,8,     y,h,T_INT, M.inner));
+
+  // bedroom #2 and the hall along the front
+  I.add(wall(1,8, B2R,8,       y,h,T_INT, M.inner, [{at:12,w:2.7,sill:0,h:6.8,type:'open'}]));
+  I.add(wall(1,8, 1,DEP,       y,h,T_INT, M.inner));
+
+  LAB.main.add(label('Master Bedroom','24&prime;-0&Prime; &times; 24&prime;-0&Prime;', 58, y+4.2, 12));
+  LAB.main.add(label('Master Bath','14&prime;-8&Prime; deep', 41, y+3.4, 16));
+  LAB.main.add(label('Closet','7&prime;-7&Prime;', 41, y+1.4, 3.5));
+  LAB.main.add(label('Sitting Room','6&prime;-8&Prime; opening to the master', 31.5, y+3.2, 17));
+  LAB.main.add(label('Bedroom #2','', 9, y+4.2, 16.5));
+  LAB.main.add(label('Bath','', 20, y+1.6, 20));
+  LAB.main.add(label('Bath','', 20, y+1.6, 12));
+  LAB.main.add(label('Up', '', (ST0+ST1)/2, y+2.4, 19));
+  LAB.main.add(label('Hall','to arctic entry, kitchen &amp; office', 16, y+1.4, 4));
 })();
 
 /* ============================================================
-   UPPER LEVEL  (A/2)  bedrooms #4 & #5, bath, switchback stair
-   37'-0" x 24'-0";  gable end 6'-6" | 11'-0" | 6'-6"
+   UPPER LEVEL  (A/2)  bedrooms 4 & 5, bath — 37'-0" wing
    ============================================================ */
-(function upperLevel(){
+(function upper(){
   const y = Y_UPPER, h = WALL_H;
-  G.upper.add(slab(0,0,TWO,DEP, y, 0.9, M.floor));
+  G.upper.add(slab(0,0,SPLIT,DEP,y,0.9,M.floor));
+  G.upper.add(rimBand(0,0,SPLIT,DEP, y, FLOOR_SY));
 
-  // 24'-0" side wall: two 5'0 x 5'0 centred in the 6'-6" segments
-  // of the 6'-6" | 11'-0" | 6'-6" string on A/2
+  // west gable end (x = 0) : two 5'0 x 5'0 per A/2 (6'-6" | 11'-0" | 6'-6")
   G.upper.add(wall(0,DEP, 0,0, y,h,T_EXT, M.siding, [
     {at:3.25-2.5,  w:5, sill:2.5, h:5, type:'win'},
     {at:20.75-2.5, w:5, sill:2.5, h:5, type:'win'}
-  ]));
-  // front gable wall, 37'-0" wide, peak at mid-span
-  G.upper.add(wall(0,0, TWO,0, y,h,T_EXT, M.siding, [
-    {at:6.0,  w:5, sill:2.5, h:5, type:'win'},
-    {at:22.0, w:5, sill:2.5, h:4, type:'win'},   // 5'0 x 4'0, bedroom #4
-    {at:31.0, w:3, sill:3.5, h:3, type:'win'}    // bathroom
-  ], {at:TWO/2, rise:RIDGE - Y_PLATE}));
-  // rear gable wall
-  G.upper.add(wall(TWO,DEP, 0,DEP, y,h,T_EXT, M.siding, [
-    {at:13.0, w:5, sill:2.5, h:5, type:'win'},
-    {at:31.0, w:5, sill:2.5, h:5, type:'win'}
-  ], {at:TWO/2, rise:RIDGE - Y_PLATE}));
-  // wall onto the single-storey run
-  G.upper.add(wall(TWO,0, TWO,DEP, y,h,T_EXT, M.siding));
+  ], {at:DEP/2, rise:RIDGE_A - Y_PLATE}));
 
-  // --- partitions: positions scaled off A/2, not dimensioned ---
-  const I = new THREE.Group(); I.userData.level='upper'; G.interior.add(I);
-  I.add(wall(16.2,0, 16.2,DEP, y,h,T_INT, M.inner, [{at:17,w:2.7,sill:0,h:6.8,type:'open'}]));
-  I.add(wall(5.5,0,  5.5,8,    y,h,T_INT, M.inner));
-  I.add(wall(5.5,8,  16.2,8,   y,h,T_INT, M.inner, [{at:2,w:2.7,sill:0,h:6.8,type:'open'},
-                                                    {at:7.5,w:2.4,sill:0,h:6.8,type:'open'}]));
-  I.add(wall(13,0,   13,8,     y,h,T_INT, M.inner));
+  G.upper.add(wall(0,0, SPLIT,0, y,h,T_EXT, M.siding, [
+    {at:7.5,  w:5, sill:2.5, h:5, type:'win'},
+    {at:22.5, w:5, sill:2.5, h:4, type:'win'},     // 5'0 x 4'0, bedroom #4
+    {at:31.0, w:3, sill:3.5, h:3, type:'win'}      // bathroom
+  ]));
+  G.upper.add(wall(SPLIT,DEP, 0,DEP, y,h,T_EXT, M.siding, [
+    {at:6.0,  w:5, sill:2.5, h:5, type:'win'},
+    {at:24.0, w:5, sill:2.5, h:5, type:'win'}
+  ]));
+  // east wall of the upper wing sits over the main-level partition
+  G.upper.add(wall(SPLIT,0, SPLIT,DEP, y,h,T_EXT, M.siding, [],
+    {at:DEP/2, rise:RIDGE_A - Y_PLATE}));
+
+  const I = new THREE.Group(); G.interior.add(I); I.userData.level='upper';
+  I.add(wall(16.2,0, 16.2,DEP, y,h,T_INT, M.inner, [{at:16,w:2.7,sill:0,h:6.8,type:'open'}]));
+  I.add(wall(5.5,0,  5.5,7.6,  y,h,T_INT, M.inner));
+  I.add(wall(5.5,7.6, 16.2,7.6,y,h,T_INT, M.inner, [{at:2,w:2.7,sill:0,h:6.8,type:'open'},
+                                                    {at:7,w:2.4,sill:0,h:6.8,type:'open'}]));
+  I.add(wall(14.5,0, 14.5,7.6, y,h,T_INT, M.inner));
   I.add(wall(20.2,0, 20.2,15.8,y,h,T_INT, M.inner, [{at:13,w:2.7,sill:0,h:6.8,type:'open'}]));
-  I.add(wall(27,15.8, TWO,15.8,y,h,T_INT, M.inner, [{at:1.5,w:2.4,sill:0,h:6.8,type:'open'}]));
-  I.add(wall(27,15.8, 27,DEP,  y,h,T_INT, M.inner));
-  // switchback stair: UP 3'-8" / DN 3'-9 1/2"
+  I.add(wall(27,15.8, SPLIT,15.8, y,h,T_INT, M.inner, [{at:1.5,w:2.4,sill:0,h:6.8,type:'open'}]));
+  I.add(wall(27,15.8, 27,DEP,    y,h,T_INT, M.inner));
+  const st = new THREE.Group();
   for(let i=0;i<13;i++){
     const s = new THREE.Mesh(new THREE.BoxGeometry(3.7,0.55,0.83), M.floor);
     s.position.set(18.2, y - 0.7*i - 0.28, 15.5 + i*0.83);
-    I.add(s);
+    st.add(s);
   }
+  I.add(st);
 
-  LAB.upper.add(label('Bedroom #5','16&prime;-2&Prime; &times; 12&prime;-10&frac38;&Prime;',  8, y+4.2, 16));
-  LAB.upper.add(label('Closet','7&prime;-6&Prime;',                                          9, y+1.6,  4));
-  LAB.upper.add(label('Bedroom #4','15&prime;-9&frac34;&Prime;',                             24, y+4.2,  7));
-  LAB.upper.add(label('Bath','',                                                             32, y+1.6, 20.5));
-  LAB.upper.add(label('Stair','up / dn',                                                   18.2, y+3.0, 20));
+  LAB.upper.add(label('Bedroom #5','16&prime;-2&Prime; &times; 12&prime;-10&frac38;&Prime;', 8, y+4.2, 16));
+  LAB.upper.add(label('Bedroom #4','15&prime;-9&frac34;&Prime;', 28, y+4.2, 8));
+  LAB.upper.add(label('Bath','', 32, y+1.6, 21));
+  LAB.upper.add(label('Dn','', 18.2, y+2.6, 19));
 })();
 
 /* ============================================================
-   ROOF  (A/3)  gable, ridge along the 37', gable ends on the 24' faces
+   ROOFS  (scaled off A/3 elevations)
    ============================================================ */
-(function roof(){
-  // 37'-0" front-facing gable over the two-storey portion
-  const g2 = gableRoofZ(0, DEP, Y_PLATE, RIDGE, TWO);
-  G.roof.add(g2);
-  G.roof.add(gableVent(TWO/2, RIDGE-2.2, -0.15));
-  G.roof.add(gableVent(TWO/2, RIDGE-2.2, DEP+0.15));
-  // 33'-0" single-storey run, ridge along its length, ~4:12
-  G.roof.add(gableRoof(TWO, LEN, PLATE_LO, RIDGE_LO));
-  G.roof.add(wall(LEN,0, LEN,DEP, PLATE_LO, 0.05, T_EXT, M.siding, [],
-                  {at:DEP/2, rise:RIDGE_LO - PLATE_LO}));
-  G.roof.add(wall(TWO,DEP, TWO,0, PLATE_LO, 0.05, T_EXT, M.siding, [],
-                  {at:DEP/2, rise:RIDGE_LO - PLATE_LO}));
-  LAB.main.add(label('Single storey', '33&prime;-0&Prime; &middot; lower roof (A/2, A/3)',
-    TWO + ONE/2, PLATE_LO + 1.2, DEP/2));
+(function roofs(){
+  G.roof.add(gableRoof(0, SPLIT, Y_PLATE, RIDGE_A));           // 2-storey block, ~6:12
+  G.roof.add(gableRoof(SPLIT, LEN, WALL_H, RIDGE_B));          // master wing, ~4:12
+  // gable-end vents seen on both elevations
+  G.roof.add(gableVent(-0.1, Y_PLATE+3.2, DEP/2));
+  G.roof.add(gableVent(LEN+0.1, WALL_H+2.2, DEP/2));
+  // wing gable end wall (against the 2-storey block) + far gable
+  G.roof.add(wall(LEN,0, LEN,DEP, WALL_H, 0.05, T_EXT, M.siding, [],
+                  {at:DEP/2, rise:RIDGE_B - WALL_H}));
+  G.roof.add(wall(SPLIT,DEP, SPLIT,0, WALL_H, 0.05, T_EXT, M.siding, [],
+                  {at:DEP/2, rise:RIDGE_B - WALL_H}));
 })();
 
 /* ============================================================
-   EXISTING HOUSE  (massing only)
-   33'-0" beyond the addition per A/2; depth and layout are not
-   dimensioned on A/2-A/4, so this is a block, not a reading.
+   EXISTING HOUSE  (massing only — not dimensioned on these sheets)
    ============================================================ */
 (function existing(){
-  const x0 = LEN + 1, x1 = LEN + EXIST, z0 = 1, z1 = DEP + 6, h = WALL_H + 1;
+  const x0 = -42, x1 = -4, z0 = -2, z1 = 30, h = 9;
   const bg  = new THREE.BoxGeometry(x1-x0, h, z1-z0);
   const box = new THREE.Mesh(bg, M.exist);
-  box.position.set((x0+x1)/2, h/2, (z0+z1)/2);
+  box.position.set((x0+x1)/2, h/2 - 0.5, (z0+z1)/2);
   G.exist.add(box);
   const be = new THREE.LineSegments(new THREE.EdgesGeometry(bg), M.existE);
   be.position.copy(box.position); G.exist.add(be);
-
-  const d = z1 - z0;
+  // simple gable cap
   const s = new THREE.Shape();
-  s.moveTo(0,0); s.lineTo(d,0); s.lineTo(d/2, 5); s.closePath();
+  const d = z1-z0;
+  s.moveTo(0,0); s.lineTo(d,0); s.lineTo(d/2, 6); s.closePath();
   const g = new THREE.ExtrudeGeometry(s,{depth:x1-x0, bevelEnabled:false});
   g.rotateY(-Math.PI/2);
   const cap = new THREE.Mesh(g, M.exist);
-  cap.position.set(x1, h, z0); G.exist.add(cap);
+  cap.position.set(x1, h-0.5, z0);
+  G.exist.add(cap);
   const ce = new THREE.LineSegments(new THREE.EdgesGeometry(g), M.existE);
   ce.position.copy(cap.position); G.exist.add(ce);
-
-  LAB.exist.add(label('Existing house',
-    'massing only &mdash; not dimensioned on A/2&ndash;A/4',
-    LEN + EXIST/2, h + 7, DEP/2));
+  // link back to the addition
+  const link = new THREE.Mesh(new THREE.BoxGeometry(4, WALL_H, 13), M.exist);
+  link.position.set(-2, WALL_H/2, 12);
+  G.exist.add(link);
+  LAB.exist.add(label('Existing house','approximate massing &mdash; not dimensioned on A/1&ndash;A/4',
+                      -25, 14.5, 14));
 })();
 
 /* ============================================================
@@ -589,22 +625,25 @@ Object.values(LAB).forEach(g=>G.labels.add(g));
 (function dims(){
   const mat = new THREE.LineBasicMaterial({color:0xffcc66});
   const seg = (a,b,text)=>{
-    G.dims.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(
-      [new THREE.Vector3(...a), new THREE.Vector3(...b)]), mat));
+    const g = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(...a), new THREE.Vector3(...b)]);
+    G.dims.add(new THREE.Line(g, mat));
+    // ticks
     [a,b].forEach(p=>{
-      const t = new THREE.Mesh(new THREE.SphereGeometry(0.22,8,6),
+      const t = new THREE.Mesh(new THREE.SphereGeometry(0.28,8,6),
         new THREE.MeshBasicMaterial({color:0xffcc66}));
       t.position.set(...p); G.dims.add(t);
     });
     G.dims.add(label(text,null,(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2,'dlabel'));
   };
   const yd = GRADE + 0.4;
-  seg([0,yd,-4],[TWO,yd,-4],                 '37&prime;-0&Prime; two storeys');
-  seg([TWO,yd,-4],[LEN,yd,-4],               '33&prime;-0&Prime; single storey');
-  seg([0,yd,-8],[LEN,yd,-8],                 '70&prime;-0&Prime; new foundation');
-  seg([-5,yd,0],[-5,yd,DEP],                 '24&prime;-2&frac12;&Prime;');
-  seg([-3,-FROST,-4],[-3,RIDGE,-4],          'peak &asymp; 26&prime;-3&Prime; over slab');
-  seg([-3,-FROST,DEP+4],[-3,0,DEP+4],        '40&Prime; stem wall');
+  seg([0,yd,-7],[LEN,yd,-7], '70&prime;-0&Prime;');
+  seg([0,yd,-3.5],[SPLIT,yd,-3.5], '36&prime;-0&Prime;');
+  seg([SPLIT,yd,-3.5],[LEN,yd,-3.5], '34&prime;-0&Prime;');
+  seg([LEN+9,yd,0],[LEN+9,yd,DEP], '24&prime;-0&Prime;');
+  seg([46,yd,DEP+4],[LEN,yd,DEP+4], '24&prime;-0&Prime; master');
+  seg([SPLIT,yd,DEP+4],[46,yd,DEP+4], '10&prime;-0&Prime;');
+  seg([-4,Y_BASE,-6],[-4,RIDGE_A,-6], 'ridge &asymp; 23&prime; over main flr');
 })();
 
 /* ============================================================
@@ -660,11 +699,11 @@ document.getElementById('c-explode').addEventListener('input', e=>{
 // camera offsets measured from FOCUS, scaled so the whole building still fits
 // on a narrow (phone) viewport
 const VIEWS = {
-  iso:   [-86,  68, -96],
-  front: [  0,  10, -152],
-  rear:  [  0,  10,  152],
-  end:   [-142, 13,    1],
-  top:   [  0, 188,    0.1]
+  iso:   [-80,  62, -92],
+  front: [  0,   9, -136],
+  rear:  [  0,   9,  136],
+  end:   [124,  12,    1],
+  top:   [  0, 168,    0.1]
 };
 let anim = null;
 function goTo(v){
