@@ -62,12 +62,14 @@
   <div class="tabs" id="layers">
     <button type="button" id="btnBorough" aria-pressed="true">Borough land</button>
     <button type="button" id="btnPrivate" aria-pressed="false">Private parcels</button>
+    <button type="button" id="btnRefuge" aria-pressed="true">Federal refuge</button>
   </div>
   <div class="legend">
     <span><i style="background:var(--parcel)"></i>The listing&rsquo;s lot</span>
     <span><i style="background:#3f7d45"></i>Borough land &mdash; open to casual use</span>
     <span><i style="background:#8a8f86"></i>Borough-owned, not casual use</span>
     <span><i style="background:#d08cc0"></i>Private parcel</span>
+    <span><i style="background:#2f8f7a"></i>Federal refuge (Kenai NWR)</span>
     <span><i style="background:var(--wet)"></i>Mapped wetland</span>
     <span><i style="background:var(--power)"></i>115 kV transmission</span>
   </div>
@@ -111,6 +113,23 @@
        .addTo(boroughLayer);
     });
   }).catch(function(){});
+
+  // Federal refuge. It is absent from the assessor's parcel layer, so without this it
+  // renders as blank ground and reads as if it were unowned.
+  var refugeLayer = L.layerGroup().addTo(map);
+  fetch('refuge.json').then(function(r){ return r.json(); }).then(function(d){
+    if(!(d.rings||[]).length) return;
+    L.polygon(ringsToLatLng(d.rings),
+      {color:'#2f8f7a', weight:2, opacity:.95, fillColor:'#2f8f7a', fillOpacity:.18})
+     .bindPopup('<b>Kenai National Wildlife Refuge</b><br>Federal land, open to the public')
+     .addTo(refugeLayer);
+  }).catch(function(){});
+
+  document.getElementById('btnRefuge').addEventListener('click', function(){
+    var on = map.hasLayer(refugeLayer);
+    if(on) map.removeLayer(refugeLayer); else refugeLayer.addTo(map);
+    this.setAttribute('aria-pressed', on?'false':'true');
+  });
 
   document.getElementById('btnBorough').addEventListener('click', function(){
     var on = map.hasLayer(boroughLayer);
