@@ -3,45 +3,59 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Parcel lines, wetlands and power corridors</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600&family=Azeret+Mono:wght@400;500&display=swap">
 <style>
   :root{--ground:#f4f2ed;--card:#fff;--ink:#191a17;--muted:#5f6660;--rule:#dcd9d1;--firm:#b4b0a6;
-        --parcel:#ffd400;--wet:#2bb3e0;--power:#ff3b1f;
+        --parcel:#ffd400;--wet:#2bb3e0;--power:#ff3b1f;--ok:#2f7d4f;--bad:#b3341f;
         --ui:"Barlow Semi Condensed",system-ui,sans-serif;--mono:"Azeret Mono",ui-monospace,monospace}
   @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-    --ground:#14161a;--card:#1c1f24;--ink:#e7e9e4;--muted:#9aa09a;--rule:#2e333a;--firm:#49505a}}
+    --ground:#14161a;--card:#1c1f24;--ink:#e7e9e4;--muted:#9aa09a;--rule:#2e333a;--firm:#49505a;
+    --ok:#6cc48c;--bad:#f0714f}}
+  :root[data-theme="dark"]{--ground:#14161a;--card:#1c1f24;--ink:#e7e9e4;--muted:#9aa09a;
+    --rule:#2e333a;--firm:#49505a;--ok:#6cc48c;--bad:#f0714f}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);font-size:17px;padding:1rem 1rem 2rem}
-  .wrap{max-width:60rem;margin:0 auto}
-  a.back{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none}
-  h1{margin:.5rem 0 0;font-size:1.45rem;font-weight:600}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);font-size:17px;
+       padding-block:1rem 2rem;padding-inline:1rem}
+  .wrap{max-width:62rem;margin:0 auto}
+  a.back{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;
+         color:var(--muted);text-decoration:none}
+  h1{margin:.5rem 0 0;font-size:1.45rem;font-weight:600;text-wrap:balance}
   .sub{font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-top:.2rem;letter-spacing:.04em}
   .tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin:.8rem 0}
-  button{font-family:var(--mono);font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;padding:.45em .7em;
-         border:1px solid var(--firm);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer}
+  button{font-family:var(--mono);font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;
+         padding:.45em .7em;border:1px solid var(--firm);background:transparent;color:var(--muted);
+         border-radius:3px;cursor:pointer}
   button[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+  button:focus-visible{outline:2px solid var(--parcel);outline-offset:2px}
   #map{height:62vh;min-height:24rem;border:1px solid var(--rule);border-radius:4px}
-  .legend{display:flex;flex-wrap:wrap;gap:.3rem 1rem;font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-top:.5rem}
+  .legend{display:flex;flex-wrap:wrap;gap:.3rem 1rem;font-family:var(--mono);font-size:.65rem;
+          color:var(--muted);margin-top:.5rem}
   .legend i{display:inline-block;width:14px;height:4px;margin-right:.35rem;vertical-align:3px}
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:.5rem;margin-top:1rem}
-  .stat{background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:.65rem .75rem}
-  .stat .k{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-  .stat .v{font-family:var(--mono);font-size:1.05rem;font-weight:500;margin-top:.15rem}
-  .stat .n{font-size:.85rem;color:var(--muted);margin-top:.15rem;line-height:1.35}
-  .note{margin-top:1rem;background:var(--card);border:1px solid var(--firm);border-left:3px solid var(--power);
-        padding:.7rem .85rem;font-size:.9rem;color:var(--muted);line-height:1.5}
+  table{width:100%;border-collapse:collapse;margin-top:1rem;font-size:.86rem}
+  th,td{text-align:left;padding:.4rem .5rem;border-bottom:1px solid var(--rule)}
+  th{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
+     color:var(--muted);font-weight:500}
+  td.num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  tr.row{cursor:pointer}
+  tr.row:hover td{background:var(--card)}
+  .over{color:var(--bad)} .under{color:var(--ok)}
+  .wrapt{overflow-x:auto}
+  .note{margin-top:1rem;background:var(--card);border:1px solid var(--firm);
+        border-left:3px solid var(--power);padding:.7rem .85rem;font-size:.9rem;
+        color:var(--muted);line-height:1.5}
   .note strong{color:var(--ink)}
-  .leaflet-container{background:#111}
+  .leaflet-container{background:#111;font-family:var(--ui)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <a class="back" href="./">&larr; Back to the tour</a>
   <h1>Parcel lines, wetlands and power corridors</h1>
-  <div class="sub">KPB assessor parcels &middot; KPB wetlands assessment &middot; HIFLD 115 kV transmission &middot; Esri imagery</div>
+  <div class="sub" id="sub">Loading&hellip;</div>
 
   <div class="tabs" id="tabs"></div>
   <div id="map"></div>
@@ -51,7 +65,7 @@
     <span><i style="background:var(--power)"></i>115 kV transmission</span>
   </div>
 
-  <div class="stats" id="stats"></div>
+  <div class="wrapt"><table id="tbl"></table></div>
   <div class="note" id="note"></div>
 </div>
 
@@ -59,80 +73,116 @@
 <script>
 (function(){
   "use strict";
-  // Grid-sampled wetland fraction per parcel (point-in-polygon, ~2,000 samples inside each
-  // boundary). It is an estimate off the Borough's mapped wetlands, not a delineation.
-  var WET = { "575 Pace St": 71, "36880 Kendanemken Rd": 24, "40248 Arrowhead Ave": 0 };
+  // Grid-sampled wetland fraction, only for the three parcels that were sampled.
+  var WET = { "575 Pace": 71, "36880 Kendanemken": 24, "40248 Arrowhead": 0 };
 
-  var map = L.map('map', {scrollWheelZoom:true}).setView([60.503,-151.03], 13);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'
-  }).addTo(map);
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  function money(n){return "$"+Number(n||0).toLocaleString();}
+
+  var map = L.map('map', {scrollWheelZoom:true}).setView([60.503,-151.03], 11);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {maxZoom:19, attribution:'Imagery &copy; Esri, Maxar'}).addTo(map);
   L.control.scale({imperial:true, metric:false}).addTo(map);
 
-  function ringsToLatLng(rings){ return rings.map(function(r){ return r.map(function(p){ return [p[1], p[0]]; }); }); }
+  function ringsToLatLng(rings){
+    return rings.map(function(r){ return r.map(function(p){ return [p[1], p[0]]; }); });
+  }
 
-  fetch('gis-data.json').then(function(r){ return r.json(); }).then(function(d){
-    var wetLayer = L.layerGroup().addTo(map);
-    d.wetlands.forEach(function(w){
-      L.polygon(ringsToLatLng(w.rings), {color:'#2bb3e0', weight:1, opacity:.75, fillOpacity:.28})
-       .bindPopup('<b>'+(w.geocomp||'Wetland')+'</b><br>unit '+(w.mapunit||'')+'<br>'+(w.acres||0).toFixed(1)+' acres')
-       .addTo(wetLayer);
-    });
+  Promise.all([
+    fetch('parcels.json').then(function(r){ return r.json(); }),
+    fetch('gis-data.json').then(function(r){ return r.json(); }).catch(function(){ return null; })
+  ]).then(function(res){
+    var P = res[0], G = res[1];
+    var parcels = P.parcels || [];
 
-    d.lines.forEach(function(l){
-      l.paths.forEach(function(path){
-        L.polyline(path.map(function(p){ return [p[1],p[0]]; }),
-          {color:'#ff3b1f', weight:3, opacity:.95})
-          .bindPopup('<b>'+l.kv+' kV transmission</b><br>'+l.owner+'<br>to '+l.to).addTo(map);
+    if(G){
+      (G.wetlands||[]).forEach(function(w){
+        L.polygon(ringsToLatLng(w.rings), {color:'#2bb3e0',weight:1,opacity:.75,fillOpacity:.28})
+         .bindPopup('<b>'+esc(w.geocomp||'Wetland')+'</b><br>'+(w.acres||0).toFixed(1)+' acres')
+         .addTo(map);
       });
+      (G.lines||[]).forEach(function(l){
+        (l.paths||[]).forEach(function(path){
+          L.polyline(path.map(function(p){ return [p[1],p[0]]; }),
+            {color:'#ff3b1f',weight:3,opacity:.95})
+            .bindPopup('<b>'+l.kv+' kV transmission</b><br>'+esc(l.owner)).addTo(map);
+        });
+      });
+    }
+
+    var bounds = {}, all = L.latLngBounds([]);
+    parcels.forEach(function(p){
+      var poly = L.polygon(ringsToLatLng(p.rings),
+        {color:'#ffd400', weight:3, opacity:1, fill:false}).addTo(map);
+      var gap = (p.price && p.assessed) ? Math.round((p.price-p.assessed)/p.assessed*100) : null;
+      poly.bindPopup('<b>'+esc(p.key)+'</b><br>Parcel '+esc(p.parcel)+'<br>'+
+        p.acreage+' acres<br>Asking '+money(p.price)+' &middot; assessed '+money(p.assessed)+
+        (gap!==null ? '<br><b>'+(gap>=0?'+':'')+gap+'%</b> over assessed' : '')+
+        (WET[p.key]!==undefined ? '<br>~'+WET[p.key]+'% mapped wetland' : ''));
+      bounds[p.key] = poly.getBounds();
+      all.extend(poly.getBounds());
     });
 
-    var bounds = {};
-    d.parcels.forEach(function(p){
-      var name = p.attrs.PHYSICAL_ADDRESSES;
-      var poly = L.polygon(ringsToLatLng(p.rings), {color:'#ffd400', weight:3, opacity:1, fill:false}).addTo(map);
-      poly.bindPopup('<b>'+name+'</b><br>Parcel '+p.attrs.PARCEL_ID+'<br>'+p.attrs.ACREAGE+' acres<br>'
-        +'Land $'+(p.attrs.LAND_VALUE||0).toLocaleString()+' &middot; assessed $'+(p.attrs.ASSESSED_VALUE||0).toLocaleString()
-        +'<br>~'+(WET[name]!==undefined?WET[name]:'?')+'% mapped wetland');
-      bounds[name] = poly.getBounds();
-    });
-
-    // tabs
     var tabs = document.getElementById('tabs');
-    var all = L.latLngBounds([]); Object.keys(bounds).forEach(function(k){ all.extend(bounds[k]); });
     function mk(label, b){
       var btn=document.createElement('button'); btn.type='button'; btn.textContent=label;
-      btn.addEventListener('click',function(){
+      btn.addEventListener('click', function(){
         [].forEach.call(tabs.children,function(c){c.setAttribute('aria-pressed','false');});
         btn.setAttribute('aria-pressed','true');
-        map.fitBounds(b, {padding:[24,24]});
+        map.fitBounds(b, {padding:[26,26]});
       });
       tabs.appendChild(btn); return btn;
     }
-    var first = mk('All three', all.pad(0.35));
-    Object.keys(bounds).forEach(function(k){ mk(k.replace(/ (St|Rd|Ave)$/,''), bounds[k]); });
+    var first = mk('All '+parcels.length, all.pad(0.08));
+    parcels.forEach(function(p){ mk(p.key.replace(/^\d+\s+/,''), bounds[p.key]); });
     first.setAttribute('aria-pressed','true');
-    map.fitBounds(all.pad(0.35));
+    map.fitBounds(all.pad(0.08));
 
-    // stats
-    var s = document.getElementById('stats'); s.innerHTML='';
-    d.parcels.forEach(function(p){
-      var name=p.attrs.PHYSICAL_ADDRESSES, ac=p.attrs.ACREAGE, w=WET[name]||0;
-      var dry=(ac*(100-w)/100);
-      var el=document.createElement('div'); el.className='stat';
-      el.innerHTML='<div class="k">'+name+'</div><div class="v">'+dry.toFixed(1)+' dry ac</div>'
-        +'<div class="n">'+ac+' ac total &middot; ~'+w+'% wetland<br>land $'
-        +(p.attrs.LAND_VALUE||0).toLocaleString()+' &middot; $'+Math.round((p.attrs.LAND_VALUE||0)/ac).toLocaleString()+'/ac</div>';
-      s.appendChild(el);
+    document.getElementById('sub').textContent =
+      parcels.length + ' parcels from the KPB assessor, matched by street address' +
+      ((P.unresolved && P.unresolved.length) ? ' · ' + P.unresolved.length + ' unresolved' : '');
+
+    // table
+    var rows = parcels.slice().sort(function(a,b){
+      var ga=(a.price-a.assessed)/a.assessed, gb=(b.price-b.assessed)/b.assessed;
+      return gb-ga;
+    });
+    var h = '<thead><tr><th>Property</th><th>Parcel</th><th class="num">Acres</th>'+
+            '<th class="num">Asking</th><th class="num">Assessed</th><th class="num">Diff</th>'+
+            '<th class="num">Wetland</th></tr></thead><tbody>';
+    rows.forEach(function(p){
+      var gap = (p.price && p.assessed) ? Math.round((p.price-p.assessed)/p.assessed*100) : null;
+      h += '<tr class="row" data-k="'+esc(p.key)+'"><td>'+esc(p.key)+
+           (p.verdict?' <span style="color:var(--muted);font-size:.8em">'+esc(p.verdict)+'</span>':'')+
+           '</td><td class="num">'+esc(p.parcel)+'</td>'+
+           '<td class="num">'+p.acreage+'</td><td class="num">'+money(p.price)+'</td>'+
+           '<td class="num">'+money(p.assessed)+'</td>'+
+           '<td class="num '+(gap>0?'over':'under')+'">'+(gap===null?'&ndash;':(gap>=0?'+':'')+gap+'%')+'</td>'+
+           '<td class="num">'+(WET[p.key]!==undefined?WET[p.key]+'%':'&ndash;')+'</td></tr>';
+    });
+    document.getElementById('tbl').innerHTML = h + '</tbody>';
+    [].forEach.call(document.querySelectorAll('tr.row'), function(tr){
+      tr.addEventListener('click', function(){
+        var b = bounds[tr.getAttribute('data-k')];
+        if(b){ map.fitBounds(b,{padding:[26,26]}); document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'}); }
+      });
     });
 
+    var un = (P.unresolved||[]).join(', ');
     document.getElementById('note').innerHTML =
-      '<strong>Read the yellow line, not the acreage.</strong> Wetland shading is the Borough&rsquo;s mapped '
-      + 'assessment and the percentages are grid-sampled inside each boundary &mdash; an estimate, not a '
-      + 'jurisdictional delineation. Transmission centrelines come from a national dataset and can sit a '
-      + 'couple of hundred feet off true. Nothing here replaces a plat or a survey.';
+      '<strong>Boundaries are matched to the assessor by street address, not by map pin.</strong> '+
+      'Matching on the nearest parcel to a pin returned the neighbour’s lot for ten of these, '+
+      'so the address is the key. ' +
+      (un ? '<strong>'+esc(un)+'</strong> has no assessor record under that number and is '+
+            'deliberately left off rather than guessed. ' : '') +
+      'Assessed values are the Borough’s, not an appraisal, and lag the market. '+
+      'Wetland percentages exist for only three parcels and are grid-sampled estimates off the '+
+      'Borough’s mapped wetlands — not a jurisdictional delineation. Transmission '+
+      'centrelines come from a national dataset and can sit a couple of hundred feet off. '+
+      'Nothing here replaces a plat or a survey. Rejected properties are not shown.';
   }).catch(function(e){
-    document.getElementById('note').textContent = 'Could not load gis-data.json: ' + e;
+    document.getElementById('note').textContent = 'Could not load parcel data: ' + e;
   });
 })();
 </script>
