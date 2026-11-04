@@ -109,6 +109,9 @@
   .mapviews .act[aria-pressed="true"]{background:var(--ink);color:var(--ground);
                                       border-color:var(--ink)}
   .mapviews .act[disabled]{opacity:.35;cursor:default}
+  .mapstatus{font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;color:var(--muted);
+             padding:0 .8rem;line-height:1.6}
+  .mapstatus:empty{display:none}
   .near{padding:.55rem .8rem;border-bottom:1px solid var(--rule);display:grid;
         grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:.3rem .8rem;font-size:.85rem}
   .near span{color:var(--muted)}
@@ -392,6 +395,51 @@
     return 2*R*Math.asin(Math.sqrt(h));
   }
 
+  // Private parcels, fetched live for whatever is on screen. Shipping every private lot
+  // on the peninsula would be enormous; this keeps the page small and still answers
+  // "is all this private?" directly.
+  var PRIV_SVC = 'https://services.arcgis.com/ba4DH9pIcqkXJVfl/arcgis/rest/services/' +
+                 'Redacted_Parcels_view/FeatureServer/0/query';
+  function loadPrivate(m, layer, statusEl){
+    if(m.getZoom() < 14){
+      if(statusEl) statusEl.textContent = 'Zoom in to outline private parcels.';
+      return;
+    }
+    var b = m.getBounds();
+    var body = new URLSearchParams({
+      geometry: JSON.stringify({xmin:b.getWest(), ymin:b.getSouth(),
+                                xmax:b.getEast(), ymax:b.getNorth(),
+                                spatialReference:{wkid:4326}}),
+      geometryType:'esriGeometryEnvelope', inSR:'4326', outSR:'4326',
+      spatialRel:'esriSpatialRelIntersects',
+      outFields:'PARCEL_ID,PHYSICAL_ADDRESSES,ACREAGE,ASSESSED_VALUE',
+      returnGeometry:'true', maxAllowableOffset:'0.00008',
+      resultRecordCount:'400', f:'json'
+    });
+    fetch(PRIV_SVC, {method:'POST', body:body}).then(function(r){ return r.json(); })
+      .then(function(d){
+        layer.clearLayers();
+        var n = 0;
+        (d.features||[]).forEach(function(f){
+          if(!f.geometry || !f.geometry.rings) return;
+          n++;
+          L.polygon(f.geometry.rings.map(function(r){
+            return r.map(function(pt){ return [pt[1], pt[0]]; }); }),
+            {color:'#d08cc0', weight:1, opacity:.85, fill:true,
+             fillColor:'#d08cc0', fillOpacity:.07})
+           .bindPopup('<b>'+esc(f.attributes.PHYSICAL_ADDRESSES||'Private parcel')+'</b><br>'+
+                      'Parcel '+esc(f.attributes.PARCEL_ID)+'<br>'+
+                      (f.attributes.ACREAGE!=null?f.attributes.ACREAGE+' acres<br>':'')+
+                      'Assessed $'+Number(f.attributes.ASSESSED_VALUE||0).toLocaleString())
+           .addTo(layer);
+        });
+        if(statusEl) statusEl.textContent =
+          n + ' private parcels outlined here · anything not green is privately owned';
+      }).catch(function(){
+        if(statusEl) statusEl.textContent = 'Could not load private parcels.';
+      });
+  }
+
   var mapsMade = {};
   function makePropMap(el, s){
     if(mapsMade[el.id] || !window.L) return;
@@ -403,15 +451,33 @@
     // Views are explicit buttons, not one compromise zoom. Fitting the lot together with
     // amenities 1.6 mi away shrank a 3-acre lot to a speck, which is why the boundary
     // looked missing.
-    var views = {};
+    var views = {}, privLayer = L.layerGroup(), ownMode = false;
+    var statusEl = document.getElementById('ms-'+el.id);
+
     function go(which){
       var b = views[which];
+      ownMode = (which === 'own');
+      if(ownMode){
+        privLayer.addTo(m);
+        if(!b){
+          // No borough land near enough to frame - show the lot's surroundings instead
+          // and say plainly that it is all private.
+          try{ m.setView([s.lat,s.lon], 15); }catch(e){}
+          if(statusEl) statusEl.textContent =
+            'No borough land within 2 miles — everything around this house is privately owned.';
+        }
+      } else {
+        m.removeLayer(privLayer);
+        if(statusEl) statusEl.textContent = '';
+      }
       if(b){ try{ m.fitBounds(b, {padding:[18,18]}); }catch(e){} }
+      if(ownMode) setTimeout(function(){ loadPrivate(m, privLayer, statusEl); }, 250);
       var row = document.getElementById('mv-'+el.id);
       if(row) [].forEach.call(row.children, function(btn){
         btn.setAttribute('aria-pressed', btn.getAttribute('data-v')===which ? 'true':'false'); });
     }
     el._go = go;
+    m.on('moveend', function(){ if(ownMode) loadPrivate(m, privLayer, statusEl); });
 
     loadParcels().then(function(all){
       var p = all[keyOf(s)];
@@ -456,12 +522,7 @@
     L.control.scale({imperial:true, metric:false}).addTo(m);
 
     drawBorough(m, s, 2.0).then(function(res){
-      if(res && res.bounds){ views.borough = res.bounds.pad(0.12); }
-      var row = document.getElementById('mv-'+el.id);
-      if(row){
-        var b = row.querySelector('[data-v="borough"]');
-        if(b && !views.borough) b.disabled = true;
-      }
+      if(res && res.bounds){ views.own = res.bounds.pad(0.10); }
     });
     setTimeout(function(){ m.invalidateSize(); if(views.lot) go('lot'); }, 80);
   }
@@ -550,6 +611,7 @@
            '<div class="pmapnote">'+
            '<span class="key"><i style="background:#ffd400"></i>lot line</span>'+
            '<span class="key"><i style="background:#3f7d45"></i>borough land you can walk on</span>'+
+           '<span class="key"><i style="background:#d08cc0"></i>private parcel</span>'+
            '<span class="key"><i style="background:#b3341f"></i>hospital</span>'+
            '<span class="key"><i style="background:#2f6fa8"></i>school</span>'+
            '<span class="key"><i style="background:#3f7d45"></i>park</span>'+
@@ -561,9 +623,10 @@
            ' Lot line from the KPB assessor · imagery &copy; Esri</div>'+
            '<div class="mapviews" id="mv-m-'+id+'">'+
              '<button class="act" type="button" data-v="lot" aria-pressed="true">The lot</button>'+
-             '<button class="act" type="button" data-v="borough">Borough land</button>'+
+             '<button class="act" type="button" data-v="own">Who owns what</button>'+
              '<button class="act" type="button" data-v="amen">Schools &amp; parks</button>'+
-           '</div>';
+           '</div>'+
+           '<div class="mapstatus" id="ms-m-'+id+'"></div>';
     }
     if(s.cnote){
       h += '<div class="cnote"><span class="who">From the walkthrough notes</span>'+esc(s.cnote)+'</div>';
