@@ -440,6 +440,30 @@
       });
   }
 
+  // Kenai National Wildlife Refuge - the third ownership category. Federal land is not in
+  // the assessor's parcel layer at all, so without this the refuge reads as blank ground.
+  // Simplified geometry, for drawing only: the distances on the cards come from the
+  // unsimplified boundary and are more accurate than measuring against this ring.
+  var REFUGE = null, refugeWait = null;
+  function loadRefuge(){
+    if(refugeWait) return refugeWait;
+    refugeWait = fetch('refuge.json').then(function(r){ return r.json(); })
+      .then(function(d){ REFUGE = d.rings || []; return REFUGE; })
+      .catch(function(){ REFUGE = []; return REFUGE; });
+    return refugeWait;
+  }
+  function drawRefuge(m, layer){
+    return loadRefuge().then(function(rings){
+      if(!rings.length) return;
+      L.polygon(rings.map(function(r){
+        return r.map(function(pt){ return [pt[1], pt[0]]; }); }),
+        {color:'#2f8f7a', weight:2, opacity:.95, fillColor:'#2f8f7a', fillOpacity:.18})
+       .bindPopup('<b>Kenai National Wildlife Refuge</b><br>Federal land — roughly 2 million '+
+                  'acres, open to the public')
+       .addTo(layer);
+    });
+  }
+
   var mapsMade = {};
   function makePropMap(el, s){
     if(mapsMade[el.id] || !window.L) return;
@@ -451,14 +475,17 @@
     // Views are explicit buttons, not one compromise zoom. Fitting the lot together with
     // amenities 1.6 mi away shrank a 3-acre lot to a speck, which is why the boundary
     // looked missing.
-    var views = {}, privLayer = L.layerGroup(), ownMode = false;
+    // Separate layers: loadPrivate() clears its own on every pan, which would wipe the
+    // refuge if they shared one.
+    var views = {}, privLayer = L.layerGroup(), refLayer = L.layerGroup(), ownMode = false;
     var statusEl = document.getElementById('ms-'+el.id);
 
     function go(which){
       var b = views[which];
       ownMode = (which === 'own');
       if(ownMode){
-        privLayer.addTo(m);
+        privLayer.addTo(m); refLayer.addTo(m);
+        if(!refLayer.getLayers().length) drawRefuge(m, refLayer);
         if(!b){
           // No borough land near enough to frame - show the lot's surroundings instead
           // and say plainly that it is all private.
@@ -467,7 +494,7 @@
             'No borough land within 2 miles — everything around this house is privately owned.';
         }
       } else {
-        m.removeLayer(privLayer);
+        m.removeLayer(privLayer); m.removeLayer(refLayer);
         if(statusEl) statusEl.textContent = '';
       }
       if(b){ try{ m.fitBounds(b, {padding:[18,18]}); }catch(e){} }
@@ -612,6 +639,7 @@
            '<span class="key"><i style="background:#ffd400"></i>lot line</span>'+
            '<span class="key"><i style="background:#3f7d45"></i>borough land you can walk on</span>'+
            '<span class="key"><i style="background:#d08cc0"></i>private parcel</span>'+
+           '<span class="key"><i style="background:#2f8f7a"></i>federal refuge</span>'+
            '<span class="key"><i style="background:#b3341f"></i>hospital</span>'+
            '<span class="key"><i style="background:#2f6fa8"></i>school</span>'+
            '<span class="key"><i style="background:#3f7d45"></i>park</span>'+
