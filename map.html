@@ -59,12 +59,20 @@
 
   <div class="tabs" id="tabs"></div>
   <div id="map"></div>
+  <div class="tabs" id="layers">
+    <button type="button" id="btnBorough" aria-pressed="true">Borough land</button>
+    <button type="button" id="btnPrivate" aria-pressed="false">Private parcels</button>
+  </div>
   <div class="legend">
-    <span><i style="background:var(--parcel)"></i>Parcel boundary</span>
+    <span><i style="background:var(--parcel)"></i>The listing&rsquo;s lot</span>
+    <span><i style="background:#3f7d45"></i>Borough land &mdash; open to casual use</span>
+    <span><i style="background:#8a8f86"></i>Borough-owned, not casual use</span>
+    <span><i style="background:#d08cc0"></i>Private parcel</span>
     <span><i style="background:var(--wet)"></i>Mapped wetland</span>
     <span><i style="background:var(--power)"></i>115 kV transmission</span>
   </div>
 
+  <div class="sub" id="note2" style="margin-top:.4rem"></div>
   <div class="wrapt"><table id="tbl"></table></div>
   <div class="note" id="note"></div>
 </div>
@@ -88,6 +96,70 @@
   function ringsToLatLng(rings){
     return rings.map(function(r){ return r.map(function(p){ return [p[1], p[0]]; }); });
   }
+
+  // ---- Borough land: green where the public may walk, grey dashed where not. ----
+  var boroughLayer = L.layerGroup().addTo(map);
+  fetch('boroughland.json').then(function(r){ return r.json(); }).then(function(d){
+    (d.parcels||[]).forEach(function(p){
+      L.polygon(ringsToLatLng(p.rings),
+        p.casual ? {color:'#3f7d45', weight:2, opacity:.95, fillColor:'#3f7d45', fillOpacity:.32}
+                 : {color:'#8a8f86', weight:1, opacity:.75, fill:false, dashArray:'4 3'})
+       .bindPopup('<b>Kenai Peninsula Borough</b><br>Parcel '+esc(p.id)+'<br>'+
+                  (p.ac!=null?p.ac+' acres<br>':'')+(p.useType?esc(p.useType)+'<br>':'')+
+                  (p.casual ? '<b style="color:#2f7d4f">Open to public casual use</b>'
+                            : 'Borough-owned — not listed for casual use'))
+       .addTo(boroughLayer);
+    });
+  }).catch(function(){});
+
+  document.getElementById('btnBorough').addEventListener('click', function(){
+    var on = map.hasLayer(boroughLayer);
+    if(on) map.removeLayer(boroughLayer); else boroughLayer.addTo(map);
+    this.setAttribute('aria-pressed', on?'false':'true');
+  });
+
+  // ---- Private parcels: fetched for whatever is on screen, so the file stays small. ----
+  var privLayer = L.layerGroup(), privOn = false, privBusy = false;
+  var PRIV_SVC = 'https://services.arcgis.com/ba4DH9pIcqkXJVfl/arcgis/rest/services/' +
+                 'Redacted_Parcels_view/FeatureServer/0/query';
+  function loadPrivate(){
+    if(!privOn || privBusy || map.getZoom() < 14) return;
+    privBusy = true;
+    var b = map.getBounds();
+    var body = new URLSearchParams({
+      geometry: JSON.stringify({xmin:b.getWest(), ymin:b.getSouth(),
+                                xmax:b.getEast(), ymax:b.getNorth(),
+                                spatialReference:{wkid:4326}}),
+      geometryType:'esriGeometryEnvelope', inSR:'4326', outSR:'4326',
+      spatialRel:'esriSpatialRelIntersects',
+      outFields:'PARCEL_ID,PHYSICAL_ADDRESSES,ACREAGE,ASSESSED_VALUE',
+      returnGeometry:'true', maxAllowableOffset:'0.00008',
+      resultRecordCount:'400', f:'json'
+    });
+    fetch(PRIV_SVC, {method:'POST', body:body}).then(function(r){ return r.json(); })
+      .then(function(d){
+        privLayer.clearLayers();
+        (d.features||[]).forEach(function(f){
+          if(!f.geometry || !f.geometry.rings) return;
+          L.polygon(ringsToLatLng(f.geometry.rings),
+            {color:'#d08cc0', weight:1, opacity:.85, fill:false})
+           .bindPopup('<b>'+esc(f.attributes.PHYSICAL_ADDRESSES||'Private parcel')+'</b><br>'+
+                      'Parcel '+esc(f.attributes.PARCEL_ID)+'<br>'+
+                      (f.attributes.ACREAGE!=null?f.attributes.ACREAGE+' acres<br>':'')+
+                      'Assessed '+money(f.attributes.ASSESSED_VALUE))
+           .addTo(privLayer);
+        });
+        document.getElementById('note2').textContent =
+          (d.features||[]).length + ' parcels drawn for this view';
+      }).catch(function(){}).then(function(){ privBusy = false; });
+  }
+  document.getElementById('btnPrivate').addEventListener('click', function(){
+    privOn = !privOn;
+    this.setAttribute('aria-pressed', privOn?'true':'false');
+    if(privOn){ privLayer.addTo(map); loadPrivate(); }
+    else { map.removeLayer(privLayer); document.getElementById('note2').textContent=''; }
+  });
+  map.on('moveend zoomend', loadPrivate);
 
   Promise.all([
     fetch('parcels.json').then(function(r){ return r.json(); }),
@@ -176,6 +248,10 @@
       'so the address is the key. ' +
       (un ? '<strong>'+esc(un)+'</strong> has no assessor record under that number and is '+
             'deliberately left off rather than guessed. ' : '') +
+      '<strong>Green is land the Borough owns and lets the public walk on; grey dashed is '+
+      'Borough-owned but not on the casual-use list.</strong> Turn on “Private parcels” '+
+      'to outline everything else — those are fetched live for whatever is on screen, so '+
+      'zoom in past about 500 ft for them to appear. '+
       'Assessed values are the Borough’s, not an appraisal, and lag the market. '+
       'Wetland percentages exist for only three parcels and are grid-sampled estimates off the '+
       'Borough’s mapped wetlands — not a jurisdictional delineation. Transmission '+
