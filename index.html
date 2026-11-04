@@ -100,6 +100,12 @@
   .pmapnote .key{margin-right:.7rem;white-space:nowrap}
   .pmapnote .key i{display:inline-block;width:8px;height:8px;border-radius:50%;
                    margin-right:.25rem;vertical-align:0}
+  .mapviews{display:flex;gap:.4rem;flex-wrap:wrap;padding:.5rem .8rem;
+            border-bottom:1px solid var(--rule);background:var(--sunk)}
+  .mapviews .act{font-size:.62rem}
+  .mapviews .act[aria-pressed="true"]{background:var(--ink);color:var(--ground);
+                                      border-color:var(--ink)}
+  .mapviews .act[disabled]{opacity:.35;cursor:default}
   .near{padding:.55rem .8rem;border-bottom:1px solid var(--rule);display:grid;
         grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:.3rem .8rem;font-size:.85rem}
   .near span{color:var(--muted)}
@@ -344,7 +350,7 @@
 
   function drawBorough(m, s, maxMi){
     return loadBorough().then(function(all){
-      var shown = 0;
+      var shown = 0, bb = null;
       all.forEach(function(p){
         var near = false;
         for(var i=0;i<p.rings.length && !near;i++){
@@ -355,9 +361,9 @@
         }
         if(!near) return;
         shown++;
-        L.polygon(p.rings.map(function(r){
+        var poly = L.polygon(p.rings.map(function(r){
           return r.map(function(pt){ return [pt[1], pt[0]]; }); }),
-          p.casual ? {color:'#3f7d45', weight:1, opacity:.9, fillColor:'#3f7d45', fillOpacity:.30}
+          p.casual ? {color:'#3f7d45', weight:2, opacity:.95, fillColor:'#3f7d45', fillOpacity:.32}
                    : {color:'#8a8f86', weight:1, opacity:.7, fill:false, dashArray:'4 3'})
          .bindPopup('<b>Kenai Peninsula Borough land</b><br>Parcel '+esc(p.id)+'<br>'+
                     (p.ac!=null?p.ac+' acres<br>':'')+
@@ -365,8 +371,13 @@
                     (p.casual ? '<b style="color:#2f7d4f">Open to public casual use</b>'
                               : 'Borough-owned — not listed for casual use'))
          .addTo(m);
+        try{
+          var pb = poly.getBounds();
+          bb = bb ? bb.extend(pb) : L.latLngBounds(pb.getSouthWest(), pb.getNorthEast());
+        }catch(e){}
       });
-      return shown;
+      if(bb){ try{ bb.extend([s.lat, s.lon]); }catch(e){} }
+      return {count: shown, bounds: bb};
     });
   }
   function keyOf(s){ return s.addr.split(" ").slice(0,2).join(" "); }
@@ -386,26 +397,33 @@
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       {maxZoom:19}).addTo(m);
 
+    // Views are explicit buttons, not one compromise zoom. Fitting the lot together with
+    // amenities 1.6 mi away shrank a 3-acre lot to a speck, which is why the boundary
+    // looked missing.
+    var views = {};
+    function go(which){
+      var b = views[which];
+      if(b){ try{ m.fitBounds(b, {padding:[18,18]}); }catch(e){} }
+      var row = document.getElementById('mv-'+el.id);
+      if(row) [].forEach.call(row.children, function(btn){
+        btn.setAttribute('aria-pressed', btn.getAttribute('data-v')===which ? 'true':'false'); });
+    }
+    el._go = go;
+
     loadParcels().then(function(all){
       var p = all[keyOf(s)];
       if(!p || !p.rings) return;
       var poly = L.polygon(p.rings.map(function(r){
         return r.map(function(pt){ return [pt[1], pt[0]]; }); }),
-        {color:'#ffd400', weight:3, opacity:1, fill:false}).addTo(m);
+        {color:'#ffd400', weight:4, opacity:1, fill:true,
+         fillColor:'#ffd400', fillOpacity:.10}).addTo(m);
       var ask = s.price, asd = p.assessed || 0;
       var gap = (ask && asd) ? Math.round((ask-asd)/asd*100) : null;
       poly.bindPopup('<b>Parcel '+esc(p.parcel)+'</b><br>'+p.acreage+' acres<br>'+
         'Assessed $'+asd.toLocaleString()+
         (gap!==null ? '<br>Asking '+(gap>=0?'+':'')+gap+'% vs assessed' : '')+
         (p.legal ? '<br><span style="font-size:.85em">'+esc(p.legal)+'</span>' : ''));
-      // Frame the lot together with whatever is genuinely walkable/short-drive from it,
-      // so the boundary stays legible but the school and park are on screen.
-      try{
-        var b = poly.getBounds();
-        near.filter(function(x){ return x.d <= 1.6; })
-            .forEach(function(x){ b.extend([x.a.lat, x.a.lon]); });
-        m.fitBounds(b.pad(0.12));
-      }catch(e){}
+      try{ views.lot = poly.getBounds().pad(0.9); go('lot'); }catch(e){}
     });
     L.circleMarker([s.lat,s.lon], {radius:9, color:'#fff', weight:2,
       fillColor: s.day==="Tue AM"?'#1d6a63':s.day==="Tue PM"?'#9a5b1f':'#3b4f8a',
@@ -425,9 +443,24 @@
                    (a.note?'<br>'+esc(a.note):''))
         .addTo(m);
     });
+    try{
+      var ab = L.latLngBounds([[s.lat,s.lon]]);
+      near.filter(function(x){ return x.d <= 2.0; })
+          .forEach(function(x){ ab.extend([x.a.lat, x.a.lon]); });
+      views.amen = ab.pad(0.12);
+    }catch(e){}
+
     L.control.scale({imperial:true, metric:false}).addTo(m);
-    drawBorough(m, s, 2.0);
-    setTimeout(function(){ m.invalidateSize(); }, 60);
+
+    drawBorough(m, s, 2.0).then(function(res){
+      if(res && res.bounds){ views.borough = res.bounds.pad(0.12); }
+      var row = document.getElementById('mv-'+el.id);
+      if(row){
+        var b = row.querySelector('[data-v="borough"]');
+        if(b && !views.borough) b.disabled = true;
+      }
+    });
+    setTimeout(function(){ m.invalidateSize(); if(views.lot) go('lot'); }, 80);
   }
 
   // ================= cards =================
@@ -518,9 +551,14 @@
            '<span class="key"><i style="background:#7a4ca8"></i>gym</span>'+
            '<span class="key"><i style="background:#a86a1f"></i>trails</span>'+
            '<br>'+(s.gpsLat
-             ? 'Pin from the phone’s own GPS on site. Tap any dot for the name and distance.'
+             ? 'Pin from the phone’s own GPS on site. Tap any shape for detail.'
              : 'Pin geocoded from the street address, not confirmed on site.')+
-           ' Lot line from the KPB assessor · imagery &copy; Esri</div>';
+           ' Lot line from the KPB assessor · imagery &copy; Esri</div>'+
+           '<div class="mapviews" id="mv-m-'+id+'">'+
+             '<button class="act" type="button" data-v="lot" aria-pressed="true">The lot</button>'+
+             '<button class="act" type="button" data-v="borough">Borough land</button>'+
+             '<button class="act" type="button" data-v="amen">Schools &amp; parks</button>'+
+           '</div>';
     }
     if(s.cnote){
       h += '<div class="cnote"><span class="who">From the walkthrough notes</span>'+esc(s.cnote)+'</div>';
@@ -562,7 +600,6 @@
     h += '</div>';
 
     h += '<div class="acts">';
-    if(s.phone) h += '<a class="act call" href="tel:'+esc(s.phone.replace(/\D/g,''))+'">Call agent</a>';
     if(s.lat)   h += '<a class="act" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+s.lat+','+s.lon+'">Directions</a>';
     if(s.model) h += '<a class="act" href="'+esc(s.model)+'">3D model</a>';
     h += '<a class="act" href="map.html">Parcel map</a>';
@@ -604,6 +641,13 @@
     [].forEach.call(document.querySelectorAll(".card"), function(card){
       var id = card.getAttribute("data-id");
       var s = STOPS.filter(function(x){return idOf(x)===id;})[0];
+      var mv = card.querySelector(".mapviews");
+      if(mv) [].forEach.call(mv.children, function(btn){
+        btn.addEventListener("click", function(){
+          var el = document.getElementById("m-"+id);
+          if(el && el._go) el._go(btn.getAttribute("data-v"));
+        });
+      });
       card.querySelector(".top").addEventListener("click", function(){
         var body = card.querySelector(".body");
         var open = this.getAttribute("aria-expanded")==="true";
