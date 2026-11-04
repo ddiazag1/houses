@@ -95,6 +95,15 @@
     {maxZoom:19, attribution:'Imagery &copy; Esri, Maxar'}).addTo(map);
   L.control.scale({imperial:true, metric:false}).addTo(map);
 
+  // Keys are "number + first word", which turns "530 W Riverview Avenue" into "530 W".
+  // For anything shown to a human, use the street name instead.
+  var SUFFIX = /\s+(Avenue|Ave|Street|St|Drive|Dr|Road|Rd|Circle|Cir|Loop|Way|Court|Ct|Lane|Ln|Boulevard|Blvd|Highway|Hwy)\.?$/i;
+  function label(p){
+    var street = String(p.addr || p.key || '').split(',')[0]
+                   .replace(/^\d+\s+/, '').replace(SUFFIX, '');
+    return street || p.key;
+  }
+
   function ringsToLatLng(rings){
     return rings.map(function(r){ return r.map(function(p){ return [p[1], p[0]]; }); });
   }
@@ -207,7 +216,7 @@
       var poly = L.polygon(ringsToLatLng(p.rings),
         {color:'#ffd400', weight:3, opacity:1, fill:false}).addTo(map);
       var gap = (p.price && p.assessed) ? Math.round((p.price-p.assessed)/p.assessed*100) : null;
-      poly.bindPopup('<b>'+esc(p.key)+'</b><br>Parcel '+esc(p.parcel)+'<br>'+
+      poly.bindPopup('<b>'+esc(label(p))+'</b><br>Parcel '+esc(p.parcel)+'<br>'+
         p.acreage+' acres<br>Asking '+money(p.price)+' &middot; assessed '+money(p.assessed)+
         (gap!==null ? '<br><b>'+(gap>=0?'+':'')+gap+'%</b> over assessed' : '')+
         (WET[p.key]!==undefined ? '<br>~'+WET[p.key]+'% mapped wetland' : ''));
@@ -226,9 +235,31 @@
       tabs.appendChild(btn); return btn;
     }
     var first = mk('All '+parcels.length, all.pad(0.08));
-    parcels.forEach(function(p){ mk(p.key.replace(/^\d+\s+/,''), bounds[p.key]); });
-    first.setAttribute('aria-pressed','true');
-    map.fitBounds(all.pad(0.08));
+    var tabFor = {};
+    parcels.forEach(function(p){ tabFor[p.key] = mk(label(p), bounds[p.key]); });
+
+    // Deep link: map.html?p=<key> opens straight on that lot instead of the whole
+    // peninsula, so the "Parcel map" button on a card lands where you expect.
+    var want = null;
+    try{
+      var qs = new URLSearchParams(location.search).get('p');
+      if(qs){
+        want = parcels.filter(function(p){ return p.key === qs; })[0] ||
+               parcels.filter(function(p){
+                 return p.key.toLowerCase().indexOf(qs.toLowerCase()) === 0; })[0];
+      }
+    }catch(e){}
+
+    if(want && bounds[want.key]){
+      first.setAttribute('aria-pressed','false');
+      if(tabFor[want.key]) tabFor[want.key].setAttribute('aria-pressed','true');
+      map.fitBounds(bounds[want.key], {padding:[26,26]});
+      document.getElementById('note2').textContent =
+        'Showing ' + label(want) + '. Use the buttons above the map for the others.';
+    } else {
+      first.setAttribute('aria-pressed','true');
+      map.fitBounds(all.pad(0.08));
+    }
 
     document.getElementById('sub').textContent =
       parcels.length + ' parcels from the KPB assessor, matched by street address' +
@@ -244,7 +275,7 @@
             '<th class="num">Wetland</th></tr></thead><tbody>';
     rows.forEach(function(p){
       var gap = (p.price && p.assessed) ? Math.round((p.price-p.assessed)/p.assessed*100) : null;
-      h += '<tr class="row" data-k="'+esc(p.key)+'"><td>'+esc(p.key)+
+      h += '<tr class="row" data-k="'+esc(p.key)+'"><td>'+esc(label(p))+
            (p.verdict?' <span style="color:var(--muted);font-size:.8em">'+esc(p.verdict)+'</span>':'')+
            '</td><td class="num">'+esc(p.parcel)+'</td>'+
            '<td class="num">'+p.acreage+'</td><td class="num">'+money(p.price)+'</td>'+
