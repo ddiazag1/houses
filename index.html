@@ -401,8 +401,9 @@
   var PRIV_SVC = 'https://services.arcgis.com/ba4DH9pIcqkXJVfl/arcgis/rest/services/' +
                  'Redacted_Parcels_view/FeatureServer/0/query';
   function loadPrivate(m, layer, statusEl){
-    if(m.getZoom() < 14){
-      if(statusEl) statusEl.textContent = 'Zoom in to outline private parcels.';
+    if(m.getZoom() < 12){
+      if(statusEl) statusEl.textContent =
+        'Zoom in a little to outline the private parcels.';
       return;
     }
     var b = m.getBounds();
@@ -478,30 +479,45 @@
     // Separate layers: loadPrivate() clears its own on every pan, which would wipe the
     // refuge if they shared one.
     var views = {}, privLayer = L.layerGroup(), refLayer = L.layerGroup(), ownMode = false;
+    var boroughReady = Promise.resolve();   // replaced below once drawBorough starts
     var statusEl = document.getElementById('ms-'+el.id);
 
+    function press(which){
+      var row = document.getElementById('mv-'+el.id);
+      if(row) [].forEach.call(row.children, function(btn){
+        btn.setAttribute('aria-pressed', btn.getAttribute('data-v')===which ? 'true':'false'); });
+    }
+
     function go(which){
-      var b = views[which];
       ownMode = (which === 'own');
-      if(ownMode){
-        privLayer.addTo(m); refLayer.addTo(m);
-        if(!refLayer.getLayers().length) drawRefuge(m, refLayer);
-        if(!b){
-          // No borough land near enough to frame - show the lot's surroundings instead
-          // and say plainly that it is all private.
+      press(which);
+
+      if(!ownMode){
+        m.removeLayer(privLayer); m.removeLayer(refLayer);
+        if(statusEl) statusEl.textContent = '';
+        var b = views[which];
+        if(b){ try{ m.fitBounds(b, {padding:[18,18]}); }catch(e){} }
+        return;
+      }
+
+      privLayer.addTo(m); refLayer.addTo(m);
+      if(!refLayer.getLayers().length) drawRefuge(m, refLayer);
+      if(statusEl) statusEl.textContent = 'Loading land ownership…';
+
+      // Wait for the borough fetch before deciding there is nothing to show. Reading
+      // views.own synchronously raced the fetch and wrongly reported "no borough land"
+      // on every property when the button was tapped quickly.
+      boroughReady.then(function(){
+        if(!ownMode) return;                 // user switched views while we waited
+        if(views.own){
+          try{ m.fitBounds(views.own, {padding:[18,18]}); }catch(e){}
+        } else {
           try{ m.setView([s.lat,s.lon], 15); }catch(e){}
           if(statusEl) statusEl.textContent =
             'No borough land within 2 miles — everything around this house is privately owned.';
         }
-      } else {
-        m.removeLayer(privLayer); m.removeLayer(refLayer);
-        if(statusEl) statusEl.textContent = '';
-      }
-      if(b){ try{ m.fitBounds(b, {padding:[18,18]}); }catch(e){} }
-      if(ownMode) setTimeout(function(){ loadPrivate(m, privLayer, statusEl); }, 250);
-      var row = document.getElementById('mv-'+el.id);
-      if(row) [].forEach.call(row.children, function(btn){
-        btn.setAttribute('aria-pressed', btn.getAttribute('data-v')===which ? 'true':'false'); });
+        setTimeout(function(){ loadPrivate(m, privLayer, statusEl); }, 250);
+      });
     }
     el._go = go;
     m.on('moveend', function(){ if(ownMode) loadPrivate(m, privLayer, statusEl); });
@@ -548,9 +564,10 @@
 
     L.control.scale({imperial:true, metric:false}).addTo(m);
 
-    drawBorough(m, s, 2.0).then(function(res){
+    boroughReady = drawBorough(m, s, 2.0).then(function(res){
       if(res && res.bounds){ views.own = res.bounds.pad(0.10); }
-    });
+      return res;
+    }).catch(function(){ return null; });
     setTimeout(function(){ m.invalidateSize(); if(views.lot) go('lot'); }, 80);
   }
 
@@ -705,7 +722,7 @@
          encodeURIComponent('Alaska MLS '+s.mls+' '+s.addr.split(',')[0])+'">MLS '+esc(s.mls)+'</a>';
     if(s.lat)   h += '<a class="act" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+s.lat+','+s.lon+'">Directions</a>';
     if(s.model) h += '<a class="act" href="'+esc(s.model)+'">3D model</a>';
-    h += '<a class="act" href="map.html">Parcel map</a>';
+    h += '<a class="act" href="map.html?p='+encodeURIComponent(keyOf(s))+'">Parcel map</a>';
     h += '<button class="act hide-btn" type="button">'+(isHidden(s)?'Restore':'Hide')+'</button>';
     h += '</div></article>';
     return h;
