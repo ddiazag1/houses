@@ -90,7 +90,7 @@
   .act{font-family:var(--mono);font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;
        padding:.5em .7em;border:1px solid var(--firm);border-radius:3px;background:transparent;
        color:var(--muted);text-decoration:none;cursor:pointer;display:inline-block}
-  .act.call{color:var(--ink);border-color:var(--ink)}
+  .act.photos{color:var(--ink);border-color:var(--ink);font-weight:500}
   .act.hide-btn{margin-left:auto}
 
   .body{border-top:1px solid var(--rule)}
@@ -599,7 +599,14 @@
     }
     h += '</div>';
 
+    // Zillow blocks server-side fetching (403) and the photos are the broker's copyright,
+    // so they are linked rather than copied. Opening in your own browser works normally.
+    var slug = s.addr.replace(/,/g,'').replace(/\s+/g,'-');
     h += '<div class="acts">';
+    h += '<a class="act photos" target="_blank" rel="noopener" href="https://www.zillow.com/homes/'+
+         encodeURIComponent(slug)+'_rb/">Listing photos</a>';
+    if(s.mls) h += '<a class="act" target="_blank" rel="noopener" href="https://www.google.com/search?q='+
+         encodeURIComponent('Alaska MLS '+s.mls+' '+s.addr.split(',')[0])+'">MLS '+esc(s.mls)+'</a>';
     if(s.lat)   h += '<a class="act" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+s.lat+','+s.lon+'">Directions</a>';
     if(s.model) h += '<a class="act" href="'+esc(s.model)+'">3D model</a>';
     h += '<a class="act" href="map.html">Parcel map</a>';
