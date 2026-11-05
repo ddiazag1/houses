@@ -503,6 +503,63 @@
     });
   }
 
+  // Lakes, coloured by whether anyone but the shoreline owners can get to them. Satellite
+  // imagery shows water as blue ground and says nothing about it, which reads as an
+  // amenity - the kettle at Leisure Lake looks like a lake you can use, and it is not:
+  // its bed is divided into the surrounding lots and all 13 shoreline parcels are private.
+  var WATER = null, waterWait = null;
+  function loadWater(){
+    if(waterWait) return waterWait;
+    waterWait = fetch('water.json').then(function(r){ return r.json(); })
+      .then(function(d){ WATER = d.lakes || []; return WATER; })
+      .catch(function(){ WATER = []; return WATER; });
+    return waterWait;
+  }
+  var WCOL = {private:'#b3341f', public:'#2bb3e0', unknown:'#8a8f86'};
+  function waterWord(l){
+    if(l.access === 'public')
+      return '<b style="color:#1f7fa8">Public land reaches the shore</b><br>'+
+             l.pub+' public parcel'+(l.pub===1?'':'s')+' on the waterline'+
+             (l.priv?', '+l.priv+' private':'');
+    if(l.access === 'private')
+      return '<b style="color:#b3341f">No public way in</b><br>all '+l.priv+
+             ' parcel'+(l.priv===1?'':'s')+' on the shoreline are privately owned';
+    return '<b>Shoreline ownership not resolved</b><br>no parcel data came back here';
+  }
+  function drawWater(m, s, layer, maxMi){
+    return loadWater().then(function(all){
+      var shown = 0, bb = null;
+      all.forEach(function(l){
+        var near = false;
+        for(var i=0;i<l.rings.length && !near;i++){
+          var ring = l.rings[i];
+          for(var j=0;j<ring.length;j+=2){
+            if(miBetween(s.lat, s.lon, ring[j][1], ring[j][0]) <= maxMi){ near = true; break; }
+          }
+        }
+        if(!near) return;
+        shown++;
+        var c = WCOL[l.access] || WCOL.unknown;
+        var poly = L.polygon(l.rings.map(function(r){
+          return r.map(function(pt){ return [pt[1], pt[0]]; }); }),
+          {color:c, weight:2, opacity:.95, fill:true, fillColor:c,
+           fillOpacity: l.access==='public' ? .30 : .22})
+         .bindPopup('<b>'+esc(l.name || 'Unnamed lake')+'</b><br>'+l.ac+' acres<br>'+
+                    waterWord(l)+
+                    '<br><span style="font-size:.85em">In Alaska the water itself is '+
+                    'public, but that is no right to cross private land to reach it.</span>')
+         .addTo(layer);
+        try{
+          var pb = poly.getBounds();
+          bb = bb ? bb.extend(pb) : L.latLngBounds(pb.getSouthWest(), pb.getNorthEast());
+        }catch(e){}
+      });
+      if(bb){ try{ bb.extend([s.lat, s.lon]); }catch(e){} }
+      var priv = all.filter(function(l){ return l.access === 'private'; }).length;
+      return {count: shown, bounds: bb, priv: priv};
+    });
+  }
+
   // Roads coloured by who clears them in winter. The Borough's road layer has no surface
   // field, so paved-vs-gravel cannot be drawn from it - this is maintenance, not surface.
   var ROADS = null, roadsWait = null;
@@ -561,7 +618,7 @@
     // Separate layers: loadPrivate() clears its own on every pan, which would wipe the
     // refuge if they shared one.
     var views = {}, privLayer = L.layerGroup(), refLayer = L.layerGroup();
-    var roadLayer = L.layerGroup(), ownMode = false;
+    var roadLayer = L.layerGroup(), waterLayer = L.layerGroup(), ownMode = false;
     // Every layer drawn after the yellow lot line sits on top of it in the same SVG pane
     // and swallows its click, so tapping your own lot returned the neighbour's parcel or
     // the borough polygon instead. Re-lift it whenever anything else finishes drawing.
@@ -585,6 +642,28 @@
     function go(which){
       ownMode = (which === 'own');
       press(which);
+
+      if(which !== 'water') m.removeLayer(waterLayer);
+
+      if(which === 'water'){
+        m.removeLayer(privLayer); m.removeLayer(refLayer); m.removeLayer(roadLayer);
+        waterLayer.addTo(m);
+        if(statusEl) statusEl.textContent = 'Loading lakes…';
+        if(!waterLayer.getLayers().length){
+          drawWater(m, s, waterLayer, 1.5).then(function(res){
+            if(res.bounds){ views.water = res.bounds.pad(0.08);
+              try{ m.fitBounds(views.water, {padding:[18,18]}); }catch(e){} }
+            if(statusEl) statusEl.textContent = res.count
+              ? res.count + ' lake' + (res.count===1?'':'s') + ' within 1.5 miles · '+
+                'red means every parcel on the shore is private, so there is no public way in'
+              : 'No mapped lake within 1.5 miles of this house';
+            liftLot();
+          });
+        } else if(views.water){
+          try{ m.fitBounds(views.water, {padding:[18,18]}); }catch(e){}
+        }
+        return;
+      }
 
       if(which === 'plow'){
         m.removeLayer(privLayer); m.removeLayer(refLayer);
@@ -839,6 +918,8 @@
            '<span class="key"><i style="background:#d08cc0"></i>private parcel</span>'+
            '<span class="key"><i style="background:#2f8f7a"></i>federal refuge</span>'+
            '<span class="key"><i style="background:#b3341f"></i>road nobody plows</span>'+
+           '<span class="key"><i style="background:#2bb3e0"></i>lake you can get to</span>'+
+           '<span class="key"><i style="background:#b3341f"></i>lake with no public access</span>'+
            '<span class="key"><i style="background:#b3341f"></i>hospital</span>'+
            '<span class="key"><i style="background:#2f6fa8"></i>school</span>'+
            '<span class="key"><i style="background:#3f7d45"></i>park</span>'+
@@ -852,6 +933,7 @@
              '<button class="act" type="button" data-v="lot" aria-pressed="true">The lot</button>'+
              '<button class="act" type="button" data-v="own">Who owns what</button>'+
              '<button class="act" type="button" data-v="plow">Snow plowing</button>'+
+             '<button class="act" type="button" data-v="water">Lakes</button>'+
              '<button class="act" type="button" data-v="amen">Schools &amp; parks</button>'+
            '</div>'+
            '<div class="mapstatus" id="ms-m-'+id+'"></div>';
@@ -986,9 +1068,13 @@
       });
       bar.appendChild(b);
     });
+    var bk = document.createElement("a");
+    bk.className = "tab"; bk.href = "bike.html"; bk.textContent = "Bike route";
+    bk.style.marginLeft = "auto"; bk.style.textDecoration = "none";
+    bar.appendChild(bk);
     var rk = document.createElement("a");
     rk.className = "tab"; rk.href = "rank.html"; rk.textContent = "Rank them";
-    rk.style.marginLeft = "auto"; rk.style.textDecoration = "none";
+    rk.style.textDecoration = "none";
     bar.appendChild(rk);
   })();
 
