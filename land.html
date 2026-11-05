@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Borough land and how to get on it</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Azeret+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root{
+    --ground:#f4f2ed; --card:#fff; --sunk:#edeae3; --ink:#191a17; --muted:#5f6660;
+    --rule:#dcd9d1; --firm:#b4b0a6; --cph:#b3341f; --ok:#2f7d4f; --pm:#9a5b1f;
+    --dry:#3f7d45; --mixed:#a8902f; --wet:#2b7fb0; --trail:#a86a1f;
+    --ui:"Barlow Semi Condensed",system-ui,sans-serif; --mono:"Azeret Mono",ui-monospace,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#14161a; --card:#1c1f24; --sunk:#171a1e; --ink:#e7e9e4; --muted:#9aa09a;
+    --rule:#2e333a; --firm:#49505a; --cph:#f0714f; --ok:#6cc48c; --pm:#e0a35c;
+    --dry:#6cc48c; --mixed:#d4b84a; --wet:#5fb8e0; --trail:#d79a4a;}}
+  :root[data-theme="dark"]{
+    --ground:#14161a; --card:#1c1f24; --sunk:#171a1e; --ink:#e7e9e4; --muted:#9aa09a;
+    --rule:#2e333a; --firm:#49505a; --cph:#f0714f; --ok:#6cc48c; --pm:#e0a35c;
+    --dry:#6cc48c; --mixed:#d4b84a; --wet:#5fb8e0; --trail:#d79a4a;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);font-size:17px;
+       line-height:1.4;padding-block:1rem 4rem;padding-inline:1rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:52rem;margin:0 auto}
+  a.back{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;
+         color:var(--muted);text-decoration:none}
+  h1{margin:.5rem 0 0;font-size:1.6rem;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+  .sub{font-family:var(--mono);font-size:.68rem;color:var(--muted);letter-spacing:.05em;
+       text-transform:uppercase;margin-top:.25rem}
+  .bar{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin:.9rem 0;
+       border-top:1px solid var(--firm);border-bottom:1px solid var(--firm);padding-block:.7rem}
+  button{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;
+         padding:.5em .75em;border:1px solid var(--firm);background:transparent;color:var(--muted);
+         border-radius:3px;cursor:pointer}
+  button[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+  button:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+
+  .tot{display:flex;flex-wrap:wrap;gap:.2rem 1.4rem;background:var(--sunk);
+       border:1px solid var(--rule);border-radius:4px;padding:.75rem .85rem;margin:.6rem 0}
+  .tot div{display:flex;align-items:baseline;gap:.35rem}
+  .tot b{font-size:1.25rem;font-weight:600;font-variant-numeric:tabular-nums}
+  .tot span{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;
+            text-transform:uppercase;color:var(--muted)}
+
+  #map{height:27rem;border:1px solid var(--rule);border-radius:4px;background:var(--sunk);
+       margin:.6rem 0}
+  @media (max-width:620px){ #map{height:20rem} }
+  .leaflet-container{font-family:var(--ui)}
+  .key{display:inline-flex;align-items:center;gap:.3rem;font-family:var(--mono);
+       font-size:.6rem;color:var(--muted);margin-right:.9rem;margin-bottom:.2rem}
+  .key i{width:.9rem;height:.55rem;border-radius:2px;display:inline-block}
+  .key i.ln{height:.2rem;width:1.1rem;border-radius:1px}
+  .key i.dot{width:.6rem;height:.6rem;border-radius:50%}
+
+  table{width:100%;border-collapse:collapse;font-size:.95rem;margin-top:.5rem}
+  th{font-family:var(--mono);font-size:.56rem;letter-spacing:.06em;text-transform:uppercase;
+     color:var(--muted);font-weight:500;text-align:left;padding:.3rem .4rem;
+     border-bottom:1px solid var(--rule)}
+  td{padding:.45rem .4rem;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums}
+  td.r{text-align:right;font-family:var(--mono);font-size:.75rem}
+  tr.t{cursor:pointer}
+  tr.t:hover td{background:var(--sunk)}
+  .chip{font-family:var(--mono);font-size:.56rem;letter-spacing:.05em;text-transform:uppercase;
+        border-radius:2px;padding:.12em .4em;color:#fff}
+  .far{color:var(--cph);font-weight:600}
+  .note{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--pm);
+        border-radius:3px;padding:.65rem .75rem;font-size:.92rem;margin:.8rem 0}
+  footer{margin-top:1.8rem;border-top:1px solid var(--firm);padding-top:.8rem;
+         font-family:var(--mono);font-size:.62rem;line-height:1.7;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">&larr; the houses</a>
+  <h1>Borough land and how to get on it</h1>
+  <div class="sub" id="sub">loading</div>
+
+  <div class="bar" id="tabs"></div>
+  <div class="tot" id="tot"></div>
+  <div id="map"></div>
+  <div id="legend"></div>
+  <table><thead><tr>
+    <th>Tract</th><th class="r">Acres</th><th class="r">Dry</th><th class="r">Wet</th>
+    <th class="r">From house</th><th>Way on</th>
+  </tr></thead><tbody id="rows"></tbody></table>
+  <div class="note" id="note"></div>
+  <footer id="foot"></footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var D = null, cur = null, map = null, layer = null;
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  function n(v){ return Number(v||0).toLocaleString(); }
+
+  // Colour by how much of the tract is dry, because that is what decides whether it is
+  // usable in July as opposed to only when it is frozen.
+  function col(wet){
+    return wet <= 20 ? getComputedStyle(document.documentElement).getPropertyValue('--dry')
+         : wet <= 50 ? getComputedStyle(document.documentElement).getPropertyValue('--mixed')
+                     : getComputedStyle(document.documentElement).getPropertyValue('--wet');
+  }
+  function band(wet){ return wet <= 20 ? "mostly dry" : wet <= 50 ? "mixed" : "mostly wetland"; }
+
+  function draw(key){
+    cur = key;
+    var h = D.houses[key];
+    [].forEach.call(document.querySelectorAll('#tabs button'), function(b){
+      b.setAttribute('aria-pressed', b.getAttribute('data-k') === key ? 'true' : 'false'); });
+
+    document.getElementById('sub').textContent =
+      h.addr + " · casual-use borough land within 2 miles";
+    document.getElementById('tot').innerHTML =
+      '<div><b>'+n(h.dryAc)+'</b><span>acres dry</span></div>'+
+      '<div><b>'+n(h.totalAc)+'</b><span>acres total</span></div>'+
+      '<div><b>'+h.wetPct+'%</b><span>wetland</span></div>'+
+      '<div><b>'+h.tracts.length+'</b><span>tracts</span></div>';
+
+    // The map is the nice half; the table is the half that has to work. Everything below
+    // the map renders regardless, so a failed tile/CDN load does not blank the page.
+    drawTable(h);
+    if(typeof L === "undefined"){
+      document.getElementById('legend').textContent =
+        'Map unavailable — the table below has the same numbers.';
+      return;
+    }
+    if(!map){
+      map = L.map('map', {scrollWheelZoom:false});
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        {maxZoom:18, attribution:'Imagery &copy; Esri, Maxar'}).addTo(map);
+      L.control.scale({imperial:true, metric:false}).addTo(map);
+    }
+    if(layer) map.removeLayer(layer);
+    layer = L.layerGroup().addTo(map);
+    var all = L.latLngBounds([[h.lat, h.lon]]);
+
+    (h.trails||[]).forEach(function(t){
+      (t.p||[]).forEach(function(path){
+        L.polyline(path.map(function(p){ return [p[1], p[0]]; }),
+          {color:'#a86a1f', weight:3, opacity:.9})
+         .bindPopup('<b>'+esc(t.n)+'</b><br>'+t.d+' mi from the house').addTo(layer);
+      });
+    });
+
+    h.tracts.forEach(function(t){
+      var c = col(t.wet).trim();
+      var poly = L.polygon(t.rings.map(function(r){
+        return r.map(function(p){ return [p[1], p[0]]; }); }),
+        {color:c, weight:2, opacity:.95, fill:true, fillColor:c, fillOpacity:.30});
+      var kinds = Object.keys(t.kinds||{}).slice(0,3).join(', ');
+      poly.bindPopup('<b>Borough tract '+esc(t.id)+'</b><br>'+
+        n(t.ac)+' acres · <b>'+n(t.dryAc)+' dry</b> · '+t.wet+'% wetland ('+
+        esc(band(t.wet))+')'+
+        (kinds?'<br>'+esc(kinds):'')+
+        '<br>'+t.d+' mi from the house'+
+        (t.access ? '<br><b>Way on:</b> '+t.access.ft+' ft from '+esc(t.access.road) : '')+
+        '<br><span style="font-size:.85em">Open to casual use — hiking, hunting, '+
+        'camping under 14 days, skiing, snowmachining. ATVs only on an existing trail.</span>')
+       .addTo(layer);
+      try{ all.extend(poly.getBounds()); }catch(e){}
+
+      if(t.access){
+        var a = t.access;
+        // The gap between the nearest maintained road and the tract edge: this is the
+        // walk-in, and on some tracts it is most of a mile.
+        L.polyline([[a.roadLat, a.roadLon], [a.tractLat, a.tractLon]],
+          {color:'#fff', weight:3, opacity:.95, dashArray:'5 5'}).addTo(layer);
+        L.circleMarker([a.roadLat, a.roadLon], {radius:14, stroke:false, fill:true,
+          fillOpacity:0}).bindPopup('<b>Way on to tract '+esc(t.id)+'</b><br>'+
+          esc(a.road)+'<br>'+a.ft+' ft to the tract edge').addTo(layer);
+        L.circleMarker([a.roadLat, a.roadLon], {radius:6, color:'#fff', weight:2,
+          fillColor:'#b3341f', fillOpacity:1})
+         .bindPopup('<b>Way on to tract '+esc(t.id)+'</b><br>'+esc(a.road)+'<br>'+
+                    a.ft+' ft to the tract edge').addTo(layer);
+        try{ all.extend([a.roadLat, a.roadLon]); }catch(e){}
+      }
+    });
+
+    L.circleMarker([h.lat, h.lon], {radius:10, color:'#fff', weight:3,
+      fillColor:'#191a17', fillOpacity:1})
+     .bindPopup('<b>'+esc(h.addr)+'</b>').addTo(layer);
+
+    try{ map.fitBounds(all.pad(0.08)); }catch(e){}
+    setTimeout(function(){ map.invalidateSize(); }, 60);
+
+    document.getElementById('legend').innerHTML =
+      '<span class="key"><i style="background:'+col(0)+'"></i>mostly dry (under 20% wetland)</span>'+
+      '<span class="key"><i style="background:'+col(35)+'"></i>mixed (20–50%)</span>'+
+      '<span class="key"><i style="background:'+col(80)+'"></i>mostly wetland (over 50%)</span>'+
+      '<span class="key"><i class="ln" style="background:#a86a1f"></i>mapped trail</span>'+
+      '<span class="key"><i class="dot" style="background:#b3341f"></i>way on, from a maintained road</span>'+
+      '<span class="key"><i class="dot" style="background:#191a17"></i>the house</span>';
+
+  }
+
+  function drawTable(h){
+    document.getElementById('rows').innerHTML = h.tracts.map(function(t){
+      var a = t.access;
+      var far = a && a.ft > 1000;
+      return '<tr class="t" data-id="'+esc(t.id)+'">'+
+        '<td><span class="chip" style="background:'+col(t.wet)+'">'+esc(band(t.wet))+'</span></td>'+
+        '<td class="r">'+n(t.ac)+'</td>'+
+        '<td class="r"><b>'+n(t.dryAc)+'</b></td>'+
+        '<td class="r">'+t.wet+'%</td>'+
+        '<td class="r">'+t.d+' mi</td>'+
+        '<td>'+(a ? (far?'<span class="far">':'')+n(a.ft)+' ft'+(far?'</span>':'')+
+                    ' from '+esc(a.road) : '—')+'</td></tr>';
+    }).join('');
+    [].forEach.call(document.querySelectorAll('#rows tr.t'), function(tr){
+      tr.addEventListener('click', function(){
+        var t = h.tracts.filter(function(x){ return x.id === tr.getAttribute('data-id'); })[0];
+        if(!t || !map) return;
+        try{
+          var b = L.latLngBounds(t.rings[0].map(function(p){ return [p[1], p[0]]; }));
+          if(t.access) b.extend([t.access.roadLat, t.access.roadLon]);
+          map.fitBounds(b.pad(0.15));
+          document.getElementById('map').scrollIntoView({behavior:'smooth', block:'center'});
+        }catch(e){}
+      });
+    });
+
+    var worst = h.tracts.filter(function(t){ return t.access && t.access.ft > 2000; });
+    document.getElementById('note').innerHTML =
+      'Colour is the share of each tract that the Borough maps as wetland. That is not the '+
+      'same as useless — frozen kettle bog is the easiest ground of the year on a '+
+      'snowmachine, and the worst of it in July. The red dot is the closest point on a '+
+      '<b>publicly maintained</b> road; the dashed line is the gap you cross to get on.'+
+      (worst.length ? ' <b>'+worst.length+' tract'+(worst.length>1?'s here are':' here is')+
+        ' more than 2,000 ft from any maintained road</b> — effectively roadless.' : '');
+  }
+
+  fetch('landaccess.json').then(function(r){ return r.json(); }).then(function(j){
+    D = j;
+    var bar = document.getElementById('tabs');
+    Object.keys(D.houses).forEach(function(k, i){
+      var b = document.createElement('button');
+      b.type = 'button'; b.textContent = D.houses[k].name;
+      b.setAttribute('data-k', k);
+      b.addEventListener('click', function(){ draw(k); });
+      bar.appendChild(b);
+    });
+    var first = new URLSearchParams(location.search).get('h');
+    draw(D.houses[first] ? first : Object.keys(D.houses)[0]);
+  }).catch(function(){
+    document.getElementById('sub').textContent = 'Could not load the land data.';
+  });
+
+  document.getElementById('foot').innerHTML =
+    'Tracts are Borough parcels on the casual-use list, which is the land the public may '+
+    'legally walk on without a permit (KPB 17.10.190). Wetland share is sampled from the '+
+    'Borough’s own Wetlands Assessment layer over each tract, so it is good to a few '+
+    'percent, not survey-grade. Distances to a road are to the nearest segment the State, '+
+    'a city or a Road Service Area maintains — they show that a road is close, not '+
+    'that a legal easement runs from it to the tract. Check that before counting on it.';
+})();
+</script>
+</body>
+</html>
