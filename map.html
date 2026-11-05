@@ -63,6 +63,7 @@
     <button type="button" id="btnBorough" aria-pressed="true">Borough land</button>
     <button type="button" id="btnPrivate" aria-pressed="false">Private parcels</button>
     <button type="button" id="btnRefuge" aria-pressed="true">Federal refuge</button>
+    <button type="button" id="btnWater" aria-pressed="false">Lakes</button>
   </div>
   <div class="legend">
     <span><i style="background:var(--parcel)"></i>The listing&rsquo;s lot</span>
@@ -70,6 +71,8 @@
     <span><i style="background:#8a8f86"></i>Borough-owned, not casual use</span>
     <span><i style="background:#d08cc0"></i>Private parcel</span>
     <span><i style="background:#2f8f7a"></i>Federal refuge (Kenai NWR)</span>
+    <span><i style="background:#2bb3e0"></i>Lake &mdash; public land reaches the shore</span>
+    <span><i style="background:#b3341f"></i>Lake &mdash; no public way in</span>
     <span><i style="background:var(--wet)"></i>Mapped wetland</span>
     <span><i style="background:var(--power)"></i>115 kV transmission</span>
   </div>
@@ -138,6 +141,49 @@
   document.getElementById('btnRefuge').addEventListener('click', function(){
     var on = map.hasLayer(refugeLayer);
     if(on) map.removeLayer(refugeLayer); else refugeLayer.addTo(map);
+    this.setAttribute('aria-pressed', on?'false':'true');
+  });
+
+  // Lakes, shaded by whether anyone but the shoreline owners can reach them. Off by
+  // default: imagery already shows the water, and this layer is about access, not scenery.
+  var waterLayer = L.layerGroup(), waterLoaded = false;
+  var WCOL = {private:'#b3341f', public:'#2bb3e0', unknown:'#8a8f86'};
+  function waterWord(l){
+    if(l.access === 'public')
+      return '<b style="color:#1f7fa8">Public land reaches the shore</b><br>'+
+             l.pub+' public parcel'+(l.pub===1?'':'s')+' on the waterline'+
+             (l.priv?', '+l.priv+' private':'');
+    if(l.access === 'private')
+      return '<b style="color:#b3341f">No public way in</b><br>all '+l.priv+
+             ' parcel'+(l.priv===1?'':'s')+' on the shoreline are privately owned';
+    return '<b>Shoreline ownership not resolved</b>';
+  }
+  function loadWater(){
+    if(waterLoaded) return;
+    waterLoaded = true;
+    fetch('water.json').then(function(r){ return r.json(); }).then(function(d){
+      (d.lakes||[]).forEach(function(l){
+        var c = WCOL[l.access] || WCOL.unknown;
+        L.polygon(ringsToLatLng(l.rings),
+          {color:c, weight:2, opacity:.95, fill:true, fillColor:c,
+           fillOpacity: l.access==='public' ? .30 : .22})
+         .bindPopup('<b>'+esc(l.name || 'Unnamed lake')+'</b><br>'+l.ac+' acres<br>'+
+                    waterWord(l)+
+                    '<br><span style="font-size:.85em">The water itself is public under '+
+                    'Alaska law, but that is no right to cross private land to reach it.'+
+                    '</span>')
+         .addTo(waterLayer);
+      });
+      var n = (d.lakes||[]).length;
+      var p = (d.lakes||[]).filter(function(l){ return l.access === 'private'; }).length;
+      document.getElementById('note2').textContent =
+        n + ' lakes mapped · ' + p + ' of them have no public access at all';
+    }).catch(function(){ waterLoaded = false; });
+  }
+  document.getElementById('btnWater').addEventListener('click', function(){
+    var on = map.hasLayer(waterLayer);
+    if(on){ map.removeLayer(waterLayer); }
+    else { waterLayer.addTo(map); loadWater(); }
     this.setAttribute('aria-pressed', on?'false':'true');
   });
 
