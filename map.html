@@ -114,7 +114,8 @@
     (d.parcels||[]).forEach(function(p){
       L.polygon(ringsToLatLng(p.rings),
         p.casual ? {color:'#3f7d45', weight:2, opacity:.95, fillColor:'#3f7d45', fillOpacity:.32}
-                 : {color:'#8a8f86', weight:1, opacity:.75, fill:false, dashArray:'4 3'})
+                 : {color:'#8a8f86', weight:1, opacity:.75, dashArray:'4 3',
+                    fill:true, fillColor:'#8a8f86', fillOpacity:0})
        .bindPopup('<b>Kenai Peninsula Borough</b><br>Parcel '+esc(p.id)+'<br>'+
                   (p.ac!=null?p.ac+' acres<br>':'')+(p.useType?esc(p.useType)+'<br>':'')+
                   (p.casual ? '<b style="color:#2f7d4f">Open to public casual use</b>'
@@ -170,7 +171,9 @@
         (d.features||[]).forEach(function(f){
           if(!f.geometry || !f.geometry.rings) return;
           L.polygon(ringsToLatLng(f.geometry.rings),
-            {color:'#d08cc0', weight:1, opacity:.85, fill:false})
+            // Transparent fill, not fill:false — a 1px stroke is not a tappable target.
+            {color:'#d08cc0', weight:1, opacity:.85,
+             fill:true, fillColor:'#d08cc0', fillOpacity:0})
            .bindPopup('<b>'+esc(f.attributes.PHYSICAL_ADDRESSES||'Private parcel')+'</b><br>'+
                       'Parcel '+esc(f.attributes.PARCEL_ID)+'<br>'+
                       (f.attributes.ACREAGE!=null?f.attributes.ACREAGE+' acres<br>':'')+
@@ -212,9 +215,14 @@
     }
 
     var bounds = {}, all = L.latLngBounds([]);
+    var lotPolys = [];
     parcels.forEach(function(p){
+      // fill:false made ONLY the 3px stroke clickable, so tapping a lot either hit nothing
+      // or fell through to the wetland polygon underneath. A faint fill makes the whole lot
+      // a target and also makes the lot easier to pick out against the imagery.
       var poly = L.polygon(ringsToLatLng(p.rings),
-        {color:'#ffd400', weight:3, opacity:1, fill:false}).addTo(map);
+        {color:'#ffd400', weight:3, opacity:1,
+         fill:true, fillColor:'#ffd400', fillOpacity:.08}).addTo(map);
       var gap = (p.price && p.assessed) ? Math.round((p.price-p.assessed)/p.assessed*100) : null;
       poly.bindPopup('<b>'+esc(label(p))+'</b><br>Parcel '+esc(p.parcel)+'<br>'+
         p.acreage+' acres<br>Asking '+money(p.price)+' &middot; assessed '+money(p.assessed)+
@@ -222,7 +230,22 @@
         (WET[p.key]!==undefined ? '<br>~'+WET[p.key]+'% mapped wetland' : ''));
       bounds[p.key] = poly.getBounds();
       all.extend(poly.getBounds());
+      lotPolys.push(poly);
     });
+
+    // Borough, refuge, wetland and private-parcel polygons all land above the lots in the
+    // same pane and swallow their clicks. Re-lift the lots whenever anything else is added.
+    function liftLots(){
+      lotPolys.forEach(function(q){ if(q.bringToFront) try{ q.bringToFront(); }catch(e){} });
+    }
+    // Debounced: the private-parcel layer adds up to 400 polygons in one pass and each one
+    // fires layeradd.
+    var liftT = null;
+    map.on('layeradd', function(){
+      if(liftT) clearTimeout(liftT);
+      liftT = setTimeout(liftLots, 40);
+    });
+    liftLots();
 
     var tabs = document.getElementById('tabs');
     function mk(label, b){
