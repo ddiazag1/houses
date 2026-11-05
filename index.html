@@ -404,8 +404,11 @@
         shown++;
         var poly = L.polygon(p.rings.map(function(r){
           return r.map(function(pt){ return [pt[1], pt[0]]; }); }),
+          // fill:false means only the 1px stroke is a click target, which is unhittable on
+          // a phone. A transparent fill keeps the look and makes the whole shape tappable.
           p.casual ? {color:'#3f7d45', weight:2, opacity:.95, fillColor:'#3f7d45', fillOpacity:.32}
-                   : {color:'#8a8f86', weight:1, opacity:.7, fill:false, dashArray:'4 3'})
+                   : {color:'#8a8f86', weight:1, opacity:.7, dashArray:'4 3',
+                      fill:true, fillColor:'#8a8f86', fillOpacity:0})
          .bindPopup('<b>Kenai Peninsula Borough land</b><br>Parcel '+esc(p.id)+'<br>'+
                     (p.ac!=null?p.ac+' acres<br>':'')+
                     (p.useType?esc(p.useType)+'<br>':'')+
@@ -559,6 +562,17 @@
     // refuge if they shared one.
     var views = {}, privLayer = L.layerGroup(), refLayer = L.layerGroup();
     var roadLayer = L.layerGroup(), ownMode = false;
+    // Every layer drawn after the yellow lot line sits on top of it in the same SVG pane
+    // and swallows its click, so tapping your own lot returned the neighbour's parcel or
+    // the borough polygon instead. Re-lift it whenever anything else finishes drawing.
+    var lotPoly = null, liftT = null;
+    function liftLot(){
+      if(lotPoly && lotPoly.bringToFront){ try{ lotPoly.bringToFront(); }catch(e){} }
+    }
+    function liftSoon(){                 // the private layer adds ~400 polygons at once
+      if(liftT) clearTimeout(liftT);
+      liftT = setTimeout(liftLot, 40);
+    }
     var boroughReady = Promise.resolve();   // replaced below once drawBorough starts
     var statusEl = document.getElementById('ms-'+el.id);
 
@@ -596,6 +610,7 @@
         if(statusEl) statusEl.textContent = '';
         var b = views[which];
         if(b){ try{ m.fitBounds(b, {padding:[18,18]}); }catch(e){} }
+        liftLot();
         return;
       }
 
@@ -620,6 +635,9 @@
     }
     el._go = go;
     m.on('moveend', function(){ if(ownMode) loadPrivate(m, privLayer, statusEl); });
+    // Anything added to the map — or to a group already on it — lands above the lot line,
+    // so re-lift on every add rather than trying to remember each async draw.
+    m.on('layeradd', liftSoon);
 
     loadParcels().then(function(all){
       var p = all[keyOf(s)];
@@ -634,7 +652,9 @@
         'Assessed $'+asd.toLocaleString()+
         (gap!==null ? '<br>Asking '+(gap>=0?'+':'')+gap+'% vs assessed' : '')+
         (p.legal ? '<br><span style="font-size:.85em">'+esc(p.legal)+'</span>' : ''));
+      lotPoly = poly;
       try{ views.lot = poly.getBounds().pad(0.9); go('lot'); }catch(e){}
+      liftLot();
     });
     L.circleMarker([s.lat,s.lon], {radius:9, color:'#fff', weight:2,
       fillColor: s.day==="Tue AM"?'#1d6a63':s.day==="Tue PM"?'#9a5b1f':'#3b4f8a',
