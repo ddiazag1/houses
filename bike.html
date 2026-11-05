@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Bike route from Beemun's</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Azeret+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root{
+    --ground:#f4f2ed; --card:#fff; --sunk:#edeae3; --ink:#191a17; --muted:#5f6660;
+    --rule:#dcd9d1; --firm:#b4b0a6; --cph:#b3341f; --ok:#2f7d4f; --pm:#9a5b1f;
+    --trail:#a86a1f; --route:#1d6a63;
+    --ui:"Barlow Semi Condensed",system-ui,sans-serif; --mono:"Azeret Mono",ui-monospace,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#14161a; --card:#1c1f24; --sunk:#171a1e; --ink:#e7e9e4; --muted:#9aa09a;
+    --rule:#2e333a; --firm:#49505a; --cph:#f0714f; --ok:#6cc48c; --pm:#e0a35c;
+    --trail:#d79a4a; --route:#5fd0c4;}}
+  :root[data-theme="dark"]{
+    --ground:#14161a; --card:#1c1f24; --sunk:#171a1e; --ink:#e7e9e4; --muted:#9aa09a;
+    --rule:#2e333a; --firm:#49505a; --cph:#f0714f; --ok:#6cc48c; --pm:#e0a35c;
+    --trail:#d79a4a; --route:#5fd0c4;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);font-size:17px;
+       line-height:1.4;padding-block:1rem 4rem;padding-inline:1rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:46rem;margin:0 auto}
+  a.back{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;
+         color:var(--muted);text-decoration:none}
+  h1{margin:.5rem 0 0;font-size:1.6rem;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+  h2{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+     color:var(--muted);font-weight:500;margin:1.6rem 0 .5rem;
+     border-bottom:1px solid var(--rule);padding-bottom:.3rem}
+  .sub{font-family:var(--mono);font-size:.68rem;color:var(--muted);letter-spacing:.05em;
+       text-transform:uppercase;margin-top:.25rem}
+  .bar{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin:.9rem 0;
+       border-top:1px solid var(--firm);border-bottom:1px solid var(--firm);padding-block:.7rem}
+  button{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;
+         padding:.5em .75em;border:1px solid var(--firm);background:transparent;color:var(--muted);
+         border-radius:3px;cursor:pointer}
+  button[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+  button:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+
+  .cond{display:flex;flex-wrap:wrap;gap:.3rem 1.2rem;background:var(--card);
+        border:1px solid var(--rule);border-radius:4px;padding:.7rem .8rem;margin:.6rem 0}
+  .cond div{display:flex;align-items:baseline;gap:.35rem}
+  .cond b{font-variant-numeric:tabular-nums}
+  .cond span.lab{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;
+                 text-transform:uppercase;color:var(--muted)}
+  .warn{color:var(--cph);font-weight:600}
+
+  #map{height:22rem;border:1px solid var(--rule);border-radius:4px;background:var(--sunk);
+       margin:.6rem 0}
+  @media (max-width:560px){ #map{height:17rem} }
+  .leaflet-container{font-family:var(--ui)}
+  .key{display:inline-flex;align-items:center;gap:.3rem;font-family:var(--mono);
+       font-size:.6rem;color:var(--muted);margin-right:.9rem}
+  .key i{width:.85rem;height:.2rem;border-radius:1px;display:inline-block}
+  .key i.dot{width:.55rem;height:.55rem;border-radius:50%}
+
+  .tot{display:flex;flex-wrap:wrap;gap:.2rem 1.4rem;background:var(--sunk);
+       border:1px solid var(--rule);border-radius:4px;padding:.75rem .85rem;margin:.6rem 0}
+  .tot div{display:flex;align-items:baseline;gap:.35rem}
+  .tot b{font-size:1.25rem;font-weight:600;font-variant-numeric:tabular-nums}
+  .tot span{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;
+            text-transform:uppercase;color:var(--muted)}
+
+  ol.legs{list-style:none;margin:.4rem 0 0;padding:0}
+  ol.legs li{display:flex;gap:.6rem;align-items:baseline;padding:.5rem .1rem;
+             border-bottom:1px solid var(--rule)}
+  ol.legs li:last-child{border-bottom:0}
+  .seat{font-family:var(--mono);font-size:.7rem;color:var(--muted);min-width:1.4rem;
+        text-align:right;font-variant-numeric:tabular-nums}
+  .who{flex:1 1 auto;min-width:0}
+  .nm{font-weight:600;display:block}
+  .meta{font-family:var(--mono);font-size:.62rem;color:var(--muted);display:block;margin-top:.1rem}
+  .meta b{color:var(--ink);font-weight:500}
+  .lgo{font-family:var(--mono);font-size:.62rem;color:var(--muted);white-space:nowrap;
+       font-variant-numeric:tabular-nums}
+  a.open{flex:0 0 auto;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;
+         text-transform:uppercase;text-decoration:none;padding:.45em .55em;
+         border:1px solid var(--firm);border-radius:3px;color:var(--ink);white-space:nowrap}
+  .pill{font-family:var(--mono);font-size:.56rem;letter-spacing:.06em;text-transform:uppercase;
+        border:1px solid var(--firm);border-radius:2px;padding:.1em .35em;color:var(--muted)}
+  .pill.on{border-color:var(--ok);color:var(--ok)}
+
+  table.opts{width:100%;border-collapse:collapse;font-size:.95rem}
+  table.opts th{font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;
+                text-transform:uppercase;color:var(--muted);font-weight:500;text-align:left;
+                padding:.3rem .4rem;border-bottom:1px solid var(--rule)}
+  table.opts td{padding:.42rem .4rem;border-bottom:1px solid var(--rule);
+                font-variant-numeric:tabular-nums}
+  table.opts tr.sel td{background:var(--sunk)}
+  table.opts td.r{text-align:right;font-family:var(--mono);font-size:.74rem}
+  table.opts tr{cursor:pointer}
+  .hid{font-family:var(--mono);font-size:.64rem;color:var(--muted);margin:.5rem 0}
+  .hid b{color:var(--ink);font-weight:500}
+  .note{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--pm);
+        border-radius:3px;padding:.65rem .75rem;font-size:.92rem;margin:.7rem 0}
+  footer{margin-top:1.8rem;border-top:1px solid var(--firm);padding-top:.8rem;
+         font-family:var(--mono);font-size:.62rem;line-height:1.7;color:var(--muted)}
+  footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">&larr; the houses</a>
+  <h1>Bike route from Beemun's</h1>
+  <div class="sub" id="sub">loading</div>
+
+  <div class="cond" id="cond"></div>
+
+  <div class="bar" id="bar"></div>
+  <div class="hid" id="hidnote"></div>
+
+  <div id="map"></div>
+  <div id="legend"></div>
+
+  <h2>The ride</h2>
+  <div class="tot" id="tot"></div>
+  <ol class="legs" id="legs"></ol>
+  <div id="gmaps"></div>
+
+  <h2>Pick a different turnaround</h2>
+  <table class="opts"><thead><tr>
+    <th>Turnaround</th><th class="r">Houses</th><th class="r">Round trip</th><th class="r">Riding</th>
+  </tr></thead><tbody id="opts"></tbody></table>
+
+  <div class="note" id="caveat"></div>
+  <footer id="foot"></footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  // bike.json is written by bikedata.py and fetched directly, so build.ps1 and the main
+  // page's payload are untouched by this page.
+  var B = {}, STOPS = [], START = {}, DIST = [], MINS = [], COND = {};
+
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+
+  // Hidden houses live in this browser's localStorage, set on the main page. Nothing is
+  // sent anywhere, so the route has to be assembled here rather than precomputed.
+  var HIDDEN = "tour.hidden.v1";
+  var hidden = {};
+  try{ hidden = JSON.parse(localStorage.getItem(HIDDEN)||"{}") || {}; }catch(e){ hidden = {}; }
+  function isHidden(s){ return !!hidden[s.id]; }
+
+  var budget = 20;              // miles, round trip
+  var useHidden = false;        // include hidden houses anyway
+  var pick = null;              // chosen turnaround id
+
+  function live(){
+    return STOPS.filter(function(s){ return useHidden || !isHidden(s); });
+  }
+
+  // Index into the matrix: 0 is Beemun's, then STOPS in the order bikedata.py wrote them.
+  function ix(s){ return STOPS.indexOf(s) + 1; }
+  function leg(a, b){ return DIST[a === null ? 0 : ix(a)][b === null ? 0 : ix(b)]; }
+  function legMin(a, b){ return MINS[a === null ? 0 : ix(a)][b === null ? 0 : ix(b)]; }
+
+  // An out-and-back: ride out to the turnaround, calling at anything that is genuinely on
+  // the way, then ride home. A house counts as "on the way" when detouring to it costs
+  // less than a quarter extra over going straight to the turnaround.
+  function build(target){
+    var pool = live().filter(function(s){ return s !== target && s.mi < target.mi; });
+    var onWay = pool.filter(function(s){
+      return (leg(null, s) + leg(s, target)) <= leg(null, target) * 1.25;
+    }).sort(function(a, b){ return a.mi - b.mi; });
+
+    var chain = onWay.concat([target]);
+    var miles = 0, mins = 0, prev = null, legs = [];
+    chain.forEach(function(s){
+      var d = leg(prev, s), t = legMin(prev, s);
+      miles += d; mins += t;
+      legs.push({to: s, mi: d, min: t});
+      prev = s;
+    });
+    var back = leg(prev, null), backMin = legMin(prev, null);
+    miles += back; mins += backMin;
+    legs.push({to: null, mi: back, min: backMin});
+    return {target: target, chain: chain, legs: legs,
+            miles: Math.round(miles*10)/10, mins: Math.round(mins)};
+  }
+
+  function options(){
+    return live().map(build).sort(function(a, b){ return a.miles - b.miles; });
+  }
+
+  function best(){
+    var all = options();
+    var fit = all.filter(function(r){ return r.miles <= budget; });
+    if(!fit.length) return all[0] || null;
+    // Within the budget, the ride that reaches the most houses; ties go to the longer one.
+    fit.sort(function(a, b){
+      return (b.chain.length - a.chain.length) || (b.miles - a.miles); });
+    return fit[0];
+  }
+
+  function current(){
+    var all = options();
+    if(pick){
+      var hit = all.filter(function(r){ return r.target.id === pick; })[0];
+      if(hit) return hit;
+    }
+    return best();
+  }
+
+  // ---- map ----------------------------------------------------------------
+  var map = null, routeLayer = null, markLayer = null;
+  function drawMap(route){
+    if(typeof L === "undefined") return;
+    if(!map){
+      map = L.map("map", {scrollWheelZoom:false});
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+        {maxZoom:18, attribution:"Esri"}).addTo(map);
+      (B.trail||[]).forEach(function(path){
+        L.polyline(path.map(function(p){ return [p[1], p[0]]; }),
+          {color:"#a86a1f", weight:4, opacity:.9})
+         .bindPopup("<b>Unity Trail</b><br>Paved, separated from the highway,<br>" +
+                    "Soldotna to Kenai").addTo(map);
+      });
+      L.control.scale({imperial:true, metric:false}).addTo(map);
+    }
+    if(routeLayer) map.removeLayer(routeLayer);
+    if(markLayer) map.removeLayer(markLayer);
+    routeLayer = L.layerGroup().addTo(map);
+    markLayer = L.layerGroup().addTo(map);
+
+    var pts = [[START.lat, START.lon]].concat(route.chain.map(function(s){
+      return [s.lat, s.lon]; })).concat([[START.lat, START.lon]]);
+    L.polyline(pts, {color:"#1d6a63", weight:3, opacity:.85, dashArray:"7 5"})
+     .addTo(routeLayer);
+
+    L.circleMarker([START.lat, START.lon], {radius:9, color:"#fff", weight:2,
+      fillColor:"#b3341f", fillOpacity:1})
+     .bindPopup("<b>"+esc(START.name)+"</b><br>"+esc(START.addr)+"<br>"+
+                esc(START.hours)+"<br>"+esc(START.phone)).addTo(markLayer);
+
+    live().forEach(function(s){
+      var on = route.chain.indexOf(s) >= 0;
+      L.circleMarker([s.lat, s.lon], {radius: on?8:5, color:"#fff", weight:2,
+        fillColor: on ? "#2f7d4f" : "#b4b0a6", fillOpacity:1})
+       .bindPopup("<b>"+esc(s.addr)+"</b><br>"+s.mi+" mi / "+s.min+" min from Beemun's<br>"+
+                  (s.trailMi!=null ? s.trailMi+" mi off the Unity Trail<br>" : "")+
+                  '<a href="index.html#card-'+esc(s.id)+'">Open the card</a>')
+       .addTo(markLayer);
+    });
+    try{ map.fitBounds(L.latLngBounds(pts).pad(0.15)); }catch(e){}
+    setTimeout(function(){ map.invalidateSize(); }, 60);
+  }
+
+  // ---- render -------------------------------------------------------------
+  function render(){
+    var all = STOPS.length, shown = live().length, tucked = all - shown;
+
+    document.getElementById("sub").textContent =
+      shown + " houses in play · out and back from " + (START.addr||"the rental");
+
+    var c = COND;
+    document.getElementById("cond").innerHTML =
+      (c.day ? '<div><span class="lab">'+esc(c.day)+'</span><b>'+esc(c.high)+'</b></div>' : '')+
+      (c.wx ? '<div><span class="lab">weather</span>'+esc(c.wx)+'</div>' : '')+
+      (c.sunrise ? '<div><span class="lab">light</span><b>'+esc(c.sunrise)+'</b> to <b>'+
+                   esc(c.sunset)+'</b></div>' : '')+
+      (c.shopHours ? '<div><span class="lab">beemun’s</span>'+esc(c.shopHours)+'</div>' : '')+
+      (c.alert ? '<div class="warn">'+esc(c.alert)+'</div>' : '');
+
+    var bar = document.getElementById("bar");
+    if(!bar.children.length){
+      [["6 mi or less",6],["12 mi or less",12],["20 mi or less",20],["Any length",999]]
+        .forEach(function(b){
+          var btn = document.createElement("button");
+          btn.type = "button"; btn.textContent = b[0];
+          btn.setAttribute("data-b", b[1]);
+          btn.addEventListener("click", function(){
+            budget = b[1]; pick = null; render(); });
+          bar.appendChild(btn);
+        });
+      var hb = document.createElement("button");
+      hb.type = "button"; hb.id = "hb";
+      hb.addEventListener("click", function(){ useHidden = !useHidden; pick = null; render(); });
+      bar.appendChild(hb);
+    }
+    [].forEach.call(bar.querySelectorAll("[data-b]"), function(btn){
+      btn.setAttribute("aria-pressed",
+        Number(btn.getAttribute("data-b")) === budget ? "true" : "false"); });
+    var hb = document.getElementById("hb");
+    hb.textContent = useHidden ? "Hidden houses included" : "Hidden houses excluded";
+    hb.setAttribute("aria-pressed", useHidden ? "true" : "false");
+
+    document.getElementById("hidnote").innerHTML = tucked
+      ? '<b>'+tucked+'</b> house'+(tucked>1?'s':'')+' you hid on the main page '+
+        (useHidden ? 'are being counted anyway.' : 'are left out of every route below.')
+      : 'Nothing is hidden on this device, so all '+all+
+        ' houses still in play are candidates.';
+
+    document.getElementById("legend").innerHTML =
+      '<span class="key"><i style="background:#a86a1f"></i>Unity Trail (paved, car-free)</span>'+
+      '<span class="key"><i style="background:#1d6a63"></i>your ride</span>'+
+      '<span class="key"><i class="dot" style="background:#b3341f"></i>Beemun’s</span>'+
+      '<span class="key"><i class="dot" style="background:#2f7d4f"></i>on the route</span>'+
+      '<span class="key"><i class="dot" style="background:#b4b0a6"></i>not on it</span>';
+
+    var r = current();
+    if(!r){
+      document.getElementById("tot").innerHTML = '<div>Nothing left to ride to.</div>';
+      document.getElementById("legs").innerHTML = '';
+      document.getElementById("opts").innerHTML = '';
+      document.getElementById("gmaps").innerHTML = '';
+      return;
+    }
+
+    var hrs = Math.round((r.mins + r.chain.length * 12) / 6) / 10;  // 12 min a stop
+    document.getElementById("tot").innerHTML =
+      '<div><b>'+r.miles+'</b><span>miles round trip</span></div>'+
+      '<div><b>'+r.mins+'</b><span>min riding</span></div>'+
+      '<div><b>'+r.chain.length+'</b><span>house'+(r.chain.length>1?'s':'')+'</span></div>'+
+      '<div><b>'+hrs+'</b><span>hours with stops</span></div>';
+
+    document.getElementById("legs").innerHTML =
+      '<li><span class="seat">0</span><span class="who"><span class="nm">'+
+      esc(START.name)+'</span><span class="meta">'+esc(START.addr)+' · '+
+      esc(START.hours||'')+'</span></span><span class="lgo">start</span></li>' +
+      r.legs.map(function(g, i){
+        if(!g.to){
+          return '<li><span class="seat">↩</span><span class="who"><span class="nm">'+
+            'Back to Beemun’s</span><span class="meta">return leg</span></span>'+
+            '<span class="lgo">'+g.mi.toFixed(1)+' mi · '+g.min+' min</span></li>';
+        }
+        var s = g.to;
+        var bits = [];
+        if(s.trailMi != null) bits.push('<b>'+s.trailMi+' mi</b> off the Unity Trail');
+        if(s.verdict) bits.push(esc(s.verdict));
+        return '<li><span class="seat">'+(i+1)+'</span>'+
+          '<span class="who"><span class="nm">'+esc(s.addr)+
+          (s === r.target ? ' <span class="pill on">turnaround</span>' : '')+
+          (isHidden(s) ? ' <span class="pill">hidden</span>' : '')+'</span>'+
+          '<span class="meta">'+bits.join(' · ')+'</span></span>'+
+          '<a class="open" href="index.html#card-'+esc(s.id)+'">Card</a>'+
+          '<span class="lgo">'+g.mi.toFixed(1)+' mi · '+g.min+' min</span></li>';
+      }).join("");
+
+    var wp = r.chain.map(function(s){ return s.lat+","+s.lon; }).join("|");
+    document.getElementById("gmaps").innerHTML =
+      '<p><a class="open" target="_blank" rel="noopener" href="'+
+      'https://www.google.com/maps/dir/?api=1&origin='+START.lat+','+START.lon+
+      '&destination='+START.lat+','+START.lon+'&waypoints='+encodeURIComponent(wp)+
+      '&travelmode=bicycling">Open this ride in Google Maps</a></p>';
+
+    document.getElementById("opts").innerHTML = options().map(function(o){
+      return '<tr data-id="'+esc(o.target.id)+'"'+
+        (o.target.id === r.target.id ? ' class="sel"' : '')+'>'+
+        '<td>'+esc(o.target.addr)+(isHidden(o.target)?' <span class="pill">hidden</span>':'')+
+        '</td><td class="r">'+o.chain.length+'</td>'+
+        '<td class="r">'+o.miles.toFixed(1)+' mi</td>'+
+        '<td class="r">'+o.mins+' min</td></tr>';
+    }).join("");
+    [].forEach.call(document.querySelectorAll("#opts tr"), function(tr){
+      tr.addEventListener("click", function(){
+        pick = tr.getAttribute("data-id"); render(); });
+    });
+
+    document.getElementById("caveat").innerHTML = esc(COND.caveat || "");
+    drawMap(r);
+  }
+
+  document.getElementById("foot").innerHTML =
+    'Riding distances and times are routed on OpenStreetMap with a hybrid-bike profile, '+
+    'door to door, and do not allow for stopping to look at a house — the "hours with '+
+    'stops" figure adds 12 minutes each. The Unity Trail is drawn from the Borough’s '+
+    'own trail layer. Which houses are hidden is read from this browser and is not sent '+
+    'anywhere. Rejected houses are never offered.';
+
+  fetch("bike.json").then(function(r){ return r.json(); }).then(function(j){
+    B = j || {};
+    STOPS = B.stops || []; START = B.start || {};
+    DIST = B.dist || []; MINS = B.mins || []; COND = B.cond || {};
+    render();
+  }).catch(function(){
+    document.getElementById("sub").textContent = "Could not load the route data.";
+  });
+})();
+</script>
+</body>
+</html>
