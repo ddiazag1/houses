@@ -122,6 +122,8 @@
   .mapviews{display:flex;gap:.4rem;flex-wrap:wrap;padding:.5rem .8rem;
             border-bottom:1px solid var(--rule);background:var(--sunk)}
   .mapviews .act{font-size:.62rem}
+  /* Not a view — push it away from the view buttons so it does not read as one. */
+  .mapviews .dotbtn{margin-left:auto}
   .mapviews .act[aria-pressed="true"]{background:var(--ink);color:var(--ground);
                                       border-color:var(--ink)}
   .mapviews .act[disabled]{opacity:.35;cursor:default}
@@ -278,8 +280,42 @@
   // Real tiles with roads and place names. The old hand-drawn SVG plotted dots on a blank
   // ground, which told you nothing about where anything actually was.
   var OV = null, ovStops = null, ovAm = null, ovStreet = null, ovSat = null, amOn = true;
+  // amOn is initialised from storage once dotsOn() is defined, just below.
   var DAYCOL = {"Tue AM":"#1d6a63","Tue PM":"#9a5b1f","Wed":"#3b4f8a"};
   var KINDCOL = {hospital:"#b3341f",school:"#2f6fa8",park:"#3f7d45",gym:"#7a4ca8",trail:"#a86a1f"};
+  // The dot colour was the only thing saying what a marker was, and a legend four scrolls
+  // away is not an answer. Every popup now names its own kind.
+  var KINDNAME = {hospital:"Hospital", school:"School", park:"Park", gym:"Gym",
+                  trail:"Trails"};
+  function amenPopup(a, miles){
+    var col = KINDCOL[a.kind] || "#888";
+    return '<b style="display:flex;align-items:center;gap:.4em;margin-bottom:.15em">'+
+      '<i style="width:.7em;height:.7em;border-radius:50%;flex:0 0 auto;background:'+
+      col+'"></i>'+esc(KINDNAME[a.kind] || "Place")+'</b>'+
+      esc(a.name)+
+      (miles!=null ? '<br>'+miles.toFixed(1)+' mi from this house' : '')+
+      (a.note ? '<br>'+esc(a.note) : '');
+  }
+  // A 5px dot is not a tappable target on a phone, so each one gets an invisible halo
+  // under it carrying the same popup.
+  function addAmen(layer, a, miles){
+    var big = a.kind === "hospital", col = KINDCOL[a.kind] || "#888";
+    var html = amenPopup(a, miles);
+    L.circleMarker([a.lat, a.lon], {radius:15, stroke:false, fill:true,
+      fillColor:col, fillOpacity:0}).bindPopup(html).addTo(layer);
+    L.circleMarker([a.lat, a.lon], {radius: big?9:7, color:"#fff", weight:2,
+      fillColor:col, fillOpacity: big?1:.9}).bindPopup(html).addTo(layer);
+  }
+
+  // Whether the amenity dots are showing, remembered on this device like the hidden list.
+  var DOTKEY = "tour.dots.v1";
+  function dotsOn(){
+    try{ return localStorage.getItem(DOTKEY) !== "0"; }catch(e){ return true; }
+  }
+  function setDots(on){
+    try{ localStorage.setItem(DOTKEY, on ? "1" : "0"); }catch(e){}
+  }
+  amOn = dotsOn();
 
   function initOverview(){
     if(OV || !window.L) return;
@@ -302,12 +338,24 @@
       else   { OV.removeLayer(ovStreet); ovSat.addTo(OV);  this.textContent = "Street map"; }
     });
     document.getElementById("fitall").addEventListener("click", fitOverview);
-    document.getElementById("togglam").addEventListener("click", function(){
-      amOn = !amOn;
+    var tg = document.getElementById("togglam");
+    function paintToggle(){
       if(amOn) ovAm.addTo(OV); else OV.removeLayer(ovAm);
-      this.setAttribute("aria-pressed", amOn?"true":"false");
-      this.textContent = amOn ? "Amenities on" : "Amenities off";
+      tg.setAttribute("aria-pressed", amOn?"true":"false");
+      tg.textContent = amOn ? "Markers on" : "Markers off";
+    }
+    tg.addEventListener("click", function(){
+      amOn = !amOn;
+      setDots(amOn);
+      paintToggle();
+      // Every card map honours the same switch, so flipping it here flips it everywhere.
+      [].forEach.call(document.querySelectorAll(".pmap"), function(el){
+        if(el._dots) el._dots(amOn); });
+      [].forEach.call(document.querySelectorAll('.mapviews [data-dots]'), function(b){
+        b.setAttribute("aria-pressed", amOn?"true":"false");
+        b.textContent = amOn ? "Markers on" : "Markers off"; });
     });
+    paintToggle();
   }
 
   function inView(s){
@@ -337,13 +385,7 @@
     if(!OV) return;                       // no Leaflet: page still works, map just absent
     ovStops.clearLayers(); ovAm.clearLayers();
 
-    AM.forEach(function(a){
-      var big = a.kind==="hospital";
-      L.circleMarker([a.lat,a.lon], {radius: big?8:5, color:"#fff",
-        weight: big?2:1, fillColor: KINDCOL[a.kind]||"#888", fillOpacity: big?1:.85})
-        .bindPopup("<b>"+esc(a.name)+"</b>"+(a.note?"<br>"+esc(a.note):""))
-        .addTo(ovAm);
-    });
+    AM.forEach(function(a){ addAmen(ovAm, a, null); });
 
     visibleStops().forEach(function(s){
       var col = DAYCOL[s.day] || "#555";
@@ -618,7 +660,8 @@
     // Separate layers: loadPrivate() clears its own on every pan, which would wipe the
     // refuge if they shared one.
     var views = {}, privLayer = L.layerGroup(), refLayer = L.layerGroup();
-    var roadLayer = L.layerGroup(), waterLayer = L.layerGroup(), ownMode = false;
+    var roadLayer = L.layerGroup(), waterLayer = L.layerGroup();
+    var amenLayer = L.layerGroup(), ownMode = false;
     // Every layer drawn after the yellow lot line sits on top of it in the same SVG pane
     // and swallows its click, so tapping your own lot returned the neighbour's parcel or
     // the borough polygon instead. Re-lift it whenever anything else finishes drawing.
@@ -635,7 +678,9 @@
 
     function press(which){
       var row = document.getElementById('mv-'+el.id);
+      // Skip the markers toggle - it is not one of the views and must keep its own state.
       if(row) [].forEach.call(row.children, function(btn){
+        if(btn.hasAttribute('data-dots')) return;
         btn.setAttribute('aria-pressed', btn.getAttribute('data-v')===which ? 'true':'false'); });
     }
 
@@ -745,14 +790,13 @@
       }).filter(function(x){ return x.d <= 6; })
       .sort(function(p,q){ return p.d-q.d; }).slice(0, 14);
 
-    near.forEach(function(x){
-      var a = x.a, big = a.kind==="hospital";
-      L.circleMarker([a.lat,a.lon], {radius: big?8:6, color:'#fff', weight:2,
-        fillColor: KINDCOL[a.kind]||'#888', fillOpacity:1})
-        .bindPopup('<b>'+esc(a.name)+'</b><br>'+x.d.toFixed(1)+' mi'+
-                   (a.note?'<br>'+esc(a.note):''))
-        .addTo(m);
-    });
+    near.forEach(function(x){ addAmen(amenLayer, x.a, x.d); });
+    // One switch for every map on the page; the choice is remembered on this device.
+    el._dots = function(on){
+      if(on) amenLayer.addTo(m); else m.removeLayer(amenLayer);
+      liftLot();
+    };
+    el._dots(amOn);
     try{
       var ab = L.latLngBounds([[s.lat,s.lon]]);
       near.filter(function(x){ return x.d <= 2.0; })
@@ -935,6 +979,7 @@
              '<button class="act" type="button" data-v="plow">Snow plowing</button>'+
              '<button class="act" type="button" data-v="water">Lakes</button>'+
              '<button class="act" type="button" data-v="amen">Schools &amp; parks</button>'+
+             '<button class="act dotbtn" type="button" data-dots="1">Markers on</button>'+
            '</div>'+
            '<div class="mapstatus" id="ms-m-'+id+'"></div>';
     }
@@ -1028,6 +1073,27 @@
       var s = STOPS.filter(function(x){return idOf(x)===id;})[0];
       var mv = card.querySelector(".mapviews");
       if(mv) [].forEach.call(mv.children, function(btn){
+        if(btn.hasAttribute("data-dots")){
+          // Not a view: a sticky on/off for the school / park / gym / trail markers.
+          btn.setAttribute("aria-pressed", amOn?"true":"false");
+          btn.textContent = amOn ? "Markers on" : "Markers off";
+          btn.addEventListener("click", function(){
+            amOn = !amOn;
+            setDots(amOn);
+            [].forEach.call(document.querySelectorAll(".pmap"), function(el){
+              if(el._dots) el._dots(amOn); });
+            [].forEach.call(document.querySelectorAll('.mapviews [data-dots]'), function(b){
+              b.setAttribute("aria-pressed", amOn?"true":"false");
+              b.textContent = amOn ? "Markers on" : "Markers off"; });
+            var tg = document.getElementById("togglam");
+            if(tg){
+              tg.setAttribute("aria-pressed", amOn?"true":"false");
+              tg.textContent = amOn ? "Markers on" : "Markers off";
+              if(OV && ovAm){ if(amOn) ovAm.addTo(OV); else OV.removeLayer(ovAm); }
+            }
+          });
+          return;
+        }
         btn.addEventListener("click", function(){
           var el = document.getElementById("m-"+id);
           if(el && el._go) el._go(btn.getAttribute("data-v"));
