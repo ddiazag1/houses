@@ -84,6 +84,12 @@
   .drives b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
   .drives em{font-family:var(--mono);font-size:.62rem;font-style:normal;color:var(--firm);
              letter-spacing:.04em}
+  /* When a ranking exists it replaces the day headings, so say so and offer the way back. */
+  .rankhead{display:flex;align-items:baseline;gap:.6rem}
+  .rankhead a{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;
+              text-transform:uppercase;color:var(--muted);font-weight:400}
+  .pin.rankpin{background:var(--ink);color:var(--ground)}
+
   /* The assigned elementary, named on the map itself and under it. */
   .schoollab{background:rgba(47,111,168,.94);color:#fff;border:0;border-radius:3px;
              padding:.15rem .4rem;font-family:var(--ui);font-size:.72rem;font-weight:600;
@@ -286,6 +292,11 @@
   try{ hidden = JSON.parse(localStorage.getItem(KEY)||"{}") || {}; }catch(e){ hidden = {}; }
   function saveHidden(){ try{ localStorage.setItem(KEY, JSON.stringify(hidden)); }catch(e){} }
   function isHidden(s){ return !!hidden[idOf(s)]; }
+  // The order set on rank.html, read straight from the same storage key it writes.
+  function myOrder(){
+    try{ var o = JSON.parse(localStorage.getItem("tour.rank.v1") || "[]");
+         return Array.isArray(o) ? o : []; }catch(e){ return []; }
+  }
 
   // ---- header ----
   var gps = STOPS.filter(function(s){return s.gpsLat;}).length;
@@ -945,7 +956,7 @@
     }).join('')+'</div>';
   }
 
-  function cardHTML(s, i){
+  function cardHTML(s, i, rankNo){
     var id = idOf(s);
     var psf = s.sqft ? Math.round(s.price/s.sqft) : null;
     var flags = '';
@@ -968,7 +979,8 @@
             (/EXPIRED/i.test(s.publicNote||'')?' expired':'')+'" data-id="'+id+'">';
 
     h += '<button class="top" type="button" aria-expanded="false" aria-controls="b-'+id+'">'+
-         '<span class="pin '+cls[s.day]+'">'+s.n+'</span>'+
+         (rankNo ? '<span class="pin rankpin">'+rankNo+'</span>'
+                 : '<span class="pin '+cls[s.day]+'">'+s.n+'</span>')+
          (s.face ? '<img class="thumb" loading="lazy" src="'+esc(s.face)+
                    '" alt="'+esc(s.addr.split(",")[0])+'">' : '')+
          (s.aerial ? '<img class="thumb" loading="lazy" src="'+esc(s.aerial)+
@@ -1107,7 +1119,14 @@
          encodeURIComponent(slug)+'_rb/">Listing photos</a>';
     if(s.mls) h += '<a class="act" target="_blank" rel="noopener" href="https://www.google.com/search?q='+
          encodeURIComponent('Alaska MLS '+s.mls+' '+s.addr.split(',')[0])+'">MLS '+esc(s.mls)+'</a>';
-    if(s.lat)   h += '<a class="act" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+s.lat+','+s.lon+'">Directions</a>';
+    // The drive that gets made twice a day is house -> hospital, not here -> house.
+    if(s.lat){
+      var cph = D.hospital;
+      h += '<a class="act" target="_blank" rel="noopener" href="'+
+           'https://www.google.com/maps/dir/?api=1&origin='+s.lat+','+s.lon+
+           (cph ? '&destination='+cph.lat+','+cph.lon : '')+
+           '&travelmode=driving">Drive to the hospital</a>';
+    }
     if(s.model) h += '<a class="act" href="'+esc(s.model)+'">3D model</a>';
     h += '<a class="act" href="map.html?p='+encodeURIComponent(keyOf(s))+'">Parcel map</a>';
     h += '<button class="act hide-btn" type="button">'+(isHidden(s)?'Restore':'Hide')+'</button>';
@@ -1126,11 +1145,29 @@
     var tucked = inv.filter(isHidden);
 
     var html = "";
-    DAYS.forEach(function(day){
-      var rows = shown.filter(function(s){return s.day===day;});
-      if(!rows.length) return;
-      html += '<h2>'+day+'</h2>' + rows.map(cardHTML).join("");
-    });
+    var rank = myOrder();
+    if(rank.length){
+      // Once you have ranked them, the ranking IS the order. Day headings would fight it,
+      // so they go; the tour day is still on every card next to the time.
+      var pos = {};
+      rank.forEach(function(id, i){ pos[id] = i; });
+      var ranked = shown.slice().sort(function(a, b){
+        var pa = pos[idOf(a)], pb = pos[idOf(b)];
+        if(pa == null && pb == null) return 0;
+        if(pa == null) return 1;             // anything unranked falls to the bottom
+        if(pb == null) return -1;
+        return pa - pb;
+      });
+      html += '<h2 class="rankhead">Your ranking '+
+              '<a href="rank.html">change it</a></h2>' +
+              ranked.map(function(s, i){ return cardHTML(s, i, i+1); }).join("");
+    }else{
+      DAYS.forEach(function(day){
+        var rows = shown.filter(function(s){return s.day===day;});
+        if(!rows.length) return;
+        html += '<h2>'+day+'</h2>' + rows.map(cardHTML).join("");
+      });
+    }
     if(!shown.length){
       html += '<div class="empty">Nothing showing in this view'+
               (tucked.length?' — all of it is hidden, below.':'.')+'</div>';
