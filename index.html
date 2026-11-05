@@ -1333,9 +1333,13 @@
       });
       bar.appendChild(b);
     });
+    var ld = document.createElement("a");
+    ld.className = "tab"; ld.href = "land.html"; ld.textContent = "The land";
+    ld.style.marginLeft = "auto"; ld.style.textDecoration = "none";
+    bar.appendChild(ld);
     var bk = document.createElement("a");
     bk.className = "tab"; bk.href = "bike.html"; bk.textContent = "Bike route";
-    bk.style.marginLeft = "auto"; bk.style.textDecoration = "none";
+    bk.style.textDecoration = "none";
     bar.appendChild(bk);
     var rk = document.createElement("a");
     rk.className = "tab"; rk.href = "rank.html"; rk.textContent = "Rank them";
