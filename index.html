@@ -114,6 +114,15 @@
   .land em{font-family:var(--mono);font-size:.6rem;font-style:normal;color:var(--firm);
            letter-spacing:.04em}
   .land .thin b{color:var(--muted);font-weight:500}
+  /* School, bus and plowing on the collapsed card. Same shape as .land, own selector. */
+  .daily{display:flex;flex-direction:column;gap:.18rem;padding:.1rem .8rem .3rem;
+         font-size:.86rem;color:var(--muted)}
+  .daily .lr{display:flex;align-items:baseline;gap:.4rem;flex-wrap:wrap}
+  .daily .lr i{width:.5rem;height:.5rem;border-radius:1px;flex:0 0 auto;align-self:center}
+  .daily b{color:var(--ink);font-weight:600}
+  .daily em{font-family:var(--mono);font-size:.6rem;font-style:normal;color:var(--firm);
+            letter-spacing:.04em}
+  .daily .bad b{color:var(--cph)}
   .facts{display:flex;flex-wrap:wrap;gap:.2rem .9rem;padding:0 .8rem .6rem;
          font-family:var(--mono);font-size:.72rem;color:var(--muted)}
   .facts b{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
@@ -911,6 +920,36 @@
     return rows.length ? '<div class="land">'+rows.join('')+'</div>' : '';
   }
 
+  // School, bus and winter plowing belong on the COLLAPSED card. They were only inside the
+  // body, under the map, which meant expanding a card and scrolling past a map to find the
+  // two facts you check first. Same treatment as the public-land note.
+  function dailyRow(s){
+    var rows = [];
+    var b = s.bus;
+    if(b && b.school){
+      var busWord = b.road === true
+        ? (b.zone === 'bus' ? 'bus to the door' : 'walk zone, no bus')
+        : b.road === false ? 'NO BUS — private road' : 'bus unconfirmed';
+      var bad = (b.road === false);
+      rows.push('<div class="lr'+(bad?' bad':'')+'"><i style="background:#2f6fa8"></i>'+
+        '<span><b>'+esc(b.school)+'</b> · '+b.mi+' mi · '+
+        (bad?'<b>'+busWord+'</b>':busWord)+
+        (bad?' <em>nearest stop '+b.toPublic+' mi at '+esc(b.nearest)+'</em>':'')+
+        '</span></div>');
+    }
+    var r = s.road;
+    if(r && r.plow){
+      var nobody = /PRIVATE|NOT MAINTAINED/.test(r.plow);
+      rows.push('<div class="lr'+(nobody?' bad':'')+'">'+
+        '<i style="background:'+(nobody?'#b3341f':'#3f7d45')+'"></i>'+
+        '<span><b>'+esc(r.road||'the road')+'</b> · '+
+        (nobody?'<b>'+esc(r.plow)+'</b>':esc(r.plow))+'</span></div>');
+    }
+    // Its own class, not `.land` - sharing that one made every `.land` selector match two
+    // blocks per card and broke the public-land assertions.
+    return rows.length ? '<div class="daily">'+rows.join('')+'</div>' : '';
+  }
+
   function nearRow(s){
     var bits=[];
     if(s.cphMi!=null) bits.push(['var(--cph)','Hospital','<b>'+s.cphMi+' mi</b> · '+s.cphMin+' min']);
@@ -1004,6 +1043,7 @@
       }
       h += '</div>';
     }
+    h += dailyRow(s);
     h += landRow(s);
     h += '<div class="facts"><span><b>'+s.bed+'</b> bd</span><span><b>'+s.bath+'</b> ba</span>'+
          '<span><b>'+Number(s.sqft).toLocaleString()+'</b> sqft</span>'+
