@@ -81,13 +81,14 @@
   <div class="sub" id="sub">loading</div>
 
   <div class="bar" id="tabs"></div>
+  <div class="bar" id="modes">
+    <button type="button" data-m="land" aria-pressed="true">Borough tracts</button>
+    <button type="button" data-m="wet" aria-pressed="false">Wetland &amp; mosquitoes</button>
+  </div>
   <div class="tot" id="tot"></div>
   <div id="map"></div>
   <div id="legend"></div>
-  <table><thead><tr>
-    <th>Tract</th><th class="r">Acres</th><th class="r">Dry</th><th class="r">Wet</th>
-    <th class="r">From house</th><th>Way on</th>
-  </tr></thead><tbody id="rows"></tbody></table>
+  <table><thead><tr id="head"></tr></thead><tbody id="rows"></tbody></table>
   <div class="note" id="note"></div>
   <footer id="foot"></footer>
 </div>
@@ -96,7 +97,18 @@
 <script>
 (function(){
   "use strict";
-  var D = null, cur = null, map = null, layer = null;
+  var D = null, W = null, cur = null, mode = "land", map = null, layer = null;
+
+  // Breeding weight by wetland type. Alaskan snow-melt Aedes want small, fishless,
+  // vegetated pools that hold water through the summer: a closed kettle is ideal, a
+  // flowing drainageway is poor, and open lake with fish in it is poor too.
+  var WCOL = {high:'#b3341f', mid:'#c98a2e', low:'#2b7fb0'};
+  function breedBand(b){ return b >= 0.85 ? "high" : b >= 0.45 ? "mid" : "low"; }
+  function breedWord(b){
+    return b >= 0.85 ? "holds water all summer — prime breeding"
+         : b >= 0.45 ? "saturated, some breeding"
+                     : "flowing or open water — poor breeding";
+  }
   function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){
     return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
   function n(v){ return Number(v||0).toLocaleString(); }
@@ -123,6 +135,8 @@
       '<div><b>'+n(h.totalAc)+'</b><span>acres total</span></div>'+
       '<div><b>'+h.wetPct+'%</b><span>wetland</span></div>'+
       '<div><b>'+h.tracts.length+'</b><span>tracts</span></div>';
+
+    if(mode === "wet") return drawWet(key);
 
     // The map is the nice half; the table is the half that has to work. Everything below
     // the map renders regardless, so a failed tile/CDN load does not blank the page.
@@ -201,7 +215,89 @@
 
   }
 
+  // ---- wetland / mosquito view -------------------------------------------------
+  function drawWet(key){
+    var w = W && W[key];
+    if(!w){
+      document.getElementById('rows').innerHTML =
+        '<tr><td colspan="6">No wetland data for this property.</td></tr>';
+      return;
+    }
+    var b25 = w.bands["0.25"], b50 = w.bands["0.50"], b100 = w.bands["1.00"];
+    document.getElementById('sub').textContent =
+      w.addr + " · mapped wetland within a mile, by breeding type";
+    document.getElementById('tot').innerHTML =
+      '<div><b>'+n(b25.acres)+'</b><span>wet ac within ¼ mi</span></div>'+
+      '<div><b>'+n(b50.acres)+'</b><span>within ½ mi</span></div>'+
+      '<div><b>'+n(b50.breederAcres)+'</b><span>breeding-weighted</span></div>'+
+      '<div><b>'+n(b100.acres)+'</b><span>within 1 mi</span></div>';
+
+    document.getElementById('head').innerHTML =
+      '<th>Band</th><th class="r">Wetland ac</th><th class="r">Breeding-weighted</th>'+
+      '<th colspan="3">What it is</th>';
+    document.getElementById('rows').innerHTML =
+      ['0.25','0.50','1.00'].map(function(k){
+        var b = w.bands[k];
+        var types = Object.keys(b.byType).slice(0,4)
+          .map(function(t){ return esc(t)+' '+n(b.byType[t])+' ac'; }).join(', ');
+        return '<tr><td>within '+k+' mi</td>'+
+               '<td class="r">'+n(b.acres)+'</td>'+
+               '<td class="r"><b>'+n(b.breederAcres)+'</b></td>'+
+               '<td colspan="3">'+(types || 'none')+'</td></tr>';
+      }).join('');
+
+    document.getElementById('note').innerHTML =
+      'Red is wetland that <b>holds water all summer</b> — kettles and depressions, '+
+      'which is what Alaskan snow-melt mosquitoes breed in. Blue is flowing or open water, '+
+      'which is poor habitat: a lake with fish in it is not the problem, the bog beside it '+
+      'is. Rings are ¼, ½ and 1 mile — roughly the range these mosquitoes '+
+      'disperse. This is mapped habitat, an index rather than a count, and the season is '+
+      'late May to mid-July.';
+
+    if(typeof L === "undefined"){
+      document.getElementById('legend').textContent =
+        'Map unavailable — the table below has the same numbers.';
+      return;
+    }
+    if(!map){
+      map = L.map('map', {scrollWheelZoom:false});
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        {maxZoom:18, attribution:'Imagery &copy; Esri, Maxar'}).addTo(map);
+      L.control.scale({imperial:true, metric:false}).addTo(map);
+    }
+    if(layer) map.removeLayer(layer);
+    layer = L.layerGroup().addTo(map);
+
+    (w.polys||[]).forEach(function(p){
+      var c = WCOL[breedBand(p.breed)];
+      L.polygon(p.rings.map(function(r){
+        return r.map(function(q){ return [q[1], q[0]]; }); }),
+        {color:c, weight:1, opacity:.9, fill:true, fillColor:c, fillOpacity:.42})
+       .bindPopup('<b>'+esc(p.k)+'</b><br>'+n(p.ac)+' acres · '+p.d+' mi from the house'+
+                  '<br>'+esc(breedWord(p.breed))).addTo(layer);
+    });
+    [0.25, 0.5, 1.0].forEach(function(r){
+      L.circle([w.lat, w.lon], {radius: r*1609.34, fill:false, color:'#fff',
+        weight:1.5, opacity:.8, dashArray:'4 6'})
+       .bindPopup(r+' mile from the house').addTo(layer);
+    });
+    L.circleMarker([w.lat, w.lon], {radius:10, color:'#fff', weight:3,
+      fillColor:'#191a17', fillOpacity:1}).bindPopup('<b>'+esc(w.addr)+'</b>').addTo(layer);
+    try{ map.fitBounds(L.circle([w.lat, w.lon], {radius: 1609.34}).getBounds().pad(0.05)); }catch(e){}
+    setTimeout(function(){ map.invalidateSize(); }, 60);
+
+    document.getElementById('legend').innerHTML =
+      '<span class="key"><i style="background:'+WCOL.high+'"></i>kettle / depression — prime breeding</span>'+
+      '<span class="key"><i style="background:'+WCOL.mid+'"></i>seep — some breeding</span>'+
+      '<span class="key"><i style="background:'+WCOL.low+'"></i>flowing or open water — poor</span>'+
+      '<span class="key"><i class="ln" style="background:#fff"></i>¼, ½ and 1 mile</span>'+
+      '<span class="key"><i class="dot" style="background:#191a17"></i>the house</span>';
+  }
+
   function drawTable(h){
+    document.getElementById('head').innerHTML =
+      '<th>Tract</th><th class="r">Acres</th><th class="r">Dry</th><th class="r">Wet</th>'+
+      '<th class="r">From house</th><th>Way on</th>';
     document.getElementById('rows').innerHTML = h.tracts.map(function(t){
       var a = t.access;
       var far = a && a.ft > 1000;
@@ -237,7 +333,24 @@
         ' more than 2,000 ft from any maintained road</b> — effectively roadless.' : '');
   }
 
-  fetch('landaccess.json').then(function(r){ return r.json(); }).then(function(j){
+  [].forEach.call(document.querySelectorAll('#modes button'), function(b){
+    b.addEventListener('click', function(){
+      mode = b.getAttribute('data-m');
+      [].forEach.call(document.querySelectorAll('#modes button'), function(x){
+        x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      // The two views frame differently, so start the map fresh rather than keeping a
+      // zoom that made sense for the other one.
+      if(map && layer){ map.removeLayer(layer); layer = null; }
+      if(cur) draw(cur);
+    });
+  });
+
+  Promise.all([
+    fetch('landaccess.json').then(function(r){ return r.json(); }),
+    fetch('mosquito.json').then(function(r){ return r.json(); }).catch(function(){ return null; })
+  ]).then(function(res){
+    var j = res[0];
+    W = res[1];
     D = j;
     var bar = document.getElementById('tabs');
     Object.keys(D.houses).forEach(function(k, i){
