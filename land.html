@@ -84,6 +84,7 @@
   <div class="bar" id="modes">
     <button type="button" data-m="land" aria-pressed="true">Borough tracts</button>
     <button type="button" data-m="wet" aria-pressed="false">Wetland &amp; mosquitoes</button>
+    <button type="button" data-m="lakes" aria-pressed="false">Public water &amp; rec</button>
   </div>
   <div class="tot" id="tot"></div>
   <div id="map"></div>
@@ -97,7 +98,7 @@
 <script>
 (function(){
   "use strict";
-  var D = null, W = null, cur = null, mode = "land", map = null, layer = null;
+  var D = null, W = null, PL = null, cur = null, mode = "land", map = null, layer = null;
 
   // Breeding weight by wetland type. Alaskan snow-melt Aedes want small, fishless,
   // vegetated pools that hold water through the summer: a closed kettle is ideal, a
@@ -137,6 +138,7 @@
       '<div><b>'+h.tracts.length+'</b><span>tracts</span></div>';
 
     if(mode === "wet") return drawWet(key);
+    if(mode === "lakes") return drawLakes(key);
 
     // The map is the nice half; the table is the half that has to work. Everything below
     // the map renders regardless, so a failed tile/CDN load does not blank the page.
@@ -213,6 +215,133 @@
       '<span class="key"><i class="dot" style="background:#b3341f"></i>way on, from a maintained road</span>'+
       '<span class="key"><i class="dot" style="background:#191a17"></i>the house</span>';
 
+  }
+
+  // ---- public lakes view ---------------------------------------------------------
+  // Classified by who owns the shoreline, not by whether a boat launch is mapped: the
+  // first attempt used OSM launches and found one lake in twelve miles, which measured
+  // OSM's coverage of Alaska rather than the lakes.
+  var LCOL = {public:'#2f7d4f', private:'#b3341f', unknown:'#8a8f86'};
+  function drawLakes(key){
+    if(!PL || !PL.lakes){
+      document.getElementById('rows').innerHTML =
+        '<tr><td colspan="6">Lake data unavailable.</td></tr>';
+      return;
+    }
+    var home = PL.homes[key] || (D.houses[key] || {});
+    var lakes = PL.lakes.slice().sort(function(a,b){
+      return (a.fromHome[key]||99) - (b.fromHome[key]||99); });
+    var pub = lakes.filter(function(l){ return l.access === 'public'; });
+
+    document.getElementById('sub').textContent =
+      (home.name || home.addr || '') + " · public water and recreation within 12 miles";
+    // Nearest PUBLIC PLACE, lake or rec site. Quoting the nearest lake while the table
+    // led with a boat launch five times closer read as a contradiction.
+    var nearLake = pub[0];
+    var nearAny = null;
+    (PL.access||[]).concat(pub.map(function(l){
+      return {name: l.name || 'unnamed lake', kind: 'lake', fromHome: l.fromHome};
+    })).forEach(function(a){
+      var d = (a.fromHome||{})[key];
+      if(d == null) return;
+      if(!nearAny || d < nearAny.d) nearAny = {d: d, name: a.name, kind: a.kind};
+    });
+    document.getElementById('tot').innerHTML =
+      '<div><b>'+pub.length+'</b><span>public lakes</span></div>'+
+      '<div><b>'+((PL.access||[]).length)+'</b><span>rec sites</span></div>'+
+      (nearAny ? '<div><b>'+nearAny.d.toFixed(1)+'</b><span>mi to the nearest — '+
+                 esc(nearAny.name)+'</span></div>' : '')+
+      (nearLake ? '<div><b>'+nearLake.fromHome[key]+'</b><span>mi to a public lake</span></div>'
+                : '');
+
+    // One list of everywhere public you could go, lakes and recreation sites together,
+    // nearest first - that is the question being asked, not "lakes" specifically.
+    var rows = pub.map(function(l){
+      return {d: l.fromHome[key], name: l.name || '(unnamed lake)',
+              what: Math.round(l.ac) + ' acre lake' + (l.refuge ? ', refuge' : ''),
+              why: l.why || '', lat: l.lat, lon: l.lon, lake: true};
+    }).concat((PL.access||[]).map(function(a){
+      return {d: (a.fromHome||{})[key], name: a.name, what: a.kind,
+              why: a.src === 'KPB parks' ? 'Borough parks register' : 'OpenStreetMap',
+              lat: a.lat, lon: a.lon, lake: false};
+    })).filter(function(r){ return r.d != null; })
+       .sort(function(a, b){ return a.d - b.d; });
+
+    document.getElementById('head').innerHTML =
+      '<th>Place</th><th class="r">Miles</th><th>What</th><th colspan="2">Why public</th>';
+    document.getElementById('rows').innerHTML = rows.slice(0, 22).map(function(r){
+      return '<tr class="t" data-lake="'+esc(String(r.lat)+','+String(r.lon))+'">'+
+        '<td>'+esc(r.name)+'</td>'+
+        '<td class="r">'+r.d.toFixed(1)+'</td>'+
+        '<td>'+esc(r.what)+'</td>'+
+        '<td colspan="2">'+esc(r.why)+'</td></tr>';
+    }).join('');
+
+    document.getElementById('note').innerHTML =
+      'Green is water with at least one <b>publicly owned parcel on the shoreline</b>, or '+
+      'water inside the <b>Kenai National Wildlife Refuge</b>. Red is ringed entirely by '+
+      'private lots — the Leisure Lake kettle is one of these. Grey means no parcel '+
+      'data covers that shoreline, which on the Kenai usually means unsurveyed public '+
+      'land rather than private. <b>A public shoreline is a legal foothold, not a car '+
+      'park and a boat ramp</b> — check before relying on one.';
+
+    if(typeof L === "undefined"){
+      document.getElementById('legend').textContent =
+        'Map unavailable — the table below has the same lakes.';
+      return;
+    }
+    if(!map){
+      map = L.map('map', {scrollWheelZoom:false});
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        {maxZoom:18, attribution:'Imagery &copy; Esri, Maxar'}).addTo(map);
+      L.control.scale({imperial:true, metric:false}).addTo(map);
+    }
+    if(layer) map.removeLayer(layer);
+    layer = L.layerGroup().addTo(map);
+    var bb = L.latLngBounds([[home.lat, home.lon]]);
+
+    lakes.forEach(function(l){
+      if((l.fromHome[key]||99) > 12) return;
+      var c = LCOL[l.access] || LCOL.unknown;
+      var poly = L.polygon(l.rings.map(function(r){
+        return r.map(function(p){ return [p[1], p[0]]; }); }),
+        {color:c, weight:1.5, opacity:.95, fill:true, fillColor:c, fillOpacity:.45})
+       .bindPopup('<b>'+esc(l.name || 'Unnamed lake')+'</b><br>'+
+                  n(Math.round(l.ac))+' acres · '+l.fromHome[key]+' mi from the house'+
+                  '<br>'+esc(l.why || '')+
+                  (l.refuge ? '<br>Inside the Kenai National Wildlife Refuge' : ''))
+       .addTo(layer);
+      if(l.access === 'public' && (l.fromHome[key]||99) <= 8){
+        try{ bb.extend(poly.getBounds()); }catch(e){}
+      }
+    });
+    (PL.access||[]).forEach(function(a){
+      L.circleMarker([a.lat, a.lon], {radius:5, color:'#fff', weight:2,
+        fillColor:'#2f6fa8', fillOpacity:1})
+       .bindPopup('<b>'+esc(a.name)+'</b><br>'+esc(a.kind)+'<br>'+esc(a.src)).addTo(layer);
+    });
+    L.circleMarker([home.lat, home.lon], {radius:10, color:'#fff', weight:3,
+      fillColor:'#191a17', fillOpacity:1})
+     .bindPopup('<b>'+esc(home.name || home.addr)+'</b>').addTo(layer);
+    try{ map.fitBounds(bb.pad(0.12)); }catch(e){}
+    setTimeout(function(){ map.invalidateSize(); }, 60);
+
+    document.getElementById('legend').innerHTML =
+      '<span class="key"><i style="background:'+LCOL.public+'"></i>public shore or refuge</span>'+
+      '<span class="key"><i style="background:'+LCOL.private+'"></i>private all the way round</span>'+
+      '<span class="key"><i style="background:'+LCOL.unknown+'"></i>no parcel data</span>'+
+      '<span class="key"><i class="dot" style="background:#2f6fa8"></i>park or mapped launch</span>'+
+      '<span class="key"><i class="dot" style="background:#191a17"></i>the house</span>';
+
+    [].forEach.call(document.querySelectorAll('#rows tr.t'), function(tr){
+      tr.addEventListener('click', function(){
+        var p = (tr.getAttribute('data-lake')||'').split(',');
+        if(p.length === 2 && map){
+          map.setView([parseFloat(p[0]), parseFloat(p[1])], 14);
+          document.getElementById('map').scrollIntoView({behavior:'smooth', block:'center'});
+        }
+      });
+    });
   }
 
   // ---- wetland / mosquito view -------------------------------------------------
@@ -347,10 +476,12 @@
 
   Promise.all([
     fetch('landaccess.json').then(function(r){ return r.json(); }),
-    fetch('mosquito.json').then(function(r){ return r.json(); }).catch(function(){ return null; })
+    fetch('mosquito.json').then(function(r){ return r.json(); }).catch(function(){ return null; }),
+    fetch('publiclakes.json').then(function(r){ return r.json(); }).catch(function(){ return null; })
   ]).then(function(res){
     var j = res[0];
     W = res[1];
+    PL = res[2];
     D = j;
     var bar = document.getElementById('tabs');
     Object.keys(D.houses).forEach(function(k, i){
