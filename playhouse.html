@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Warm kids' playhouse</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Azeret+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --ground:#f4f2ed; --card:#fff; --sunk:#edeae3; --ink:#191a17; --muted:#5f6660;
+    --rule:#dcd9d1; --firm:#b4b0a6; --cph:#b3341f; --ok:#2f7d4f; --pm:#9a5b1f;
+    --ui:"Barlow Semi Condensed",system-ui,sans-serif; --mono:"Azeret Mono",ui-monospace,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#14161a; --card:#1c1f24; --sunk:#171a1e; --ink:#e7e9e4; --muted:#9aa09a;
+    --rule:#2e333a; --firm:#49505a; --cph:#f0714f; --ok:#6cc48c; --pm:#e0a35c;}}
+  :root[data-theme="dark"]{
+    --ground:#14161a; --card:#1c1f24; --sunk:#171a1e; --ink:#e7e9e4; --muted:#9aa09a;
+    --rule:#2e333a; --firm:#49505a; --cph:#f0714f; --ok:#6cc48c; --pm:#e0a35c;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);font-size:17px;
+       line-height:1.45;padding-block:1rem 4rem;padding-inline:1rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:52rem;margin:0 auto}
+  a{color:inherit}
+  a.back{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;
+         color:var(--muted);text-decoration:none}
+  h1{margin:.5rem 0 0;font-size:1.6rem;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+  h2{font-size:1.2rem;font-weight:600;margin:2rem 0 .4rem;padding-top:.8rem;border-top:1px solid var(--firm)}
+  h3{font-size:1rem;font-weight:600;margin:1.1rem 0 .3rem}
+  .sub{font-family:var(--mono);font-size:.68rem;color:var(--muted);letter-spacing:.05em;
+       text-transform:uppercase;margin-top:.25rem}
+  p,li{max-width:46rem}
+  ul,ol{padding-left:1.25rem}
+  li{margin:.2rem 0}
+  .tot{display:flex;flex-wrap:wrap;gap:.2rem 1.4rem;background:var(--sunk);
+       border:1px solid var(--rule);border-radius:4px;padding:.75rem .85rem;margin:.9rem 0}
+  .tot div{display:flex;align-items:baseline;gap:.35rem}
+  .tot b{font-size:1.25rem;font-weight:600;font-variant-numeric:tabular-nums}
+  .tot span{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{width:100%;border-collapse:collapse;font-size:.93rem;margin-top:.5rem}
+  th{font-family:var(--mono);font-size:.56rem;letter-spacing:.06em;text-transform:uppercase;
+     color:var(--muted);font-weight:500;text-align:left;padding:.3rem .4rem;border-bottom:1px solid var(--rule)}
+  td{padding:.45rem .4rem;border-bottom:1px solid var(--rule);vertical-align:top;font-variant-numeric:tabular-nums}
+  td.r{text-align:right;font-family:var(--mono);font-size:.75rem;white-space:nowrap}
+  .note{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--pm);
+        border-radius:3px;padding:.65rem .75rem;font-size:.92rem;margin:.8rem 0}
+  .note.warn{border-left-color:var(--cph)}
+  .note.good{border-left-color:var(--ok)}
+  .phase{background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:.7rem .85rem;margin:.7rem 0}
+  .phase h3{margin:0 0 .1rem}
+  .phase .when{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .kid{font-size:.88rem;color:var(--muted);margin-top:.3rem}
+  .kid b{color:var(--ok);font-weight:600}
+  svg{width:100%;height:auto;max-width:34rem;display:block;margin:.6rem 0}
+  svg .ln{stroke:var(--ink);fill:none;stroke-width:2}
+  svg .fill{fill:var(--sunk);stroke:var(--ink);stroke-width:2}
+  svg .ins{fill:var(--pm);opacity:.25}
+  svg text{fill:var(--muted);font-family:var(--mono);font-size:10px}
+  footer{margin-top:1.8rem;border-top:1px solid var(--firm);padding-top:.8rem;
+         font-family:var(--mono);font-size:.62rem;line-height:1.7;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">&larr; the houses</a>
+  <h1>A warm playhouse for the kids</h1>
+  <div class="sub">8 × 10 ft · insulated · built for a Kenai Peninsula winter</div>
+
+  <div class="tot">
+    <div><b>80</b><span>sq ft floor</span></div>
+    <div><b>8–10</b><span>weekends</span></div>
+    <div><b>$5–9k</b><span>all-in (est.)</span></div>
+    <div><b>~1 kW</b><span>heat at −20°F</span></div>
+  </div>
+
+  <p>This is a real little building, not a plywood box: a floor that won't heave, walls and roof insulated like a cabin, a metal roof that sheds snow, and one safe electric heater. It's sized 8 × 10 ft so it's big enough for two or three kids and a grown-up to sit inside, and small enough to build with two adults on weekends.</p>
+
+  <div class="note warn"><b>Before you buy anything:</b> call the city (Soldotna or Kenai) or the Kenai Peninsula Borough planning office and ask whether an 80 sq ft accessory building needs a permit or setback from the lot line. Small sheds are often exempt, but rules differ and running power to it usually needs an electrical permit. Also call 811 (Alaska Dig Line) before driving any ground anchors.</div>
+
+  <h2>1. The design in one picture</h2>
+  <svg viewBox="0 0 340 240" role="img" aria-label="Gable-end view: skids on gravel, insulated floor, 6 ft walls, 8:12 metal roof, door on gable end">
+    <rect class="fill" x="20" y="214" width="300" height="14" rx="2"/>
+    <text x="24" y="238">gravel pad 6" on fabric</text>
+    <rect class="fill" x="55" y="198" width="22" height="16"/><rect class="fill" x="159" y="198" width="22" height="16"/><rect class="fill" x="263" y="198" width="22" height="16"/>
+    <rect class="fill" x="60" y="184" width="220" height="14"/>
+    <rect class="ins" x="60" y="184" width="220" height="14"/>
+    <text x="200" y="180">insulated floor</text>
+    <polyline class="ln" points="60,184 60,100 170,27 280,100 280,184"/>
+    <line class="ln" x1="48" y1="108" x2="60" y2="100"/><line class="ln" x1="292" y1="108" x2="280" y2="100"/>
+    <rect class="fill" x="140" y="110" width="60" height="74" rx="2"/>
+    <rect class="fill" x="155" y="58" width="30" height="24"/>
+    <text x="146" y="104">door</text>
+    <text x="196" y="56">8:12 metal roof</text>
+    <text x="6" y="146">6 ft</text>
+    <line class="ln" x1="38" y1="100" x2="38" y2="184" stroke-dasharray="3 3"/>
+    <text x="150" y="20">~9'4" ridge</text>
+  </svg>
+  <ul>
+    <li><b>Footprint:</b> 8 ft wide × 10 ft deep, gable roof, door and a window on the 8 ft gable end, one window on each long side.</li>
+    <li><b>Walls:</b> 6 ft tall at the eaves (a grown-up can stand in the middle), roof rises to about 9'4" at the peak.</li>
+    <li><b>Roof:</b> 8:12 pitch with ribbed metal so snow slides off. The door goes on the <i>gable end</i> so sliding snow never lands on a kid coming out the door.</li>
+    <li><b>Foundation:</b> sits on treated skids on concrete blocks over a gravel pad, so it "floats" with the frost instead of being lifted by it. No 5-ft-deep footings needed.</li>
+    <li><b>Optional loft:</b> a 4 ft deep sleeping/reading loft across the back, about 4 ft off the floor, with a guard rail.</li>
+  </ul>
+
+  <h2>2. Why it will actually stay warm</h2>
+  <p>Warmth comes almost entirely from insulation and airtightness, then a small heater does the rest.</p>
+  <div class="scroll"><table>
+    <tr><th>Part</th><th>What to do</th><th>R-value</th></tr>
+    <tr><td>Floor</td><td>R-19 batts between 2×6 joists, held up by ¼" hardware cloth + ½" plywood underneath (stops mice and wind)</td><td class="r">R-19</td></tr>
+    <tr><td>Walls</td><td>2×4 studs with R-15 rock-wool batts, plus 1" foil-faced foam outside the sheathing to stop heat leaking through studs</td><td class="r">R-20</td></tr>
+    <tr><td>Roof</td><td>2×6 rafters with R-21 batts and 1" foam under the interior ceiling boards; keep a 1" air gap above the batts with baffles</td><td class="r">R-25</td></tr>
+    <tr><td>Windows</td><td>Small double-pane, tempered glass (or twin-wall polycarbonate)</td><td class="r">~R-3</td></tr>
+    <tr><td>Door</td><td>Insulated steel or a solid door with weatherstripping and a door sweep</td><td class="r">R-5+</td></tr>
+  </table></div>
+  <p>Put a <b>6-mil poly vapor barrier</b> (or a smart membrane) on the <i>inside</i> of the wall and ceiling insulation and tape every seam. In a Kenai winter that one step matters as much as the insulation: it keeps warm, wet breath from condensing and frosting up inside the walls.</p>
+
+  <h3>How big a heater?</h3>
+  <p>Rough heat-loss estimate for this building: about 40 BTU/hr per °F of difference between inside and outside.</p>
+  <ul>
+    <li>Outside 0°F, inside 60°F → ~2,400 BTU/hr ≈ <b>700 W</b></li>
+    <li>Outside −20°F, inside 60°F → ~3,200 BTU/hr ≈ <b>950 W</b></li>
+  </ul>
+  <p>So one <b>1,500 W wall-mounted heater with a built-in thermostat</b> is plenty. Run it at 40–45°F when nobody's out there (keeps the place from going frosty) and bump it up an hour before play time.</p>
+  <div class="note warn"><b>No wood stove, propane or kerosene heater in a kids' playhouse.</b> Small airtight rooms + combustion = carbon monoxide risk, and burns. Electric only: a wall-mounted convection or radiant panel heater (no exposed glowing elements), with tip-over/overheat shutoff if it's a portable. Mount it high or behind a guard, never under the loft or near bedding. Add a smoke alarm anyway.</div>
+
+  <h2>3. Materials list</h2>
+  <p>For an 8 × 10 building. Prices in Soldotna run higher than Lower 48 — check Spenard Builders Supply and Home Depot (Soldotna); buying everything in one delivery usually saves the trip costs.</p>
+  <div class="scroll"><table>
+    <tr><th>Section</th><th>Item</th><th>Qty</th></tr>
+    <tr><td>Site</td><td>Geotextile fabric; ¾" crushed gravel (D-1)</td><td class="r">12×14 ft; ~2 yd³</td></tr>
+    <tr><td>Foundation</td><td>Solid concrete blocks 8×8×16 (or adjustable pier blocks)</td><td class="r">9</td></tr>
+    <tr><td></td><td>4×6×10 ft pressure-treated (ground-contact) skids</td><td class="r">3</td></tr>
+    <tr><td></td><td>Earth-auger tie-down anchors + galvanized straps (wind &amp; earthquakes)</td><td class="r">4</td></tr>
+    <tr><td>Floor</td><td>2×6×8 PT joists @ 16" + 2×6×10 PT rim boards</td><td class="r">8 + 2</td></tr>
+    <tr><td></td><td>¾" tongue-and-groove plywood subfloor (4×8)</td><td class="r">3</td></tr>
+    <tr><td></td><td>½" plywood + ¼" hardware cloth for underside</td><td class="r">3 sh + 1 roll</td></tr>
+    <tr><td>Walls</td><td>2×4×8 studs (studs, plates, headers, blocking)</td><td class="r">~45</td></tr>
+    <tr><td></td><td>7/16" OSB or ½" plywood sheathing</td><td class="r">12</td></tr>
+    <tr><td></td><td>1" foil-faced polyiso foam board (4×8)</td><td class="r">12</td></tr>
+    <tr><td></td><td>House wrap, cap nails, flashing tape</td><td class="r">1 roll ea.</td></tr>
+    <tr><td></td><td>Siding: T1-11, LP SmartSide, or board-and-batten</td><td class="r">~250 sq ft</td></tr>
+    <tr><td>Roof</td><td>2×6×8 rafters @ 16" + 2×8 ridge board + 2×4 collar ties</td><td class="r">16 + 1 + 8</td></tr>
+    <tr><td></td><td>½" plywood roof sheathing</td><td class="r">6</td></tr>
+    <tr><td></td><td>Synthetic underlayment; ribbed metal panels, ridge cap, drip edge, trim screws</td><td class="r">~150 sq ft</td></tr>
+    <tr><td>Openings</td><td>Pre-hung exterior door (insulated, 30–32" wide)</td><td class="r">1</td></tr>
+    <tr><td></td><td>Small tempered double-pane windows (~24×30")</td><td class="r">3</td></tr>
+    <tr><td>Insulation</td><td>R-19 batts (floor), R-15 (walls), R-21 (roof) — rock wool preferred</td><td class="r">~80/190/120 sq ft</td></tr>
+    <tr><td></td><td>6-mil poly, acoustical sealant, canned foam, baffles</td><td class="r">1 roll + 2 tubes</td></tr>
+    <tr><td>Interior</td><td>Pine tongue-and-groove or ½" plywood for walls/ceiling</td><td class="r">~300 sq ft</td></tr>
+    <tr><td></td><td>Floor: interlocking rubber/foam tiles or vinyl plank</td><td class="r">80 sq ft</td></tr>
+    <tr><td>Electrical</td><td>Exterior GFCI feed, 2 outlets, LED light + switch, 1,500 W wall heater w/ thermostat, smoke alarm</td><td class="r">by electrician</td></tr>
+    <tr><td>Fasteners</td><td>Exterior-rated screws, 16d/8d galvanized nails, joist hangers, hurricane ties</td><td class="r">as needed</td></tr>
+  </table></div>
+
+  <h2>4. Step-by-step build, and what to expect each weekend</h2>
+  <p>Assumes two adults with a circular saw, drill/driver, level, square and a ladder. The Kenai building season is roughly <b>mid-May to late September</b>; the goal is to have it <b>roofed and closed in by early September</b> so fall rain and October snow land on a finished roof, then do the insulation and inside work in fall.</p>
+
+  <div class="phase">
+    <div class="when">Week 0 · evenings</div>
+    <h3>Plan and order</h3>
+    <ol>
+      <li>Pick the spot: level-ish, visible from the kitchen window, not under big spruce (falling snow and branches), with the gable/door end facing south or toward the house for winter sun and a short path you'll shovel.</li>
+      <li>Keep it at least ~10 ft from the house and any fire pit; check property-line setbacks.</li>
+      <li>Permit question answered, 811 called, materials ordered for delivery.</li>
+    </ol>
+    <div class="kid"><b>Kids:</b> draw "their" playhouse — window spots, colors, a name for the sign.</div>
+  </div>
+
+  <div class="phase">
+    <div class="when">Weekend 1</div>
+    <h3>Site pad and foundation</h3>
+    <ol>
+      <li>Strip sod and organics in a 12 × 14 ft area, down to mineral soil.</li>
+      <li>Lay geotextile fabric, spread 6" of crushed gravel, rake and tamp it in 3" lifts (rent a plate compactor). Slope it slightly away so meltwater drains.</li>
+      <li>Set 9 blocks in 3 rows (under each skid: both ends and middle). Use a string line and level so all block tops are dead level.</li>
+      <li>Lay the three 4×6 skids on the blocks (outer skids flush with the 8 ft width, one in the middle). Check diagonals are equal (square).</li>
+    </ol>
+    <div class="note">Why skids? Frost here goes 4–6+ ft deep. A building on gravel and skids rises and falls a little as a unit and can be shimmed level in spring. Posts set in the ground get jacked up unevenly.</div>
+    <div class="kid"><b>Kids:</b> raking gravel, carrying small rocks, holding the tape.</div>
+  </div>
+
+  <div class="phase">
+    <div class="when">Weekend 2</div>
+    <h3>Insulated floor</h3>
+    <ol>
+      <li>Build the 8 × 10 floor frame: 2×6 rims on the long sides, joists 16" on center, with joist hangers or 3 screws per end.</li>
+      <li>Flip it upside-down: staple hardware cloth across the bottom, then screw ½" plywood over it. Flip it back onto the skids.</li>
+      <li>Fill the joist bays with R-19 batts — snug, no gaps, no compressing.</li>
+      <li>Glue and screw the ¾" T&amp;G subfloor down.</li>
+      <li>Fasten frame to skids with hurricane ties; install the auger anchors and strap the skids down.</li>
+    </ol>
+    <div class="kid"><b>Kids:</b> first "standing on our floor" photo. Older kids can drive screws with help.</div>
+  </div>
+
+  <div class="phase">
+    <div class="when">Weekends 3–4</div>
+    <h3>Walls</h3>
+    <ol>
+      <li>Frame each wall flat on the deck: bottom plate, double top plate, studs 16" on center, doubled studs and a header (two 2×6 on edge) over the door and each window.</li>
+      <li>Sheath walls with OSB while they're still flat and square — much easier.</li>
+      <li>Stand the long walls first, brace them plumb, then the gable-end walls. Nail corners together and overlap the top plates at corners.</li>
+      <li>Wrap with house wrap, then the 1" foam board on top, seams taped.</li>
+    </ol>
+    <p>Expect this to be the most satisfying weekend — it suddenly looks like a house.</p>
+    <div class="kid"><b>Kids:</b> sign their names on the studs before the sheathing goes on — they'll love knowing it's in there.</div>
+  </div>
+
+  <div class="phase">
+    <div class="when">Weekends 5–6</div>
+    <h3>Roof (the hardest part — get a third adult)</h3>
+    <ol>
+      <li>Cut one pair of 8:12 rafters with a bird's-mouth notch, test-fit, then use it as a template for the rest. Leave ~12" overhang at the eaves.</li>
+      <li>Set the ridge board on temporary posts, then install rafters in pairs at 16" on center, with hurricane ties at every wall connection.</li>
+      <li>Add collar ties / ceiling joists low on every other rafter pair — they stop the walls from spreading under snow load.</li>
+      <li>Sheath with ½" plywood, add drip edge, synthetic underlayment, then the metal panels and ridge cap.</li>
+      <li>Add a snow guard strip above the door end if it has any eave over it.</li>
+    </ol>
+    <div class="note">Snow load on the Kenai can be 50+ lb/sq ft. 2×6 rafters at 16" on this short 4 ft run are very strong for it; don't go to 24" spacing to save money.</div>
+    <div class="kid"><b>Kids:</b> ground crew only — handing up screws in a bucket on a rope. Keep them out from under the roof work.</div>
+  </div>
+
+  <div class="phase">
+    <div class="when">Weekend 7</div>
+    <h3>Dry-in: windows, door, siding</h3>
+    <ol>
+      <li>Flash window and door openings (sill pan first, sides, then top — shingle-style so water runs out).</li>
+      <li>Set windows and the door level and plumb; shim and fill gaps with low-expansion foam.</li>
+      <li>Install siding and trim; caulk joints.</li>
+    </ol>
+    <p><b>Milestone:</b> it's weather-tight. Now it can wait for rain or school schedules.</p>
+    <div class="kid"><b>Kids:</b> painting — pick the color together. Use exterior latex and pre-paint boards on sawhorses.</div>
+  </div>
+
+  <div class="phase">
+    <div class="when">Weekend 8</div>
+    <h3>Power and heat (electrician)</h3>
+    <ol>
+      <li>An electrician runs a buried feed (UF cable in conduit, below frost if possible) from a GFCI breaker at the house.</li>
+      <li>Rough-in: two outlets, one ceiling LED light, wall heater with its own thermostat, smoke alarm.</li>
+      <li>Inspection if your permit requires it — <i>before</i> insulation covers the wiring.</li>
+    </ol>
+  </div>
+
+  <div class="phase">
+    <div class="when">Weekends 9–10</div>
+    <h3>Insulate and finish the inside</h3>
+    <ol>
+      <li>Seal every gap — around windows, top and bottom plates, wire holes — with sealant or canned foam. This is where "warm" is won.</li>
+      <li>Install wall and roof batts (baffles above the roof batts).</li>
+      <li>Poly vapor barrier on the warm side, every seam and penetration taped.</li>
+      <li>Cover with pine T&amp;G or plywood — no exposed insulation anywhere kids can reach.</li>
+      <li>Build the loft if you want one: 2×6 ledger bolted to the studs, 2×6 joists, ¾" plywood deck, guard rail at least 36" high with gaps under 4", a sturdy fixed ladder.</li>
+      <li>Floor tiles or vinyl plank, rugs, cushions, a shelf for books.</li>
+    </ol>
+    <div class="kid"><b>Kids:</b> decorate, name sign over the door, choose the curtains.</div>
+  </div>
+
+  <h2>5. Kid-safety checklist</h2>
+  <ul>
+    <li>Door has <b>no lock</b> that can't be opened from inside; use a simple latch both sides can work. Add finger guards on the hinge side.</li>
+    <li>All glass tempered, or polycarbonate.</li>
+    <li>No exposed screw tips, nails, insulation or sharp metal-roof edges below 7 ft — sand edges and round corners.</li>
+    <li>Loft rail ≥ 36", openings &lt; 4", ladder fixed in place.</li>
+    <li>Electric heat only, mounted and guarded, on a thermostat; smoke alarm tested monthly.</li>
+    <li>Treated lumber stays outside and underneath; inside surfaces are untreated wood with low-VOC finish.</li>
+    <li>Building is strapped down (wind and earthquakes both happen here).</li>
+    <li>Clear a winter path and keep the area under the eaves fenced or marked in late winter when snow slides.</li>
+  </ul>
+
+  <h2>6. Budget at a glance</h2>
+  <div class="scroll"><table>
+    <tr><th>Item</th><th>Rough cost</th></tr>
+    <tr><td>Gravel, fabric, blocks, skids, anchors</td><td class="r">$500–800</td></tr>
+    <tr><td>Framing lumber, sheathing, fasteners</td><td class="r">$1,300–2,000</td></tr>
+    <tr><td>Metal roof, underlayment, trim</td><td class="r">$500–800</td></tr>
+    <tr><td>Door and 3 windows</td><td class="r">$700–1,400</td></tr>
+    <tr><td>Insulation, foam, vapor barrier, sealants</td><td class="r">$600–900</td></tr>
+    <tr><td>Siding, paint, interior boards, flooring</td><td class="r">$800–1,300</td></tr>
+    <tr><td>Electrical (heater, wire, electrician)</td><td class="r">$600–1,500+</td></tr>
+    <tr><td><b>Total</b></td><td class="r"><b>~$5,000–8,700</b></td></tr>
+  </table></div>
+  <p>Ways to save: skip the electrical and use it as a well-insulated three-season space (a sunny day warms a tight 80 sq ft room surprisingly well); use reclaimed windows (only if tempered); go without the loft.</p>
+
+  <h2>7. Yearly upkeep</h2>
+  <ul>
+    <li><b>Spring:</b> check it's still level; shim the skids if frost moved it. Re-tension tie-down straps.</li>
+    <li><b>Summer:</b> touch up paint, check caulking and the door sweep.</li>
+    <li><b>Fall:</b> clear leaves off the roof, test smoke alarm, set the heater thermostat to 40–45°F standby.</li>
+    <li><b>Winter:</b> after heavy storms, pull snow off with a roof rake if it isn't sliding; keep the door end shoveled.</li>
+  </ul>
+
+  <footer>
+    Estimates only: prices, permits and snow loads change — confirm with your local building department and supplier.<br>
+    Heat-loss figure: ≈UA 40 BTU/hr·°F from R-values above, 80 sq ft floor, ~0.5 air changes/hr.
+  </footer>
+</div>
+</body>
+</html>
