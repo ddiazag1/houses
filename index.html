@@ -1296,7 +1296,7 @@
               '<a href="land.html">compare the land</a></h2>'+
               finals.map(function(s, i){ return cardHTML(s, i, s.finalist); }).join("")+
               (rest.length ? '<h2>Everything else</h2>' +
-                             rest.map(cardHTML).join("") : "");
+                             rest.map(function(s, i){ return cardHTML(s, i); }).join("") : "");
     }else if(rank.length){
       // Once you have ranked them, the ranking IS the order. Day headings would fight it,
       // so they go; the tour day is still on every card next to the time.
@@ -1316,16 +1316,28 @@
       DAYS.forEach(function(day){
         var rows = shown.filter(function(s){return s.day===day;});
         if(!rows.length) return;
-        html += '<h2>'+day+'</h2>' + rows.map(cardHTML).join("");
+        html += '<h2>'+day+'</h2>' + rows.map(function(s, i){ return cardHTML(s, i); }).join("");
       });
     }
     if(!shown.length){
       html += '<div class="empty">Nothing showing in this view'+
               (tucked.length?' — all of it is hidden, below.':'.')+'</div>';
     }
-    if(tucked.length){
+    // Rentals live on their own page (rentals.html); this card just puts them in the list.
+    if(view === "all" || view === "live"){
+      html += '<h2>Rentals</h2>'+
+        '<a class="rentcard" href="rentals.html" style="display:block;text-decoration:none;color:inherit;'+
+        'background:var(--card);border:1px solid var(--rule);border-left:4px solid var(--ok);border-radius:4px;'+
+        'padding:.75rem .9rem;margin-bottom:.7rem">'+
+        '<b style="font-size:1.1rem">Cornerstone Cabins</b> &middot; 37200 Opengate Ct'+
+        '<div style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin:.2rem 0 .35rem">'+
+        'RENTAL &middot; 12-MONTH LEASES &middot; 14 MIN TO HOSPITAL</div>'+
+        '3 bed / 1 bath, 850 sq ft, $1,900&ndash;$1,975 (two available side by side: 6 bed for ~$3,875/mo). '+
+        'Internet, trash and plowing included. <b style="color:var(--cph)">No garages.</b> '+
+        '<span style="white-space:nowrap;text-decoration:underline">Details, plow map and routes &rarr;</span></a>';
+    }    if(tucked.length){
       html += '<h2 class="hidhead">Hidden · '+tucked.length+'</h2>'+
-              tucked.map(cardHTML).join("");
+              tucked.map(function(s, i){ return cardHTML(s, i); }).join("");
     }
     list.innerHTML = html;
     wire();
