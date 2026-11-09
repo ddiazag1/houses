@@ -86,6 +86,17 @@
     <p class="warn"><b>Winter without a garage</b> means plugging in block heaters and scraping glass on call nights. The drive to the hospital includes 6.4 miles of the Sterling Highway (state-plowed; the peninsula's main moose and head-on corridor).</p>
   </div>
 
+  <h2>Property lines &amp; borough land</h2>
+  <div class="legend">
+    <span><i style="background:#f2c94c"></i>Cabin property (the parcel the pin sits on)</span>
+    <span><i style="background:#d08cc0"></i>Private parcels</span>
+    <span><i style="background:#3f7d45"></i>Borough land open to public casual use</span>
+    <span><i style="background:#8a8f86"></i>Borough land, not listed for casual use (dashed)</span>
+    <span><i style="background:#2f8f7a"></i>Kenai National Wildlife Refuge</span>
+  </div>
+  <div id="landmap" class="map" role="img" aria-label="Land ownership and reserves around the cabins"></div>
+  <div class="meta" id="landstatus" style="margin-top:.35rem">Loading land layers…</div>
+
   <h2>Drive times from the cabins</h2>
   <table id="times"><thead><tr><th>To</th><th>Time</th><th>Distance</th><th>Who plows the route</th></tr></thead><tbody></tbody></table>
 
@@ -110,17 +121,6 @@
     <span><i class="dot" style="background:#7a4ca8"></i>Gymnastics</span>
   </div>
   <div id="routemap" class="map" role="img" aria-label="Driving routes from the cabins"></div>
-
-  <h2>Who owns what &amp; the reserves</h2>
-  <div class="legend">
-    <span><i style="background:#f2c94c"></i>Cabin property (the parcel the pin sits on)</span>
-    <span><i style="background:#d08cc0"></i>Private parcels</span>
-    <span><i style="background:#3f7d45"></i>Borough land open to public casual use</span>
-    <span><i style="background:#8a8f86"></i>Borough land, not listed for casual use (dashed)</span>
-    <span><i style="background:#2f8f7a"></i>Kenai National Wildlife Refuge</span>
-  </div>
-  <div id="landmap" class="map" role="img" aria-label="Land ownership and reserves around the cabins"></div>
-  <div class="meta" id="landstatus" style="margin-top:.35rem">Loading land layers…</div>
 
   <h2>Who sleeps where (two side-by-side 3-bedroom cabins)</h2>
   <table>
@@ -240,9 +240,11 @@
   rm.fitBounds(allB.pad(0.08));
 
   // ---- land map: who owns what, and the reserves ----
-  var lm = base('landmap', [O.lat, O.lon], 13);
+  var lm = base('landmap', [O.lat, O.lon], 15);
+  var frame = L.latLngBounds([[O.lat, O.lon]]), nearPoly = null;
   var landStatus = document.getElementById('landstatus');
-  var privLayer = L.layerGroup().addTo(lm), ownLayer = L.layerGroup().addTo(lm);
+  var privLayer = L.layerGroup().addTo(lm), ownLayer = L.layerGroup().addTo(lm), boroLayer = L.layerGroup().addTo(lm);
+  function liftLand(){ boroLayer.eachLayer(function(l){ l.bringToFront(); }); ownLayer.eachLayer(function(l){ l.bringToFront(); }); }
   var PRIV = 'https://services.arcgis.com/ba4DH9pIcqkXJVfl/arcgis/rest/services/Redacted_Parcels_view/FeatureServer/0/query';
   function rings(rs){ return rs.map(function(r){ return r.map(function(p){ return [p[1], p[0]]; }); }); }
   function nearestMi(rs){
@@ -265,13 +267,14 @@
     var near = 1e9, nearAc = null;
     (d.parcels||[]).forEach(function(p){
       L.polygon(rings(p.rings),
-        p.casual ? {color:'#3f7d45', weight:2, opacity:.95, fillColor:'#3f7d45', fillOpacity:.32}
+        p.casual ? {color:'#3f7d45', weight:3, opacity:1, fillColor:'#3f7d45', fillOpacity:.45}
                  : {color:'#8a8f86', weight:1, opacity:.75, dashArray:'4 3', fill:true, fillColor:'#8a8f86', fillOpacity:0})
        .bindPopup('<b>Kenai Peninsula Borough</b><br>Parcel '+esc(p.id)+'<br>'+(p.ac!=null?p.ac+' acres<br>':'')+
                   (p.useType?esc(p.useType)+'<br>':'')+(p.casual?'<b style="color:#2f7d4f">Open to public casual use</b>':'Not listed for casual use'))
-       .addTo(lm);
-      if(p.casual){ var m = nearestMi(p.rings); if(m < near){ near = m; nearAc = p.ac; } }
+       .addTo(boroLayer);
+      if(p.casual){ var m = nearestMi(p.rings); if(m < near){ near = m; nearAc = p.ac; nearPoly = p.rings; } }
     });
+    if(nearPoly){ L.polygon(rings(nearPoly)).getBounds && frame.extend(L.polygon(rings(nearPoly)).getBounds()); lm.fitBounds(frame.pad(0.15), {maxZoom:15}); }
     if(near < 1e9) notes.borough = 'nearest public-use borough parcel ' + near.toFixed(1) + ' mi' + (nearAc?' ('+nearAc+' ac)':'');
     showNotes();
   }).catch(function(){});
@@ -290,7 +293,7 @@
                     (f.attributes.ACREAGE!=null?f.attributes.ACREAGE+' acres<br>':'')+'Assessed $'+Number(f.attributes.ASSESSED_VALUE||0).toLocaleString())
          .addTo(privLayer);
       });
-      notes.priv = n + ' private parcels outlined in view'; showNotes();
+      notes.priv = n + ' private parcels outlined in view'; showNotes(); liftLand();
     }).catch(function(){ notes.priv = 'could not load private parcels'; showNotes(); });
   }
   // the parcel the cabins sit on
@@ -300,7 +303,7 @@
     .then(function(r){ return r.json(); }).then(function(d){
       (d.features||[]).forEach(function(f){
         if(!f.geometry || !f.geometry.rings) return;
-        L.polygon(rings(f.geometry.rings), {color:'#f2c94c', weight:3, opacity:1, fillColor:'#f2c94c', fillOpacity:.12})
+        L.polygon(rings(f.geometry.rings), {color:'#f2c94c', weight:4, opacity:1, fillColor:'#f2c94c', fillOpacity:.25})
          .bindPopup('<b>Cabin property</b><br>Parcel '+esc(f.attributes.PARCEL_ID)+'<br>'+(f.attributes.ACREAGE!=null?f.attributes.ACREAGE+' acres':''))
          .addTo(ownLayer);
       });
