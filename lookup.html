@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Look up an address - parcel, driveway, plowing</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Azeret+Mono:wght@400;500&display=swap">
+<style>
+  :root{ --ground:#f4f2ed; --card:#fff; --ink:#191a17; --muted:#5f6660; --rule:#dcd9d1; --firm:#b4b0a6; --cph:#b3341f; --ok:#2f7d4f;
+         --ui:"Barlow Semi Condensed",system-ui,sans-serif; --mono:"Azeret Mono",ui-monospace,monospace; }
+  @media (prefers-color-scheme:dark){:root{ --ground:#14161a; --card:#1c1f24; --ink:#e7e9e4; --muted:#9aa09a; --rule:#2e333a; --firm:#49505a; --cph:#f0714f; --ok:#6cc48c;}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);font-size:17px;line-height:1.4;padding:1rem 1rem 3rem}
+  .wrap{max-width:54rem;margin:0 auto}
+  h1{margin:0;font-size:1.6rem;font-weight:600}
+  .sub{font-family:var(--mono);font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:.25rem}
+  .bar{display:flex;gap:.4rem;flex-wrap:wrap;margin:.9rem 0;border-top:1px solid var(--firm);border-bottom:1px solid var(--firm);padding-block:.7rem}
+  .tab{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;padding:.5em .75em;border:1px solid var(--firm);
+       color:var(--muted);border-radius:3px;text-decoration:none;background:transparent;cursor:pointer}
+  form{display:flex;gap:.4rem;margin:.6rem 0}
+  input[type=search]{flex:1;font:inherit;padding:.55rem .7rem;border:1px solid var(--firm);border-radius:4px;background:var(--card);color:var(--ink);min-width:0}
+  button.go{font-family:var(--mono);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;padding:.55rem .9rem;border:0;border-radius:4px;background:var(--ink);color:var(--ground);cursor:pointer}
+  #map{height:64vh;min-height:24rem;border:1px solid var(--rule);border-radius:4px;background:var(--card)}
+  .legend{display:flex;flex-wrap:wrap;gap:.3rem .9rem;font-family:var(--mono);font-size:.65rem;color:var(--muted);margin:.4rem 0}
+  .legend i{display:inline-block;width:14px;height:4px;margin-right:.35rem;vertical-align:2px}
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:.8rem 1rem;margin:.7rem 0}
+  .card h3{margin:0 0 .3rem;font-size:1.15rem}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:.2rem .8rem;font-size:.95rem}
+  .kv b{font-family:var(--mono);font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500;padding-top:.15rem}
+  .choices button{display:block;width:100%;text-align:left;font:inherit;margin:.25rem 0;padding:.45rem .6rem;border:1px solid var(--firm);border-radius:4px;background:var(--card);color:var(--ink);cursor:pointer}
+  #msg{font-family:var(--mono);font-size:.72rem;color:var(--muted);min-height:1.2em}
+  .src{font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-top:1.2rem;line-height:1.6}
+  a{color:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Look up an address</h1>
+  <div class="sub">Kenai Peninsula Borough parcels · driveway · who plows the road · drive to the hospital</div>
+  <div class="bar">
+    <a class="tab" href="./">← House tour</a>
+    <a class="tab" href="rentals.html">Rentals</a>
+    <a class="tab" href="land.html">The land</a>
+  </div>
+
+  <form id="f" autocomplete="off">
+    <input type="search" id="q" placeholder="e.g. 36880 Kendanemken Rd" aria-label="Street address">
+    <button class="go" type="submit">Find</button>
+  </form>
+  <div id="msg">Type a street address on the Kenai Peninsula. Number + street name is enough.</div>
+  <div id="choices" class="choices"></div>
+
+  <div class="legend">
+    <span><i style="background:#f2c94c"></i>This parcel</span>
+    <span><i style="background:#d08cc0"></i>Neighbouring property lines</span>
+    <span><i style="background:#3f7d45"></i>Borough land open to the public</span>
+    <span><i style="background:#2f6fa8"></i>State-plowed road</span>
+    <span><i style="background:#3f7d45;height:2px"></i>Borough RSA road</span>
+    <span><i style="background:#2f8f7a"></i>City road</span>
+    <span><i style="background:#b3341f"></i>Not plowed (dashed)</span>
+    <span><i style="background:#fff;border:1px dashed #111"></i>Driveway connection (approx.)</span>
+  </div>
+  <div id="map" role="img" aria-label="Satellite map of the parcel"></div>
+  <div id="info"></div>
+
+  <div class="src">
+    Parcels: Kenai Peninsula Borough assessor layer (live). Address fallback: Esri World Geocoder.
+    Roads and plowing: Kenai Peninsula Borough KPB_Roads (roadlines.json). Route: OSRM / OpenStreetMap, free-flow (winter is slower).
+    The driveway line is drawn from the nearest public road to the address point — check it against the imagery.
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var PARCELS = 'https://services.arcgis.com/ba4DH9pIcqkXJVfl/arcgis/rest/services/Redacted_Parcels_view/FeatureServer/0/query';
+  var GEOCODE = 'https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates';
+  var HOSP = {lat:60.4932252, lon:-151.0771023, name:'Central Peninsula Hospital'};
+  var COL = {state:'#2f6fa8', rsa:'#3f7d45', city:'#2f8f7a', none:'#b3341f', unknown:'#8a8f86'};
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  function mi(a,b,c,d){var R=3958.8,p1=a*Math.PI/180,p2=c*Math.PI/180,dp=p2-p1,dl=(d-b)*Math.PI/180;
+    var h=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);return 2*R*Math.asin(Math.sqrt(h));}
+  function rings(rs){ return rs.map(function(r){ return r.map(function(p){ return [p[1], p[0]]; }); }); }
+  var msg = document.getElementById('msg'), info = document.getElementById('info'), choices = document.getElementById('choices');
+
+  var map = L.map('map', {scrollWheelZoom:false}).setView([60.49, -151.06], 11);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {maxZoom:20, maxNativeZoom:19, attribution:'Imagery &copy; Esri, Maxar'}).addTo(map);
+  L.control.scale({imperial:true, metric:false}).addTo(map);
+  var nbrLayer = L.layerGroup().addTo(map), boroLayer = L.layerGroup().addTo(map), roadLayer = L.layerGroup().addTo(map),
+      routeLayer = L.layerGroup().addTo(map), hereLayer = L.layerGroup().addTo(map);
+
+  var ROADS = null, BORO = null;
+  var roadsP = fetch('roadlines.json').then(function(r){return r.json();}).then(function(d){ ROADS = d.roads||[]; }).catch(function(){ ROADS = []; });
+  var boroP = fetch('boroughland.json').then(function(r){return r.json();}).then(function(d){ BORO = d.parcels||[]; }).catch(function(){ BORO = []; });
+
+  function post(url, params){
+    return fetch(url, {method:'POST', body:new URLSearchParams(params)}).then(function(r){ return r.json(); });
+  }
+  function norm(q){
+    // "36880 Kendanemken Rd, Soldotna AK" -> "36880 KENDANEMKEN" (number + first street word, or W/E + word)
+    var s = q.split(',')[0].trim().toUpperCase().replace(/\s+/g,' ').replace(/'/g,"''");
+    var m = s.match(/^(\d+)\s+((?:N|S|E|W|NORTH|SOUTH|EAST|WEST)\s+)?([A-Z0-9]+)/);
+    if(!m) return null;
+    var dir = m[2] ? m[2].trim().charAt(0)+' ' : '';
+    return m[1]+' '+dir+m[3];
+  }
+  function searchParcel(q){
+    var key = norm(q);
+    if(!key){ msg.textContent = 'Start with the house number, e.g. 36880 Kendanemken Rd.'; return; }
+    msg.textContent = 'Searching the borough parcel records…'; choices.innerHTML = ''; info.innerHTML = '';
+    post(PARCELS, {where:"UPPER(PHYSICAL_ADDRESSES) LIKE '%"+key+"%'", outFields:'PARCEL_ID,PHYSICAL_ADDRESSES,ACREAGE,ASSESSED_VALUE',
+                   returnGeometry:'true', outSR:'4326', f:'json'})
+      .then(function(d){
+        var fs = (d.features||[]).filter(function(f){ return f.geometry && f.geometry.rings; });
+        if(fs.length === 1) return show(fs[0], q);
+        if(fs.length > 1){
+          msg.textContent = fs.length + ' parcels match — pick one:';
+          fs.slice(0, 12).forEach(function(f){
+            var b = document.createElement('button'); b.type = 'button';
+            b.textContent = (f.attributes.PHYSICAL_ADDRESSES||'(no address)')+' · parcel '+f.attributes.PARCEL_ID+(f.attributes.ACREAGE!=null?' · '+f.attributes.ACREAGE+' ac':'');
+            b.addEventListener('click', function(){ choices.innerHTML = ''; show(f, q); });
+            choices.appendChild(b);
+          });
+          return;
+        }
+        return geocodeFallback(q);
+      }).catch(function(){ geocodeFallback(q); });
+  }
+  function geocodeFallback(q){
+    msg.textContent = 'No parcel record by that address — trying the map geocoder…';
+    var u = GEOCODE+'?'+new URLSearchParams({SingleLine:q+(/AK|ALASKA/i.test(q)?'':', Kenai Peninsula, AK'), f:'json', maxLocations:'1',
+            location:'-151.06,60.49', outFields:'Match_addr'});
+    fetch(u).then(function(r){return r.json();}).then(function(d){
+      var c = (d.candidates||[])[0];
+      if(!c || c.score < 80){ msg.textContent = 'Could not find that address. Check the spelling, or try just the number and street.'; return; }
+      return post(PARCELS, {geometry:JSON.stringify({x:c.location.x, y:c.location.y, spatialReference:{wkid:4326}}), geometryType:'esriGeometryPoint',
+                  inSR:'4326', spatialRel:'esriSpatialRelIntersects', outFields:'PARCEL_ID,PHYSICAL_ADDRESSES,ACREAGE,ASSESSED_VALUE',
+                  returnGeometry:'true', outSR:'4326', f:'json'})
+        .then(function(p){
+          var f = (p.features||[])[0];
+          if(f) show(f, c.address, {lat:c.location.y, lon:c.location.x});
+          else { msg.textContent = 'Found the address ('+c.address+') but no parcel under it.'; hereLayer.clearLayers();
+                 L.circleMarker([c.location.y, c.location.x], {radius:8, color:'#fff', weight:2, fillColor:'#111', fillOpacity:1}).addTo(hereLayer);
+                 map.setView([c.location.y, c.location.x], 17); }
+        });
+    }).catch(function(){ msg.textContent = 'The geocoder did not answer. Try again in a moment.'; });
+  }
+  function geocodePoint(q){
+    var u = GEOCODE+'?'+new URLSearchParams({SingleLine:q+(/AK|ALASKA/i.test(q)?'':', AK'), f:'json', maxLocations:'1', location:'-151.06,60.49'});
+    return fetch(u).then(function(r){return r.json();}).then(function(d){ var c=(d.candidates||[])[0]; return c && c.score>=80 ? {lat:c.location.y, lon:c.location.x} : null; }).catch(function(){ return null; });
+  }
+
+  function show(f, q, pt){
+    var a = f.attributes, poly = L.polygon(rings(f.geometry.rings), {color:'#f2c94c', weight:4, opacity:1, fillColor:'#f2c94c', fillOpacity:.15});
+    hereLayer.clearLayers(); routeLayer.clearLayers(); roadLayer.clearLayers(); boroLayer.clearLayers(); nbrLayer.clearLayers();
+    poly.bindPopup('<b>'+esc(a.PHYSICAL_ADDRESSES||'Parcel')+'</b><br>Parcel '+esc(a.PARCEL_ID)).addTo(hereLayer);
+    var bb = poly.getBounds(), c = bb.getCenter();
+    map.fitBounds(bb.pad(0.12), {maxZoom:19});
+    msg.textContent = 'Parcel '+a.PARCEL_ID+' found. Loading roads, neighbours and the route…';
+    var addrP = pt ? Promise.resolve(pt) : geocodePoint(a.PHYSICAL_ADDRESSES ? a.PHYSICAL_ADDRESSES+', '+(q.split(',').slice(1).join(',')||'Kenai Peninsula, AK') : q);
+    Promise.all([roadsP, boroP, addrP]).then(function(res){
+      var ap = res[2];
+      // use the geocoded address point only if it falls inside (or right at) this parcel
+      var home = (ap && (bb.pad(0.25).contains([ap.lat, ap.lon]))) ? ap : {lat:c.lat, lon:c.lng};
+      L.circleMarker([home.lat, home.lon], {radius:7, color:'#fff', weight:2, fillColor:'#111', fillOpacity:1})
+        .bindPopup(ap && home === ap ? 'Address point' : 'Parcel centre').addTo(hereLayer);
+      // roads within ~1 mile, colored by who plows them; find the nearest road vertex to the house
+      // nearest point ON each road (segment projection), preferring the street named in the address
+      var street = String(a.PHYSICAL_ADDRESSES || q).toUpperCase().replace(/^\s*\d+\s+/, '').replace(/^(N|S|E|W)\s+/, '').split(/[\s,]+/)[0];
+      function nearestOn(r){
+        var bestr = {d:1e9}, kx = Math.cos(home.lat*Math.PI/180);
+        r.p.forEach(function(path){ for(var j=0;j<path.length-1;j++){
+          var ax=path[j][0]*kx, ay=path[j][1], bx=path[j+1][0]*kx, by=path[j+1][1], px=home.lon*kx, py=home.lat;
+          var vx=bx-ax, vy=by-ay, L2=vx*vx+vy*vy, tt = L2 ? Math.max(0, Math.min(1, ((px-ax)*vx+(py-ay)*vy)/L2)) : 0;
+          var lon=(ax+tt*vx)/kx, lat=ay+tt*vy, dd=mi(home.lat,home.lon,lat,lon);
+          if(dd < bestr.d) bestr = {d:dd, r:r, lat:lat, lon:lon};
+        } });
+        return bestr;
+      }
+      var best = {d:1e9}, named = {d:1e9};
+      ROADS.forEach(function(r){
+        var near = r.p.some(function(path){ for(var j=0;j<path.length;j+=2){ if(mi(home.lat,home.lon,path[j][1],path[j][0]) < 1.2) return true; } return false; });
+        if(!near) return;
+        var n = nearestOn(r);
+        if(n.d < best.d) best = n;
+        if(street && String(r.n||'').toUpperCase().replace(/^(N|S|E|W)\s+/, '').split(' ')[0] === street && n.d < named.d) named = n;
+        r.p.forEach(function(path){
+          L.polyline(path.map(function(p){ return [p[1], p[0]]; }), {color:COL[r.k]||'#888', weight:r.k==='state'?5:(r.k==='none'?3:4), opacity:.95, dashArray:r.k==='none'?'6 5':null})
+           .bindPopup('<b>'+esc(r.n||'unnamed road')+'</b><br>'+(r.k==='none'?'<b style="color:#b3341f">Not plowed by anyone public</b>':'Plowed by <b>'+esc(r.m)+'</b>')).addTo(roadLayer);
+        });
+      });
+      if(named.r && named.d < 0.6) best = named;
+      if(best.r){
+        L.polyline([[best.lat, best.lon], [home.lat, home.lon]], {color:'#fff', weight:3, opacity:1, dashArray:'4 6'})
+          .bindPopup('Driveway connection (approximate): '+(best.d*5280).toFixed(0)+' ft from '+esc(best.r.n||'the road')).addTo(routeLayer);
+      }
+      (BORO||[]).forEach(function(p){
+        if(!p.casual) return;
+        var near = p.rings.some(function(r){ for(var j=0;j<r.length;j+=3){ if(mi(home.lat,home.lon,r[j][1],r[j][0]) < 2) return true; } return false; });
+        if(near) L.polygon(rings(p.rings), {color:'#3f7d45', weight:3, opacity:1, fillColor:'#3f7d45', fillOpacity:.35})
+          .bindPopup('<b>Borough land</b><br>Parcel '+esc(p.id)+'<br>'+(p.ac!=null?p.ac+' acres<br>':'')+'Open to public casual use').addTo(boroLayer);
+      });
+      loadNeighbours();
+      hereLayer.eachLayer(function(l){ if(l.bringToFront) l.bringToFront(); });
+      // drive to the hospital
+      var ru = 'https://router.project-osrm.org/route/v1/driving/'+home.lon+','+home.lat+';'+HOSP.lon+','+HOSP.lat+'?overview=full&geometries=geojson';
+      fetch(ru).then(function(r){return r.json();}).then(function(d){
+        var rt = (d.routes||[])[0]; var drive = '';
+        if(rt){
+          L.polyline(rt.geometry.coordinates.map(function(p){return [p[1],p[0]];}), {color:'#b3341f', weight:4, opacity:.8}).addTo(routeLayer);
+          drive = Math.round(rt.duration/60)+' min · '+(rt.distance/1609.34).toFixed(1)+' mi';
+        }
+        L.circleMarker([HOSP.lat, HOSP.lon], {radius:8, color:'#fff', weight:2, fillColor:'#b3341f', fillOpacity:1}).bindPopup(HOSP.name).addTo(routeLayer);
+        render(a, best, drive, home);
+      }).catch(function(){ render(a, best, '(route service unavailable)', home); });
+    });
+  }
+  function render(a, best, drive, home){
+    msg.textContent = '';
+    var plow = best.r ? (best.r.k==='none' ? '<b style="color:var(--cph)">Not plowed by anyone public</b>' : 'Plowed by <b>'+esc(best.r.m)+'</b>') : 'unknown';
+    info.innerHTML = '<div class="card"><h3>'+esc(a.PHYSICAL_ADDRESSES||'Parcel '+a.PARCEL_ID)+'</h3><div class="kv">'+
+      '<b>Parcel</b><span>'+esc(a.PARCEL_ID)+'</span>'+
+      '<b>Acreage</b><span>'+(a.ACREAGE!=null?a.ACREAGE+' ac':'—')+'</span>'+
+      '<b>Assessed</b><span>'+(a.ASSESSED_VALUE?'$'+Number(a.ASSESSED_VALUE).toLocaleString():'—')+'</span>'+
+      '<b>Road</b><span>'+(best.r?esc(best.r.n||'unnamed road')+' · '+plow+' · '+(best.d*5280).toFixed(0)+' ft to the house':'no borough road found nearby')+'</span>'+
+      '<b>Hospital</b><span>'+esc(drive)+'</span>'+
+      '<b>Links</b><span><a href="https://www.google.com/maps/search/?api=1&query='+home.lat+','+home.lon+'" target="_blank" rel="noopener">Google Maps</a> · '+
+      '<a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint='+home.lat+','+home.lon+'" target="_blank" rel="noopener">Street View</a> · '+
+      '<a href="https://www.google.com/maps/dir/?api=1&origin='+home.lat+','+home.lon+'&destination='+HOSP.lat+','+HOSP.lon+'&travelmode=driving" target="_blank" rel="noopener">Directions to the hospital</a></span>'+
+      '</div></div>';
+  }
+  function loadNeighbours(){
+    if(map.getZoom() < 14) return;
+    var b = map.getBounds();
+    post(PARCELS, {geometry:JSON.stringify({xmin:b.getWest(), ymin:b.getSouth(), xmax:b.getEast(), ymax:b.getNorth(), spatialReference:{wkid:4326}}),
+      geometryType:'esriGeometryEnvelope', inSR:'4326', outSR:'4326', spatialRel:'esriSpatialRelIntersects',
+      outFields:'PARCEL_ID,PHYSICAL_ADDRESSES,ACREAGE', returnGeometry:'true', maxAllowableOffset:'0.00004', resultRecordCount:'400', f:'json'})
+      .then(function(d){
+        nbrLayer.clearLayers();
+        (d.features||[]).forEach(function(f){
+          if(!f.geometry || !f.geometry.rings) return;
+          L.polygon(rings(f.geometry.rings), {color:'#d08cc0', weight:1.5, opacity:.9, fill:true, fillColor:'#d08cc0', fillOpacity:.04})
+           .bindPopup('<b>'+esc(f.attributes.PHYSICAL_ADDRESSES||'Parcel')+'</b><br>Parcel '+esc(f.attributes.PARCEL_ID)+(f.attributes.ACREAGE!=null?'<br>'+f.attributes.ACREAGE+' acres':''))
+           .addTo(nbrLayer);
+        });
+        boroLayer.eachLayer(function(l){ l.bringToFront(); });
+        hereLayer.eachLayer(function(l){ if(l.bringToFront) l.bringToFront(); });
+      }).catch(function(){});
+  }
+  map.on('moveend', loadNeighbours);
+
+  document.getElementById('f').addEventListener('submit', function(e){
+    e.preventDefault();
+    var q = document.getElementById('q').value.trim();
+    if(!q) return;
+    history.replaceState(null, '', '?a='+encodeURIComponent(q));
+    searchParcel(q);
+  });
+  var start = new URLSearchParams(location.search).get('a');
+  if(start){ document.getElementById('q').value = start; searchParcel(start); }
+})();
+</script>
+</body>
+</html>
