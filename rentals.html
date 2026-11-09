@@ -111,10 +111,34 @@
   </div>
   <div id="routemap" class="map" role="img" aria-label="Driving routes from the cabins"></div>
 
+  <h2>Who owns what &amp; the reserves</h2>
+  <div class="legend">
+    <span><i style="background:#f2c94c"></i>Cabin property (the parcel the pin sits on)</span>
+    <span><i style="background:#d08cc0"></i>Private parcels</span>
+    <span><i style="background:#3f7d45"></i>Borough land open to public casual use</span>
+    <span><i style="background:#8a8f86"></i>Borough land, not listed for casual use (dashed)</span>
+    <span><i style="background:#2f8f7a"></i>Kenai National Wildlife Refuge</span>
+  </div>
+  <div id="landmap" class="map" role="img" aria-label="Land ownership and reserves around the cabins"></div>
+  <div class="meta" id="landstatus" style="margin-top:.35rem">Loading land layers…</div>
+
+  <h2>Who sleeps where (two side-by-side 3-bedroom cabins)</h2>
+  <table>
+    <thead><tr><th>Plan</th><th>Cabin 1</th><th>Cabin 2</th></tr></thead>
+    <tbody>
+      <tr><td><b>A</b> · parents' cabin + kids' cabin</td>
+          <td>Parents · daughter · homeschool room / office</td>
+          <td>Two older boys (share or one each) · third son · au pair (private room)</td></tr>
+      <tr><td><b>B</b> · little ones near parents</td>
+          <td>Parents · two youngest (share) · homeschool room / office</td>
+          <td>Two older boys (share) · au pair · playroom / guest room</td></tr>
+    </tbody>
+  </table>
+  <p class="meta">One bathroom per 850 sq ft cabin: if a 3 bed / 2 bath (1,025 sq ft) unit opens, make it the parents' cabin. Mudroom in one cabin for boots and gear (no garage).</p>
   <div class="src">
     Listing: cornerstonedevelopmentsak.com/cabins and Apartments.com / Zumper (checked 2026-11-08).
     Routes: OSRM / OpenStreetMap (free-flow driving; winter is slower).
-    Plowing: Kenai Peninsula Borough KPB_Roads layer, Management field (roadlines.json for the plow-zone map).
+    Plowing: Kenai Peninsula Borough KPB_Roads layer, Management field (roadlines.json for the plow-zone map). Land: KPB parcels (private parcels live from the borough service; borough land from boroughland.json), refuge boundary from refuge.json.
     Imagery: Esri. Piano studios and gym from their own listings.
   </div>
 </div>
@@ -214,6 +238,76 @@
   });
   cabinPin(rm);
   rm.fitBounds(allB.pad(0.08));
+
+  // ---- land map: who owns what, and the reserves ----
+  var lm = base('landmap', [O.lat, O.lon], 13);
+  var landStatus = document.getElementById('landstatus');
+  var privLayer = L.layerGroup().addTo(lm), ownLayer = L.layerGroup().addTo(lm);
+  var PRIV = 'https://services.arcgis.com/ba4DH9pIcqkXJVfl/arcgis/rest/services/Redacted_Parcels_view/FeatureServer/0/query';
+  function rings(rs){ return rs.map(function(r){ return r.map(function(p){ return [p[1], p[0]]; }); }); }
+  function nearestMi(rs){
+    var best = 1e9;
+    rs.forEach(function(r){ for(var k=0;k<r.length;k++){ var m = miBetween(O.lat,O.lon,r[k][1],r[k][0]); if(m<best) best=m; } });
+    return best;
+  }
+  var notes = {};
+  function showNotes(){
+    landStatus.textContent = [notes.priv, notes.borough, notes.refuge].filter(Boolean).join(' · ');
+  }
+  fetch('refuge.json').then(function(r){ return r.json(); }).then(function(d){
+    if(!(d.rings||[]).length) return;
+    L.polygon(rings(d.rings), {color:'#2f8f7a', weight:2, opacity:.95, fillColor:'#2f8f7a', fillOpacity:.18})
+     .bindPopup('<b>Kenai National Wildlife Refuge</b><br>Federal land, open to the public').addTo(lm);
+    notes.refuge = 'Kenai NWR about ' + nearestMi(d.rings).toFixed(1) + ' mi away (straight line, approximate)';
+    showNotes();
+  }).catch(function(){});
+  fetch('boroughland.json').then(function(r){ return r.json(); }).then(function(d){
+    var near = 1e9, nearAc = null;
+    (d.parcels||[]).forEach(function(p){
+      L.polygon(rings(p.rings),
+        p.casual ? {color:'#3f7d45', weight:2, opacity:.95, fillColor:'#3f7d45', fillOpacity:.32}
+                 : {color:'#8a8f86', weight:1, opacity:.75, dashArray:'4 3', fill:true, fillColor:'#8a8f86', fillOpacity:0})
+       .bindPopup('<b>Kenai Peninsula Borough</b><br>Parcel '+esc(p.id)+'<br>'+(p.ac!=null?p.ac+' acres<br>':'')+
+                  (p.useType?esc(p.useType)+'<br>':'')+(p.casual?'<b style="color:#2f7d4f">Open to public casual use</b>':'Not listed for casual use'))
+       .addTo(lm);
+      if(p.casual){ var m = nearestMi(p.rings); if(m < near){ near = m; nearAc = p.ac; } }
+    });
+    if(near < 1e9) notes.borough = 'nearest public-use borough parcel ' + near.toFixed(1) + ' mi' + (nearAc?' ('+nearAc+' ac)':'');
+    showNotes();
+  }).catch(function(){});
+  function loadPriv(){
+    if(lm.getZoom() < 12){ notes.priv = 'zoom in to outline private parcels'; showNotes(); return; }
+    var b = lm.getBounds();
+    var body = new URLSearchParams({ geometry: JSON.stringify({xmin:b.getWest(), ymin:b.getSouth(), xmax:b.getEast(), ymax:b.getNorth(), spatialReference:{wkid:4326}}),
+      geometryType:'esriGeometryEnvelope', inSR:'4326', outSR:'4326', spatialRel:'esriSpatialRelIntersects',
+      outFields:'PARCEL_ID,PHYSICAL_ADDRESSES,ACREAGE,ASSESSED_VALUE', returnGeometry:'true', maxAllowableOffset:'0.00008', resultRecordCount:'400', f:'json' });
+    fetch(PRIV, {method:'POST', body:body}).then(function(r){ return r.json(); }).then(function(d){
+      privLayer.clearLayers(); var n = 0;
+      (d.features||[]).forEach(function(f){
+        if(!f.geometry || !f.geometry.rings) return; n++;
+        L.polygon(rings(f.geometry.rings), {color:'#d08cc0', weight:1, opacity:.85, fill:true, fillColor:'#d08cc0', fillOpacity:.07})
+         .bindPopup('<b>'+esc(f.attributes.PHYSICAL_ADDRESSES||'Private parcel')+'</b><br>Parcel '+esc(f.attributes.PARCEL_ID)+'<br>'+
+                    (f.attributes.ACREAGE!=null?f.attributes.ACREAGE+' acres<br>':'')+'Assessed $'+Number(f.attributes.ASSESSED_VALUE||0).toLocaleString())
+         .addTo(privLayer);
+      });
+      notes.priv = n + ' private parcels outlined in view'; showNotes();
+    }).catch(function(){ notes.priv = 'could not load private parcels'; showNotes(); });
+  }
+  // the parcel the cabins sit on
+  fetch(PRIV, {method:'POST', body:new URLSearchParams({ geometry: JSON.stringify({x:O.lon, y:O.lat, spatialReference:{wkid:4326}}),
+      geometryType:'esriGeometryPoint', inSR:'4326', outSR:'4326', spatialRel:'esriSpatialRelIntersects',
+      outFields:'PARCEL_ID,PHYSICAL_ADDRESSES,ACREAGE,ASSESSED_VALUE', returnGeometry:'true', f:'json' })})
+    .then(function(r){ return r.json(); }).then(function(d){
+      (d.features||[]).forEach(function(f){
+        if(!f.geometry || !f.geometry.rings) return;
+        L.polygon(rings(f.geometry.rings), {color:'#f2c94c', weight:3, opacity:1, fillColor:'#f2c94c', fillOpacity:.12})
+         .bindPopup('<b>Cabin property</b><br>Parcel '+esc(f.attributes.PARCEL_ID)+'<br>'+(f.attributes.ACREAGE!=null?f.attributes.ACREAGE+' acres':''))
+         .addTo(ownLayer);
+      });
+    }).catch(function(){});
+  L.circleMarker([O.lat, O.lon], {radius:9, color:'#fff', weight:2, fillColor:'#111', fillOpacity:1})
+    .bindPopup('<b>Cornerstone Cabins</b>').addTo(lm);
+  lm.on('moveend', loadPriv); loadPriv();
 })();
 </script>
 </body>
