@@ -1284,6 +1284,20 @@
     var tucked = inv.filter(isHidden);
 
     var html = "";
+    // Rentals live on their own page (rentals.html); this card just puts them in the list.
+    var rentHTML = "";
+    if(view === "all" || view === "live"){
+      rentHTML = '<h2>Rentals</h2>'+
+        '<a class="rentcard" href="rentals.html" style="display:block;text-decoration:none;color:inherit;'+
+        'background:var(--card);border:1px solid var(--rule);border-left:4px solid var(--ok);border-radius:4px;'+
+        'padding:.75rem .9rem;margin-bottom:.7rem">'+
+        '<b style="font-size:1.1rem">Cornerstone Cabins</b> &middot; 37200 Opengate Ct'+
+        '<div style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin:.2rem 0 .35rem">'+
+        'RENTAL &middot; 12-MONTH LEASES &middot; 14 MIN TO HOSPITAL</div>'+
+        '3 bed / 1 bath, 850 sq ft, $1,900&ndash;$1,975 (two available side by side: 6 bed for ~$3,875/mo). '+
+        'Internet, trash and plowing included. <b style="color:var(--cph)">No garages.</b> '+
+        '<span style="white-space:nowrap;text-decoration:underline">Details, plow map and routes &rarr;</span></a>';
+    }
     // The shortlist is a DECISION, so it lives in the data and ships with the page - not
     // in this browser's localStorage, which does not travel between devices. Dan's drag
     // order still rules within it.
@@ -1294,10 +1308,11 @@
     if(finals.length && !rank.length){
       html += '<h2 class="finalhead">The final four '+
               '<a href="land.html">compare the land</a></h2>'+
-              finals.map(function(s, i){ return cardHTML(s, i, s.finalist); }).join("")+
+              finals.map(function(s, i){ return cardHTML(s, i, s.finalist); }).join("")+ rentHTML +
               (rest.length ? '<h2>Everything else</h2>' +
                              rest.map(function(s, i){ return cardHTML(s, i); }).join("") : "");
     }else if(rank.length){
+      html += rentHTML;
       // Once you have ranked them, the ranking IS the order. Day headings would fight it,
       // so they go; the tour day is still on every card next to the time.
       var pos = {};
@@ -1313,6 +1328,7 @@
               '<a href="rank.html">change it</a></h2>' +
               ranked.map(function(s, i){ return cardHTML(s, i, i+1); }).join("");
     }else{
+      html += rentHTML;
       DAYS.forEach(function(day){
         var rows = shown.filter(function(s){return s.day===day;});
         if(!rows.length) return;
@@ -1323,19 +1339,7 @@
       html += '<div class="empty">Nothing showing in this view'+
               (tucked.length?' — all of it is hidden, below.':'.')+'</div>';
     }
-    // Rentals live on their own page (rentals.html); this card just puts them in the list.
-    if(view === "all" || view === "live"){
-      html += '<h2>Rentals</h2>'+
-        '<a class="rentcard" href="rentals.html" style="display:block;text-decoration:none;color:inherit;'+
-        'background:var(--card);border:1px solid var(--rule);border-left:4px solid var(--ok);border-radius:4px;'+
-        'padding:.75rem .9rem;margin-bottom:.7rem">'+
-        '<b style="font-size:1.1rem">Cornerstone Cabins</b> &middot; 37200 Opengate Ct'+
-        '<div style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin:.2rem 0 .35rem">'+
-        'RENTAL &middot; 12-MONTH LEASES &middot; 14 MIN TO HOSPITAL</div>'+
-        '3 bed / 1 bath, 850 sq ft, $1,900&ndash;$1,975 (two available side by side: 6 bed for ~$3,875/mo). '+
-        'Internet, trash and plowing included. <b style="color:var(--cph)">No garages.</b> '+
-        '<span style="white-space:nowrap;text-decoration:underline">Details, plow map and routes &rarr;</span></a>';
-    }    if(tucked.length){
+    if(tucked.length){
       html += '<h2 class="hidhead">Hidden · '+tucked.length+'</h2>'+
               tucked.map(function(s, i){ return cardHTML(s, i); }).join("");
     }
