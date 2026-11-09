@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Rentals - Cornerstone Cabins</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Azeret+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --ground:#f4f2ed; --card:#fff; --sunk:#edeae3; --ink:#191a17; --muted:#5f6660;
+    --rule:#dcd9d1; --firm:#b4b0a6; --cph:#b3341f; --gym:#7a4ca8; --piano:#a86a1f; --ok:#2f7d4f;
+    --ui:"Barlow Semi Condensed",system-ui,sans-serif; --mono:"Azeret Mono",ui-monospace,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#14161a; --card:#1c1f24; --sunk:#171a1e; --ink:#e7e9e4; --muted:#9aa09a;
+    --rule:#2e333a; --firm:#49505a; --cph:#f0714f; --gym:#b98fe0; --piano:#ddaa55; --ok:#6cc48c;}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);font-size:17px;
+       line-height:1.4;padding:1rem 1rem 3rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:54rem;margin:0 auto}
+  h1{margin:0;font-size:1.6rem;font-weight:600;letter-spacing:-.01em}
+  h2{font-size:1.15rem;font-weight:600;margin:1.4rem 0 .4rem}
+  .sub{font-family:var(--mono);font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:.25rem}
+  .bar{display:flex;gap:.4rem;flex-wrap:wrap;margin:.9rem 0;border-top:1px solid var(--firm);
+       border-bottom:1px solid var(--firm);padding-block:.7rem}
+  .tab{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;padding:.5em .75em;
+       border:1px solid var(--firm);color:var(--muted);border-radius:3px;text-decoration:none;background:transparent;cursor:pointer}
+  .tab[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:.9rem 1rem;margin-bottom:.8rem}
+  .card h3{margin:0 0 .2rem;font-size:1.2rem;font-weight:600}
+  .meta{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+  table{border-collapse:collapse;width:100%;font-size:.95rem;margin:.4rem 0}
+  th,td{text-align:left;padding:.35rem .4rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-family:var(--mono);font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+  td.num{font-family:var(--mono);font-size:.82rem;white-space:nowrap}
+  .pill{display:inline-block;font-family:var(--mono);font-size:.62rem;letter-spacing:.05em;text-transform:uppercase;
+        padding:.15em .5em;border-radius:3px;border:1px solid var(--firm);margin:.1rem .2rem .1rem 0}
+  .pill.no{border-color:var(--cph);color:var(--cph)}
+  .pill.yes{border-color:var(--ok);color:var(--ok)}
+  .map{height:62vh;min-height:24rem;border:1px solid var(--rule);border-radius:4px;background:var(--card)}
+  .legend{display:flex;flex-wrap:wrap;gap:.3rem .9rem;font-family:var(--mono);font-size:.65rem;color:var(--muted);margin:.4rem 0}
+  .legend i{display:inline-block;width:14px;height:4px;margin-right:.35rem;vertical-align:2px}
+  .legend i.dot{width:9px;height:9px;border-radius:50%;vertical-align:-1px}
+  .maprow{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem}
+  ul{margin:.3rem 0 .3rem 1.1rem;padding:0}
+  li{margin:.15rem 0}
+  a{color:inherit}
+  .src{font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-top:1.4rem;line-height:1.6}
+  .warn{border-left:3px solid var(--cph);padding-left:.6rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Rentals: Cornerstone Cabins</h1>
+  <div class="sub">37200 Opengate Ct (Sterling area, Soldotna address) · 12-month leases</div>
+  <div class="bar">
+    <a class="tab" href="./">← House tour</a>
+    <a class="tab" href="land.html">The land</a>
+    <a class="tab" href="rank.html">Rank them</a>
+  </div>
+
+  <div class="card">
+    <h3>Cornerstone Cabins</h3>
+    <div class="meta">Cornerstone Developments · 19 units on 12 wooded acres · <a href="https://www.cornerstonedevelopmentsak.com/cabins" target="_blank" rel="noopener">cornerstonedevelopmentsak.com/cabins</a></div>
+    <p>
+      <span class="pill yes">12-month leases</span>
+      <span class="pill yes">Starlink internet included</span>
+      <span class="pill yes">Garbage &amp; plowing included</span>
+      <span class="pill yes">Pets with approval</span>
+      <span class="pill no">No garages</span>
+      <span class="pill no">No smoking anywhere on the property</span>
+    </p>
+    <table>
+      <thead><tr><th>Floor plan</th><th>Size</th><th>Rent</th><th>Available now (11/8)</th></tr></thead>
+      <tbody>
+        <tr><td>3 bed / 2 bath</td><td class="num">1,025 sq ft</td><td class="num">not listed</td><td>none listed</td></tr>
+        <tr><td>3 bed / 1 bath</td><td class="num">850 sq ft</td><td class="num">$1,900 - $1,975</td><td>Unit 1 ($1,975, furnished) and Unit 2 ($1,900, furnished)</td></tr>
+        <tr><td>2 bed / 1 bath</td><td class="num">625 sq ft</td><td class="num">$1,675</td><td>Dutch Landing Loop units 3 and 4</td></tr>
+      </tbody>
+    </table>
+    <p class="meta">Cornerstone advertises cabins "starting at $1,800"; unit prices above are from the current Apartments.com / Zumper listings.</p><p><b>Two side-by-side 3-bedroom cabins</b> (Units 1 + 2): 6 bed / 2 bath, about 1,700 sq ft, about <b>$3,875/mo</b>. Ask whether the two units share a wall or sit next to each other.</p>
+    <p>Heat: gas in-floor boiler and "Reni" heaters, per the listing (varies by unit). Tenant criteria: income about 2.5× rent, decent credit, clean rental history, references.</p>
+    <p class="warn"><b>Winter without a garage</b> means plugging in block heaters and scraping glass on call nights. The drive to the hospital includes 6.4 miles of the Sterling Highway (state-plowed; the peninsula's main moose and head-on corridor).</p>
+  </div>
+
+  <h2>Drive times from the cabins</h2>
+  <table id="times"><thead><tr><th>To</th><th>Time</th><th>Distance</th><th>Who plows the route</th></tr></thead><tbody></tbody></table>
+
+  <h2>Plow zone around the cabins</h2>
+  <div class="legend">
+    <span><i style="background:#2f6fa8"></i>State of Alaska</span>
+    <span><i style="background:#3f7d45"></i>Borough Road Service Area</span>
+    <span><i style="background:#2f8f7a"></i>City</span>
+    <span><i style="background:#b3341f"></i>Not plowed by anyone public (dashed)</span>
+    <span><i class="dot" style="background:#111"></i>Cabins</span>
+  </div>
+  <div id="plowmap" class="map" role="img" aria-label="Roads around the cabins colored by who plows them"></div>
+
+  <h2>Routes: hospital, piano, gymnastics</h2>
+  <div class="maprow" id="routebtns"></div>
+  <div class="legend">
+    <span><i style="background:#2f6fa8"></i>State-plowed stretch</span>
+    <span><i style="background:#3f7d45"></i>Borough RSA stretch</span>
+    <span><i style="background:#2f8f7a"></i>City stretch</span>
+    <span><i class="dot" style="background:#b3341f"></i>Hospital</span>
+    <span><i class="dot" style="background:#a86a1f"></i>Piano</span>
+    <span><i class="dot" style="background:#7a4ca8"></i>Gymnastics</span>
+  </div>
+  <div id="routemap" class="map" role="img" aria-label="Driving routes from the cabins"></div>
+
+  <div class="src">
+    Listing: cornerstonedevelopmentsak.com/cabins and Apartments.com / Zumper (checked 2026-11-08).
+    Routes: OSRM / OpenStreetMap (free-flow driving; winter is slower).
+    Plowing: Kenai Peninsula Borough KPB_Roads layer, Management field (roadlines.json for the plow-zone map).
+    Imagery: Esri. Piano studios and gym from their own listings.
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var R = /*ROUTES*/{"origin":{"name":"Cornerstone Cabins, 37200 Opengate Ct","lat":60.5191432,"lon":-150.8898033},"routes":[{"kind":"hospital","name":"Central Peninsula Hospital","lat":60.4932252,"lon":-151.0771023,"min":14,"mi":7.7,"segs":[{"name":"Opengate Court","mi":0.08,"k":"rsa","m":"Borough RSA","p":[[60.51949,-150.89085],[60.51988,-150.89031],[60.51995,-150.89018],[60.52002,-150.88999],[60.52017,-150.88924]]},{"name":"Robinson Loop Road","mi":0.11,"k":"state","m":"State of Alaska","p":[[60.52017,-150.88924],[60.51998,-150.88902],[60.51976,-150.88866],[60.51894,-150.88707]]},{"name":"Sterling Highway","mi":6.37,"k":"state","m":"State of Alaska","p":[[60.51894,-150.88707],[60.51767,-150.88976],[60.51747,-150.89019],[60.5168,-150.8916],[60.51644,-150.89237],[60.51452,-150.89637],[60.51382,-150.89809],[60.51329,-150.89988],[60.5129,-150.90152],[60.51212,-150.90465],[60.51186,-150.90568],[60.51158,-150.90678],[60.51099,-150.90912],[60.51085,-150.90967],[60.51046,-150.9112],[60.51029,-150.91191],[60.51018,-150.91234],[60.51002,-150.91301],[60.50957,-150.91479],[60.50913,-150.91662],[60.50876,-150.91805],[60.50841,-150.91963],[60.50812,-150.92112],[60.50798,-150.92197],[60.50785,-150.92282],[60.50741,-150.92627],[60.50658,-150.93355],[60.50644,-150.93476],[60.50579,-150.94056],[60.50528,-150.94513],[60.50417,-150.95525],[60.50403,-150.95645],[60.50402,-150.95652],[60.50272,-150.96816],[60.50254,-150.96987],[60.50225,-150.97262],[60.5018,-150.97763],[60.50172,-150.97897],[60.50162,-150.98074],[60.50157,-150.98148],[60.50149,-150.98309],[60.5014,-150.98446],[60.50136,-150.98532],[60.50128,-150.98709],[60.5012,-150.98867],[60.50111,-150.99075],[60.50106,-150.99171],[60.50106,-150.9918],[60.50104,-150.99232],[60.50088,-150.995],[60.50075,-150.99691],[60.50058,-150.99907],[60.49988,-151.00503],[60.49974,-151.00622],[60.49943,-151.00819],[60.49906,-151.01064],[60.49858,-151.01368],[60.49781,-151.01919],[60.49747,-151.02264],[60.49717,-151.0264],[60.49693,-151.02825],[60.49666,-151.0299],[60.49611,-151.03285],[60.49559,-151.03568],[60.49506,-151.03861],[60.49481,-151.03994],[60.49466,-151.0408],[60.49442,-151.0422],[60.49426,-151.04297],[60.49401,-151.04423],[60.49393,-151.04463],[60.49377,-151.04533],[60.49357,-151.04604],[60.49325,-151.04695],[60.49289,-151.0478],[60.49251,-151.04854],[60.49207,-151.04929],[60.49172,-151.04977],[60.4916,-151.04992],[60.49049,-151.0515],[60.48945,-151.05294],[60.48908,-151.05347],[60.48865,-151.05407],[60.48859,-151.05416],[60.4878,-151.05532],[60.48777,-151.05536],[60.48739,-151.05593],[60.48704,-151.05644],[60.48703,-151.05647]]},{"name":"Kenai Spur Highway","mi":0.75,"k":"state","m":"State of Alaska","p":[[60.48703,-151.05647],[60.48691,-151.0568],[60.48686,-151.05697],[60.48682,-151.05717],[60.48682,-151.05719],[60.4868,-151.05736],[60.4868,-151.05757],[60.48685,-151.05803],[60.4869,-151.05826],[60.48709,-151.0588],[60.48723,-151.05931],[60.48751,-151.06008],[60.48767,-151.06047],[60.48786,-151.06086],[60.48806,-151.06118],[60.48956,-151.06301],[60.49091,-151.06461],[60.49124,-151.065],[60.49128,-151.06505],[60.49161,-151.06544],[60.49205,-151.06595],[60.4921,-151.06602],[60.49211,-151.06603],[60.49212,-151.06604],[60.49224,-151.06619],[60.49314,-151.06728],[60.49364,-151.06781],[60.49435,-151.06862],[60.49498,-151.06935]]},{"name":"East Marydale Drive","mi":0.3,"k":"city","m":"City of Soldotna","p":[[60.49498,-151.06935],[60.49498,-151.07115],[60.49497,-151.07236],[60.49498,-151.07342],[60.49498,-151.07521],[60.49499,-151.07746],[60.49499,-151.07807],[60.495,-151.07826]]},{"name":"Hospital Place","mi":0.13,"k":"city","m":"City of Soldotna","p":[[60.495,-151.07826],[60.49463,-151.07825],[60.49423,-151.07824],[60.49408,-151.07814],[60.49333,-151.07689]]},{"name":"Hospital Place","mi":0.0,"k":"city","m":"City of Soldotna","p":[[60.49333,-151.07689],[60.49333,-151.07689]]}]},{"kind":"piano","name":"Last Frontier Piano Studio (Mark Weathers), 220 E Redoubt Ave","lat":60.4879668,"lon":-151.0634835,"min":11,"mi":6.8,"segs":[{"name":"Opengate Court","mi":0.08,"k":"rsa","m":"Borough RSA","p":[[60.51949,-150.89085],[60.51988,-150.89031],[60.51995,-150.89018],[60.52002,-150.88999],[60.52017,-150.88924]]},{"name":"Robinson Loop Road","mi":0.11,"k":"state","m":"State of Alaska","p":[[60.52017,-150.88924],[60.51998,-150.88902],[60.51976,-150.88866],[60.51894,-150.88707]]},{"name":"Sterling Highway","mi":6.37,"k":"state","m":"State of Alaska","p":[[60.51894,-150.88707],[60.51767,-150.88976],[60.51747,-150.89019],[60.5168,-150.8916],[60.51644,-150.89237],[60.51452,-150.89637],[60.51382,-150.89809],[60.51329,-150.89988],[60.5129,-150.90152],[60.51212,-150.90465],[60.51186,-150.90568],[60.51158,-150.90678],[60.51099,-150.90912],[60.51085,-150.90967],[60.51046,-150.9112],[60.51029,-150.91191],[60.51018,-150.91234],[60.51002,-150.91301],[60.50957,-150.91479],[60.50913,-150.91662],[60.50876,-150.91805],[60.50841,-150.91963],[60.50812,-150.92112],[60.50798,-150.92197],[60.50785,-150.92282],[60.50741,-150.92627],[60.50658,-150.93355],[60.50644,-150.93476],[60.50579,-150.94056],[60.50528,-150.94513],[60.50417,-150.95525],[60.50403,-150.95645],[60.50402,-150.95652],[60.50272,-150.96816],[60.50254,-150.96987],[60.50225,-150.97262],[60.5018,-150.97763],[60.50172,-150.97897],[60.50162,-150.98074],[60.50157,-150.98148],[60.50149,-150.98309],[60.5014,-150.98446],[60.50136,-150.98532],[60.50128,-150.98709],[60.5012,-150.98867],[60.50111,-150.99075],[60.50106,-150.99171],[60.50106,-150.9918],[60.50104,-150.99232],[60.50088,-150.995],[60.50075,-150.99691],[60.50058,-150.99907],[60.49988,-151.00503],[60.49974,-151.00622],[60.49943,-151.00819],[60.49906,-151.01064],[60.49858,-151.01368],[60.49781,-151.01919],[60.49747,-151.02264],[60.49717,-151.0264],[60.49693,-151.02825],[60.49666,-151.0299],[60.49611,-151.03285],[60.49559,-151.03568],[60.49506,-151.03861],[60.49481,-151.03994],[60.49466,-151.0408],[60.49442,-151.0422],[60.49426,-151.04297],[60.49401,-151.04423],[60.49393,-151.04463],[60.49377,-151.04533],[60.49357,-151.04604],[60.49325,-151.04695],[60.49289,-151.0478],[60.49251,-151.04854],[60.49207,-151.04929],[60.49172,-151.04977],[60.4916,-151.04992],[60.49049,-151.0515],[60.48945,-151.05294],[60.48908,-151.05347],[60.48865,-151.05407],[60.48859,-151.05416],[60.4878,-151.05532],[60.48777,-151.05536],[60.48739,-151.05593],[60.48704,-151.05644],[60.48703,-151.05647]]},{"name":"Kenai Spur Highway","mi":0.11,"k":"state","m":"State of Alaska","p":[[60.48703,-151.05647],[60.48691,-151.0568],[60.48686,-151.05697],[60.48682,-151.05717],[60.48682,-151.05719],[60.4868,-151.05736],[60.4868,-151.05757],[60.48685,-151.05803],[60.4869,-151.05826],[60.48709,-151.0588],[60.48723,-151.05931]]},{"name":"Frontage Road","mi":0.03,"k":"city","m":"City of Soldotna","p":[[60.48723,-151.05931],[60.48714,-151.05954],[60.48696,-151.05995]]},{"name":"Smiths Way","mi":0.07,"k":"city","m":"City of Soldotna","p":[[60.48696,-151.05995],[60.4874,-151.06057],[60.48756,-151.06088],[60.48766,-151.06127]]},{"name":"East Redoubt Avenue","mi":0.08,"k":"city","m":"City of Soldotna","p":[[60.48766,-151.06127],[60.48773,-151.06177],[60.48776,-151.06229],[60.48776,-151.06348]]},{"name":"East Redoubt Avenue","mi":0.0,"k":"city","m":"City of Soldotna","p":[[60.48776,-151.06348],[60.48776,-151.06348]]}]},{"kind":"piano","name":"The Music Corner (Annika Hagedorn, Alena Bennett), 44331 Sterling Hwy","lat":60.4835876,"lon":-151.067304,"min":11,"mi":7.0,"segs":[{"name":"Opengate Court","mi":0.08,"k":"rsa","m":"Borough RSA","p":[[60.51949,-150.89085],[60.51988,-150.89031],[60.51995,-150.89018],[60.52002,-150.88999],[60.52017,-150.88924]]},{"name":"Robinson Loop Road","mi":0.11,"k":"state","m":"State of Alaska","p":[[60.52017,-150.88924],[60.51998,-150.88902],[60.51976,-150.88866],[60.51894,-150.88707]]},{"name":"Sterling Highway","mi":6.83,"k":"state","m":"State of Alaska","p":[[60.51894,-150.88707],[60.51767,-150.88976],[60.51747,-150.89019],[60.5168,-150.8916],[60.51644,-150.89237],[60.51452,-150.89637],[60.51382,-150.89809],[60.51329,-150.89988],[60.5129,-150.90152],[60.51212,-150.90465],[60.51186,-150.90568],[60.51158,-150.90678],[60.51099,-150.90912],[60.51085,-150.90967],[60.51046,-150.9112],[60.51029,-150.91191],[60.51018,-150.91234],[60.51002,-150.91301],[60.50957,-150.91479],[60.50913,-150.91662],[60.50876,-150.91805],[60.50841,-150.91963],[60.50812,-150.92112],[60.50798,-150.92197],[60.50785,-150.92282],[60.50741,-150.92627],[60.50658,-150.93355],[60.50644,-150.93476],[60.50579,-150.94056],[60.50528,-150.94513],[60.50417,-150.95525],[60.50403,-150.95645],[60.50402,-150.95652],[60.50272,-150.96816],[60.50254,-150.96987],[60.50225,-150.97262],[60.5018,-150.97763],[60.50172,-150.97897],[60.50162,-150.98074],[60.50157,-150.98148],[60.50149,-150.98309],[60.5014,-150.98446],[60.50136,-150.98532],[60.50128,-150.98709],[60.5012,-150.98867],[60.50111,-150.99075],[60.50106,-150.99171],[60.50106,-150.9918],[60.50104,-150.99232],[60.50088,-150.995],[60.50075,-150.99691],[60.50058,-150.99907],[60.49988,-151.00503],[60.49974,-151.00622],[60.49943,-151.00819],[60.49906,-151.01064],[60.49858,-151.01368],[60.49781,-151.01919],[60.49747,-151.02264],[60.49717,-151.0264],[60.49693,-151.02825],[60.49666,-151.0299],[60.49611,-151.03285],[60.49559,-151.03568],[60.49506,-151.03861],[60.49481,-151.03994],[60.49466,-151.0408],[60.49442,-151.0422],[60.49426,-151.04297],[60.49401,-151.04423],[60.49393,-151.04463],[60.49377,-151.04533],[60.49357,-151.04604],[60.49325,-151.04695],[60.49289,-151.0478],[60.49251,-151.04854],[60.49207,-151.04929],[60.49172,-151.04977],[60.4916,-151.04992],[60.49049,-151.0515],[60.48945,-151.05294],[60.48908,-151.05347],[60.48865,-151.05407],[60.48859,-151.05416],[60.4878,-151.05532],[60.48777,-151.05536],[60.48739,-151.05593],[60.48704,-151.05644],[60.48703,-151.05647],[60.48658,-151.0571],[60.4865,-151.05722],[60.48643,-151.05732],[60.48633,-151.05747],[60.48589,-151.0581],[60.48556,-151.05843],[60.4854,-151.0587],[60.48523,-151.05907],[60.48499,-151.05973],[60.48481,-151.06037],[60.48464,-151.06133],[60.48441,-151.06264],[60.48435,-151.06301],[60.48433,-151.06309],[60.48429,-151.06334],[60.4841,-151.0644],[60.48403,-151.06477],[60.48401,-151.0649],[60.48395,-151.06521],[60.48382,-151.06594],[60.48374,-151.06636],[60.48371,-151.06652],[60.48361,-151.06708],[60.48357,-151.06729]]},{"name":"Sterling Highway","mi":0.0,"k":"state","m":"State of Alaska","p":[[60.48357,-151.06729],[60.48357,-151.06729]]}]},{"kind":"piano","name":"Tom Houglum, Christ Lutheran Church, 128 N Soldotna Ave","lat":60.4881712,"lon":-151.0595226,"min":10,"mi":6.8,"segs":[{"name":"Opengate Court","mi":0.08,"k":"rsa","m":"Borough RSA","p":[[60.51949,-150.89085],[60.51988,-150.89031],[60.51995,-150.89018],[60.52002,-150.88999],[60.52017,-150.88924]]},{"name":"Robinson Loop Road","mi":0.11,"k":"state","m":"State of Alaska","p":[[60.52017,-150.88924],[60.51998,-150.88902],[60.51976,-150.88866],[60.51894,-150.88707]]},{"name":"Sterling Highway","mi":6.37,"k":"state","m":"State of Alaska","p":[[60.51894,-150.88707],[60.51767,-150.88976],[60.51747,-150.89019],[60.5168,-150.8916],[60.51644,-150.89237],[60.51452,-150.89637],[60.51382,-150.89809],[60.51329,-150.89988],[60.5129,-150.90152],[60.51212,-150.90465],[60.51186,-150.90568],[60.51158,-150.90678],[60.51099,-150.90912],[60.51085,-150.90967],[60.51046,-150.9112],[60.51029,-150.91191],[60.51018,-150.91234],[60.51002,-150.91301],[60.50957,-150.91479],[60.50913,-150.91662],[60.50876,-150.91805],[60.50841,-150.91963],[60.50812,-150.92112],[60.50798,-150.92197],[60.50785,-150.92282],[60.50741,-150.92627],[60.50658,-150.93355],[60.50644,-150.93476],[60.50579,-150.94056],[60.50528,-150.94513],[60.50417,-150.95525],[60.50403,-150.95645],[60.50402,-150.95652],[60.50272,-150.96816],[60.50254,-150.96987],[60.50225,-150.97262],[60.5018,-150.97763],[60.50172,-150.97897],[60.50162,-150.98074],[60.50157,-150.98148],[60.50149,-150.98309],[60.5014,-150.98446],[60.50136,-150.98532],[60.50128,-150.98709],[60.5012,-150.98867],[60.50111,-150.99075],[60.50106,-150.99171],[60.50106,-150.9918],[60.50104,-150.99232],[60.50088,-150.995],[60.50075,-150.99691],[60.50058,-150.99907],[60.49988,-151.00503],[60.49974,-151.00622],[60.49943,-151.00819],[60.49906,-151.01064],[60.49858,-151.01368],[60.49781,-151.01919],[60.49747,-151.02264],[60.49717,-151.0264],[60.49693,-151.02825],[60.49666,-151.0299],[60.49611,-151.03285],[60.49559,-151.03568],[60.49506,-151.03861],[60.49481,-151.03994],[60.49466,-151.0408],[60.49442,-151.0422],[60.49426,-151.04297],[60.49401,-151.04423],[60.49393,-151.04463],[60.49377,-151.04533],[60.49357,-151.04604],[60.49325,-151.04695],[60.49289,-151.0478],[60.49251,-151.04854],[60.49207,-151.04929],[60.49172,-151.04977],[60.4916,-151.04992],[60.49049,-151.0515],[60.48945,-151.05294],[60.48908,-151.05347],[60.48865,-151.05407],[60.48859,-151.05416],[60.4878,-151.05532],[60.48777,-151.05536],[60.48739,-151.05593],[60.48704,-151.05644],[60.48703,-151.05647]]},{"name":"Kenai Spur Highway","mi":0.18,"k":"state","m":"State of Alaska","p":[[60.48703,-151.05647],[60.48691,-151.0568],[60.48686,-151.05697],[60.48682,-151.05717],[60.48682,-151.05719],[60.4868,-151.05736],[60.4868,-151.05757],[60.48685,-151.05803],[60.4869,-151.05826],[60.48709,-151.0588],[60.48723,-151.05931],[60.48751,-151.06008],[60.48767,-151.06047],[60.48786,-151.06086]]},{"name":"North Soldotna Avenue","mi":0.04,"k":"city","m":"City of Soldotna","p":[[60.48786,-151.06086],[60.4879,-151.0608],[60.48798,-151.06067],[60.48836,-151.06025]]},{"name":"North Soldotna Avenue","mi":0.0,"k":"city","m":"City of Soldotna","p":[[60.48836,-151.06025],[60.48836,-151.06025]]}]},{"kind":"gym","name":"River City Cheer & Gymnastics, 47710 Bennett Ct, Kenai","lat":60.5069923,"lon":-151.1657713,"min":19,"mi":12.4,"segs":[{"name":"Opengate Court","mi":0.08,"k":"rsa","m":"Borough RSA","p":[[60.51949,-150.89085],[60.51988,-150.89031],[60.51995,-150.89018],[60.52002,-150.88999],[60.52017,-150.88924]]},{"name":"Robinson Loop Road","mi":0.11,"k":"state","m":"State of Alaska","p":[[60.52017,-150.88924],[60.51998,-150.88902],[60.51976,-150.88866],[60.51894,-150.88707]]},{"name":"Sterling Highway","mi":7.69,"k":"state","m":"State of Alaska","p":[[60.51894,-150.88707],[60.51767,-150.88976],[60.51747,-150.89019],[60.5168,-150.8916],[60.51644,-150.89237],[60.51452,-150.89637],[60.51382,-150.89809],[60.51329,-150.89988],[60.5129,-150.90152],[60.51212,-150.90465],[60.51186,-150.90568],[60.51158,-150.90678],[60.51099,-150.90912],[60.51085,-150.90967],[60.51046,-150.9112],[60.51029,-150.91191],[60.51018,-150.91234],[60.51002,-150.91301],[60.50957,-150.91479],[60.50913,-150.91662],[60.50876,-150.91805],[60.50841,-150.91963],[60.50812,-150.92112],[60.50798,-150.92197],[60.50785,-150.92282],[60.50741,-150.92627],[60.50658,-150.93355],[60.50644,-150.93476],[60.50579,-150.94056],[60.50528,-150.94513],[60.50417,-150.95525],[60.50403,-150.95645],[60.50402,-150.95652],[60.50272,-150.96816],[60.50254,-150.96987],[60.50225,-150.97262],[60.5018,-150.97763],[60.50172,-150.97897],[60.50162,-150.98074],[60.50157,-150.98148],[60.50149,-150.98309],[60.5014,-150.98446],[60.50136,-150.98532],[60.50128,-150.98709],[60.5012,-150.98867],[60.50111,-150.99075],[60.50106,-150.99171],[60.50106,-150.9918],[60.50104,-150.99232],[60.50088,-150.995],[60.50075,-150.99691],[60.50058,-150.99907],[60.49988,-151.00503],[60.49974,-151.00622],[60.49943,-151.00819],[60.49906,-151.01064],[60.49858,-151.01368],[60.49781,-151.01919],[60.49747,-151.02264],[60.49717,-151.0264],[60.49693,-151.02825],[60.49666,-151.0299],[60.49611,-151.03285],[60.49559,-151.03568],[60.49506,-151.03861],[60.49481,-151.03994],[60.49466,-151.0408],[60.49442,-151.0422],[60.49426,-151.04297],[60.49401,-151.04423],[60.49393,-151.04463],[60.49377,-151.04533],[60.49357,-151.04604],[60.49325,-151.04695],[60.49289,-151.0478],[60.49251,-151.04854],[60.49207,-151.04929],[60.49172,-151.04977],[60.4916,-151.04992],[60.49049,-151.0515],[60.48945,-151.05294],[60.48908,-151.05347],[60.48865,-151.05407],[60.48859,-151.05416],[60.4878,-151.05532],[60.48777,-151.05536],[60.48739,-151.05593],[60.48704,-151.05644],[60.48703,-151.05647],[60.48658,-151.0571],[60.4865,-151.05722],[60.48643,-151.05732],[60.48633,-151.05747],[60.48589,-151.0581],[60.48556,-151.05843],[60.4854,-151.0587],[60.48523,-151.05907],[60.48499,-151.05973],[60.48481,-151.06037],[60.48464,-151.06133],[60.48441,-151.06264],[60.48435,-151.06301],[60.48433,-151.06309],[60.48429,-151.06334],[60.4841,-151.0644],[60.48403,-151.06477],[60.48401,-151.0649],[60.48395,-151.06521],[60.48382,-151.06594],[60.48374,-151.06636],[60.48371,-151.06652],[60.48361,-151.06708],[60.4834,-151.06816],[60.48313,-151.06924],[60.48291,-151.06987],[60.48287,-151.06999],[60.48259,-151.0708],[60.48218,-151.07163],[60.48176,-151.0724],[60.48123,-151.07337],[60.48086,-151.07407],[60.47934,-151.07688],[60.47777,-151.07975],[60.47758,-151.08011],[60.47713,-151.08087],[60.47631,-151.08232],[60.47574,-151.08336],[60.4757,-151.08343],[60.47566,-151.0837],[60.47556,-151.08387],[60.47536,-151.08414],[60.47517,-151.08434],[60.47486,-151.08459]]},{"name":"Kalifornsky Beach Road","mi":4.46,"k":"state","m":"State of Alaska","p":[[60.47486,-151.08459],[60.47507,-151.08647],[60.47509,-151.08708],[60.47506,-151.08831],[60.47478,-151.09108],[60.47444,-151.09361],[60.47365,-151.10089],[60.47346,-151.10258],[60.47338,-151.10327],[60.47334,-151.10383],[60.47326,-151.10867],[60.47327,-151.11631],[60.47328,-151.11772],[60.4733,-151.11924],[60.47331,-151.12109],[60.47329,-151.12698],[60.47334,-151.13425],[60.47339,-151.14014],[60.47356,-151.14167],[60.47381,-151.14291],[60.47399,-151.14363],[60.47435,-151.14479],[60.47489,-151.14591],[60.47588,-151.14745],[60.47604,-151.14753],[60.47649,-151.14783],[60.47752,-151.14852],[60.48065,-151.15047],[60.48186,-151.15127],[60.48213,-151.15144],[60.48247,-151.15167],[60.48307,-151.15209],[60.48365,-151.1525],[60.4842,-151.15288],[60.48443,-151.15304],[60.48576,-151.15398],[60.48602,-151.15413],[60.48781,-151.15532],[60.49113,-151.15756],[60.49188,-151.15809],[60.49242,-151.15845],[60.49305,-151.15887],[60.49395,-151.1595],[60.49468,-151.15996],[60.49535,-151.16038],[60.4986,-151.16268],[60.49984,-151.16355],[60.49987,-151.16357],[60.50228,-151.16521],[60.50272,-151.16548],[60.5039,-151.16629],[60.50532,-151.16727],[60.50645,-151.16806]]},{"name":"Bennett Court","mi":0.09,"k":"rsa","m":"Borough RSA","p":[[60.50645,-151.16806],[60.50649,-151.16779],[60.5068,-151.16566]]},{"name":"Bennett Court","mi":0.0,"k":"rsa","m":"Borough RSA","p":[[60.5068,-151.16566],[60.5068,-151.16566]]}]}],"source":"Routes: OSRM (OpenStreetMap). Plowing: Kenai Peninsula Borough KPB_Roads layer, Management field. Computed 2026-11-08."}/*END*/;
+  var COL = {state:'#2f6fa8', rsa:'#3f7d45', city:'#2f8f7a', none:'#b3341f', unknown:'#8a8f86'};
+  var KCOL = {hospital:'#b3341f', piano:'#a86a1f', gym:'#7a4ca8'};
+  var KNAME = {hospital:'Hospital', piano:'Piano', gym:'Gymnastics'};
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  var O = R.origin;
+
+  // ---- drive-time table ----
+  var tb = document.querySelector('#times tbody');
+  R.routes.forEach(function(r){
+    var by = {};
+    r.segs.forEach(function(s){ by[s.m] = (by[s.m]||0) + s.mi; });
+    var parts = Object.keys(by).filter(function(m){ return by[m] >= 0.05; }).sort(function(a,b){return by[b]-by[a];})
+                  .map(function(m){ return esc(m)+' '+by[m].toFixed(1)+' mi'; });
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><span class="pill" style="border-color:'+KCOL[r.kind]+';color:'+KCOL[r.kind]+'">'+
+      KNAME[r.kind]+'</span> '+esc(r.name)+'</td><td class="num">'+r.min+' min</td><td class="num">'+
+      r.mi+' mi</td><td>'+parts.join(' · ')+'</td>';
+    tb.appendChild(tr);
+  });
+
+  function base(id, center, z){
+    var m = L.map(id, {scrollWheelZoom:false}).setView(center, z);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {maxZoom:19, attribution:'Imagery &copy; Esri, Maxar'}).addTo(m);
+    L.control.scale({imperial:true, metric:false}).addTo(m);
+    return m;
+  }
+  function cabinPin(m){
+    L.circleMarker([O.lat, O.lon], {radius:9, color:'#fff', weight:2, fillColor:'#111', fillOpacity:1})
+      .bindPopup('<b>Cornerstone Cabins</b><br>37200 Opengate Ct<br>12-month leases · no garages').addTo(m);
+  }
+  function miBetween(la1, lo1, la2, lo2){
+    var r=3958.8, p1=la1*Math.PI/180, p2=la2*Math.PI/180, dp=p2-p1, dl=(lo2-lo1)*Math.PI/180;
+    var h=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+    return 2*r*Math.asin(Math.sqrt(h));
+  }
+
+  // ---- plow-zone map: every borough road within 2 miles, colored by who clears it ----
+  var pm = base('plowmap', [O.lat, O.lon], 14);
+  fetch('roadlines.json').then(function(r){ return r.json(); }).then(function(d){
+    (d.roads||[]).forEach(function(r){
+      var near = r.p.some(function(path){
+        for(var j=0;j<path.length;j+=3){ if(miBetween(O.lat,O.lon,path[j][1],path[j][0]) <= 2) return true; }
+        return false;
+      });
+      if(!near) return;
+      r.p.forEach(function(path){
+        L.polyline(path.map(function(pt){ return [pt[1], pt[0]]; }),
+          {color:COL[r.k]||'#888', weight:r.k==='state'?5:(r.k==='none'?3:4), opacity:.95,
+           dashArray:r.k==='none'?'6 5':null})
+         .bindPopup('<b>'+esc(r.n||'unnamed road')+'</b><br>'+
+           (r.k==='none' ? '<b style="color:#b3341f">Not plowed by anyone public</b>'
+                         : 'Plowed by <b>'+esc(r.m)+'</b>')+
+           '<br><span style="font-size:.85em">'+esc(r.c||'')+'</span>')
+         .addTo(pm);
+      });
+    });
+    cabinPin(pm);
+  }).catch(function(){ cabinPin(pm); });
+
+  // ---- route map ----
+  var rm = base('routemap', [O.lat, O.lon], 11);
+  var layers = {}, allB = L.latLngBounds([[O.lat, O.lon]]);
+  R.routes.forEach(function(r, i){
+    var g = L.layerGroup();
+    r.segs.forEach(function(s){
+      L.polyline(s.p, {color: r.kind==='hospital' ? (COL[s.k]||'#888') : KCOL[r.kind],
+        weight: r.kind==='hospital' ? 6 : 4, opacity:.95, dashArray: r.kind==='hospital' ? null : '8 6'})
+       .bindPopup('<b>'+esc(s.name||'road')+'</b><br>'+s.mi+' mi · plowed by '+esc(s.m)).addTo(g);
+      s.p.forEach(function(ll){ allB.extend(ll); });
+    });
+    L.circleMarker([r.lat, r.lon], {radius:8, color:'#fff', weight:2, fillColor:KCOL[r.kind], fillOpacity:1})
+     .bindPopup('<b>'+KNAME[r.kind]+'</b><br>'+esc(r.name)+'<br>'+r.min+' min · '+r.mi+' mi from the cabins')
+     .addTo(g);
+    layers[i] = g;
+    if(r.kind === 'hospital') g.addTo(rm);
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'tab';
+    b.textContent = KNAME[r.kind]+': '+r.name.split(/[,(]/)[0].trim()+' ('+r.min+' min)';
+    b.setAttribute('aria-pressed', r.kind==='hospital' ? 'true' : 'false');
+    b.addEventListener('click', function(){
+      var on = rm.hasLayer(g);
+      if(on) rm.removeLayer(g); else g.addTo(rm);
+      b.setAttribute('aria-pressed', on ? 'false' : 'true');
+    });
+    document.getElementById('routebtns').appendChild(b);
+  });
+  cabinPin(rm);
+  rm.fitBounds(allB.pad(0.08));
+})();
+</script>
+</body>
+</html>
