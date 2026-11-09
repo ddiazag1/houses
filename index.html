@@ -283,6 +283,7 @@
       <span><i style="background:var(--am)"></i>Tue AM</span>
       <span><i style="background:var(--pm)"></i>Tue PM</span>
       <span><i style="background:var(--wed)"></i>Wed</span>
+      <span><i style="background:#111;border-radius:2px"></i>Rental</span>
     </div>
   </figure>
 
@@ -448,6 +449,16 @@
                    '<br><a href="#card-'+idOf(s)+'">Open this card</a>')
         .addTo(ovStops);
     });
+
+    // Rentals: not tour stops, so they get their own black "R" pin and link to rentals.html.
+    L.marker([60.5191432, -150.8898033], {title:"Cornerstone Cabins (rental)", icon:L.divIcon({className:"",
+        iconSize:[22,22], iconAnchor:[11,11],
+        html:'<div class="numpin" style="background:#111;border-radius:4px">R</div>'})})
+      .bindPopup('<b>Cornerstone Cabins</b> &middot; rental<br>37200 Opengate Ct<br>'+
+                 '3 bd / 1 ba, $1,900&ndash;$1,975 &middot; 12-month leases &middot; no garages'+
+                 '<br>7.7 mi / 14 min to the hospital'+
+                 '<br><a href="rentals.html">Details, property lines and routes</a>')
+      .addTo(ovStops);
 
     if(!OV._fittedOnce){ OV._fittedOnce = true; setTimeout(function(){ OV.invalidateSize(); fitOverview(); }, 80); }
     else fitOverview();
